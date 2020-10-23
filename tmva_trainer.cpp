@@ -26,24 +26,17 @@ using namespace std;
 int main(int argc,char **argv)
 {
   // Configuration part-----------------------------
-  vector<string> ntupsSig,ntupsBkg;
-  string file;
-  
-  TMVAConf conf;
+  TMVAConf conf("conf");
     
-  conf.Parser(argc,argv,ntupsSig,ntupsBkg,file);
+  conf.Parser(argc,argv);
+  conf.ReadConf();
   
-  cout << "Configuration File: " << file << endl;
-  
-  vector<string> variables = {"HT_all","nJets"};
-  vector<string> split ={"eventNumber%2==0"};
+  vector<string> split = conf.GetSplit();
+  vector<TString> variables = conf.GetTVariables();
   // Configuration part-----------------------------
   // Reading part-----------------------------------
-
   vector<TMVA::DataLoader*> loaders;
-
-  conf.SetConf(ntupsSig,ntupsBkg,variables,split,"1","1","nBTags_MV2c10_70>=3","nBTags_MV2c10_70>=3");
-
+  
   for (unsigned i=0;i<split.size();i++){
     TString loader_name = "loader_"+to_string(i);
     TMVA::DataLoader* loader = new TMVA::DataLoader(loader_name);
@@ -52,15 +45,15 @@ int main(int argc,char **argv)
   }
 
   conf.SetEvents(loaders);
-
   // Reading part-----------------------------------
   // Training part----------------------------------
   for (unsigned i=0;i<split.size();i++){
-    loaders.at(i)->PrepareTrainingAndTestTree(TCut(""),"nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V");
+    loaders.at(i)->PrepareTrainingAndTestTree(TCut(""),conf.GetSamplingOpt());
     TString factory_name = "factory_"+to_string(i);
     TFile *outputFile = TFile::Open( factory_name+".root", "RECREATE" );
-    TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, "!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification" );
-    factory->BookMethod(loaders.at(i),TMVA::Types::kBDT,"BDTG","!H:!V:NTrees=600:BoostType=Grad:Shrinkage=0.05:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=30:MaxDepth=2:NegWeightTreatment=IgnoreNegWeightsInTraining");
+    TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, conf.GetFactoryOpt() );
+    TString title = "TMVA_Class_"+conf.GetClassifierOpt()+"_"+to_string(i);
+    factory->BookMethod(loaders.at(i),conf.GetClassifierOpt(),title,conf.GetTrainingOpt());
     factory->TrainAllMethods();
     factory->TestAllMethods();
     factory->EvaluateAllMethods();
@@ -68,6 +61,4 @@ int main(int argc,char **argv)
     outputFile->Close();
   }
   // Training part----------------------------------
-
-  return 0;
 }
