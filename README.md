@@ -29,19 +29,27 @@ Following arguments are used inside the configuration file for controlling the t
 
 * `TrainingOpt:` This option is used on [BookMethod()](https://root.cern/doc/master/classTMVA_1_1Factory.html#a35c42e83410f857150bb2c150bb97474) as an option of defined classifier.  
 Default option:
-```!H:!V:NTrees=600:BoostType=Grad:Shrinkage=0.05:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=30:MaxDepth=2:NegWeightTreatment=IgnoreNegWeightsInTraining```
+```
+!H:!V:NTrees=600:BoostType=Grad:Shrinkage=0.05:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=30:MaxDepth=2:NegWeightTreatment=IgnoreNegWeightsInTraining
+```
 
 * `FactoryOpt:` [TMVA::Factory()](https://root.cern/doc/master/classTMVA_1_1Factory.html) option for the job configuration.  
 Default option:
-```!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification```
+```
+!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification
+```
 
 * `SamplingOpt:` Sample option for configuration of [TMVA::DAtaLoader()](https://root.cern/doc/master/classTMVA_1_1DataLoader.html).  
 Default option:
-```nTrain_Signal=0:nTrain_Background=0:NormMode=EqualNumEvents:V```
+```
+nTrain_Signal=0:nTrain_Background=0:NormMode=EqualNumEvents:V
+```
 
 * `ClassifierOpt:` Classifier selection (e.g. `DNN`, `BDT`).  
 Default option:
-```BDT```
+```
+BDT
+```
 
 * `Var:` The variable for training.
 
