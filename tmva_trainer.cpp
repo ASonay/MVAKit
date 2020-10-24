@@ -33,6 +33,7 @@ int main(int argc,char **argv)
   
   vector<string> split = conf.GetSplit();
   vector<TString> variables = conf.GetTVariables();
+  vector<TString> variablesSpec = conf.GetTVariablesOther();
   // Configuration part-----------------------------
   // Reading part-----------------------------------
   vector<TMVA::DataLoader*> loaders;
@@ -41,6 +42,7 @@ int main(int argc,char **argv)
     TString loader_name = "loader_"+to_string(i);
     TMVA::DataLoader* loader = new TMVA::DataLoader(loader_name);
     for (auto var : variables) loader->AddVariable(var);
+    for (auto var : variablesSpec) loader->AddSpectator(var);
     loaders.push_back(loader);
   }
 
@@ -52,7 +54,7 @@ int main(int argc,char **argv)
     TString factory_name = "factory_"+to_string(i);
     TFile *outputFile = TFile::Open( factory_name+".root", "RECREATE" );
     TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, conf.GetFactoryOpt() );
-    TString title = "TMVA_Class_"+conf.GetClassifierOpt()+"_"+to_string(i);
+    TString title = "Score";
     factory->BookMethod(loaders.at(i),conf.GetClassifierOpt(),title,conf.GetTrainingOpt());
     factory->TrainAllMethods();
     factory->TestAllMethods();

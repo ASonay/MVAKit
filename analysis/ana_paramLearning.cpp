@@ -114,7 +114,7 @@ void draw_bdt_test_train(string name, TH1F* S_t, TH1F* B_t, TH1F* S_tr, TH1F* B_
 void ana_paramLearning(string filename,string path="loader_0/")
 {
 
-  string class_name = "BDTG";
+  string class_name = "TMVA_Class_DNN_0";
   
   TFile *f = new TFile(filename.c_str());
 

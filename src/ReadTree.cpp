@@ -123,5 +123,4 @@ void ReadTree::Close(){
   delete tree;
   delete formx;
   delete tf_s;
-  fi->Close();
 }
