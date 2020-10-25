@@ -6,7 +6,7 @@ The basic usage of the tool;
 
 **Compiling :**    
 ```
-make clean;make
+source build.sh
 ```
 
 **Running :**  
