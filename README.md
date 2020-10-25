@@ -4,6 +4,11 @@ The project is aiming control to TMVA package by configuration files and command
 
 The basic usage of the tool;
 
+**Setup environment :**    
+```
+source setup.sh
+```
+
 **Compiling :**    
 ```
 source build.sh
