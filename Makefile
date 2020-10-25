@@ -17,6 +17,7 @@ endif
 LINKER   = gcc
 # linking flags here
 LFLAGS   = -Wall -I. -lm
+LDFLAGS  = -shared
 #--------configure compiler----------#
 CXXFLAGS  += -O2 -Wall -Wno-write-strings
 LIBS     = $(ROOTLIBS) -lm -lz -lutil -lnsl -lpthread -lTMVA
@@ -28,7 +29,6 @@ BINDIR   = bin
 SOURCES  := $(wildcard $(SRCDIR)/*.cpp)
 INCLUDES := $(wildcard $(SRCDIR)/*.hpp)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
 

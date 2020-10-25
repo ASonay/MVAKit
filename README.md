@@ -69,7 +69,7 @@ BDT
 
 ## Splitting the Samples
 
-Two method available for splitting samples.  
+Two methods are available for splitting samples.  
 
 * `Split:x`, where the x is percentage of training samples and rest will be the testing samples (e.g. Split:50).
 

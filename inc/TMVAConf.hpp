@@ -68,6 +68,7 @@ private:
   TString m_samplingOpt;
 
   string m_conFile;
+  string m_loadFile;
   
   vector<double> m_weights;
   vector<double> m_param_vec;

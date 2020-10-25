@@ -1,3 +1,5 @@
+#include "TSystem.h"
+
 #include "../inc/TMVAConf.hpp"
 
 
@@ -117,6 +119,10 @@ TMVAConf::ReadConf(){
       in >> str;
       m_split=comaSep(str);
     }
+    else if (str.compare("LoadFile:")==0){
+      in >> str;
+      m_loadFile=str;
+    }
     else{
       cout << "Your config file is badly formatted.." << endl;
       cout << "Check here: " << str << endl;
@@ -132,6 +138,14 @@ TMVAConf::ReadConf(){
   if (!m_paramvar.empty()){
     cout << "\nParameterization detected for : " << m_paramvar << endl;
     m_parameterized=true;
+  }
+
+  if (!m_loadFile.empty()){
+    if (!gSystem->Load(m_loadFile.c_str())){
+      cout << "Can not load the file : " << m_loadFile << endl;
+      exit(0);
+    }
+    else cout << m_loadFile << " loaded successfully..\n" << endl;
   }
 
   if (m_parameterized){
