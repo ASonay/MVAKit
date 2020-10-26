@@ -57,7 +57,7 @@ private:
   
   void ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vector<string> files);
 
-  Counter AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tree, const string name, map<int,int> &tmp_param_map);
+  void AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tree, const string name, pair<int,int> split, map<int,int> &tmp_param_map, vector<Counter> &c);
 
   TTree* GetTree(TTree *tree, Long64_t max, Long64_t first);
   vector<pair<Long64_t,Long64_t>> TreeSplit(int noe);
@@ -72,9 +72,12 @@ private:
   vector<pair<string,vector<string>>> m_ntups;
   vector<pair<string,string>> m_weight;
   vector<pair<string,string>> m_cut;
+  vector<pair<string,string>> m_tree;
   vector<string> m_variables;
   vector<string> m_variables_other;
   vector<string> m_split;
+  vector<string> m_loadFile;
+  vector<string> m_loadLib;
   string m_paramvar;
   TString m_trainingOpt;
   TString m_factoryOpt;
@@ -82,7 +85,6 @@ private:
   TString m_samplingOpt;
 
   string m_conFile;
-  string m_loadFile;
 
   string m_label_current;
   string m_weight_current;

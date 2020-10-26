@@ -55,6 +55,7 @@ Default option:
 ```
 BDT
 ```
+* `AllTree:` Specifies tree name for all samples. By changing `All` with any sample label, different tree name can be specified for different ntuples.
 
 * `Var:` The variable for training.
 
@@ -71,6 +72,10 @@ BDT
 * `BkgCut:` The cut will be applied for background samples. (The phrase before `Cut:` refer the label and should be comparable with label.)
 
 * `Split:` Splitting option for categorizing events as training or testing samples (see [Splitting the Samples](#splitting-the-samples)).
+
+* `LoadFiles:` Loading custom file for using user specified function. Multiple file can be loaded by comma separation.
+
+* `LoadLibs:` Loading libraries if needed. Multiple library can be loaded by comma separation.
 
 ## Splitting the Samples
 

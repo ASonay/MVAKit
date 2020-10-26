@@ -1,5 +1,6 @@
 #include <thread> 
 #include "TSystem.h"
+#include "TROOT.h"
 
 #include "../inc/TMVAConf.hpp"
 
@@ -100,6 +101,12 @@ TMVAConf::ReadConf(){
       in >> str;
       m_cut.push_back(make_pair(label,str));
     }
+    else if (str.find("Tree:")!=string::npos){
+      auto strPos = str.find("Tree:");
+      string label = str.substr(0,strPos);
+      in >> str;
+      m_tree.push_back(make_pair(label,str));
+    }
     else if (str.compare("TrainingOpt:")==0){
       in >> str;
       m_trainingOpt=str;
@@ -120,9 +127,13 @@ TMVAConf::ReadConf(){
       in >> str;
       m_split=comaSep(str);
     }
-    else if (str.compare("LoadFile:")==0){
+    else if (str.compare("LoadFiles:")==0){
       in >> str;
-      m_loadFile=str;
+      m_loadFile=comaSep(str);
+    }
+    else if (str.compare("LoadLibs:")==0){
+      in >> str;
+      m_loadLib=comaSep(str);
     }
     else{
       cout << "Your config file is badly formatted.." << endl;
@@ -141,12 +152,17 @@ TMVAConf::ReadConf(){
     m_parameterized=true;
   }
 
-  if (!m_loadFile.empty()){
-    if (!gSystem->Load(m_loadFile.c_str())){
-      cout << "Can not load the file : " << m_loadFile << endl;
+  for (auto x : m_loadLib){
+    if ( gSystem->Load(x.c_str())==0)
+      {cout << "Your library " << x << " successfully loaded." << endl;}
+    else{
+      cout << "Your library " << x << " cannot be loaded." << endl;
       exit(0);
     }
-    else cout << m_loadFile << " loaded successfully..\n" << endl;
+  }
+
+  for (auto x : m_loadFile){
+    gROOT->ProcessLineSync((".L "+x+"+").c_str());
   }
 
   if (m_parameterized){
@@ -188,9 +204,11 @@ TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
   cout << "\nSampling label : " << m_label_current << " for following samples:\n" << endl;
 
   map<int,int> tmp_param_map;
+
+  const int split_size = m_split.size();   
   
-  unsigned tot_train=0,tot_test=0;
-  float totw_train=0,totw_test=0;
+  unsigned tot_train[split_size]={0},tot_test[split_size]={0};
+  float totw_train[split_size]={0},totw_test[split_size]={0};
 
   if (m_weight.size()==0)
     {m_weight_current="1";}
@@ -206,6 +224,16 @@ TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
     for (auto x : m_cut){
       if (StringCompare(label,x.first)) m_cut_current=x.second;
     }
+  }
+
+  string tree_name;
+  for (auto x : m_tree){
+    if ( (StringCompare(label,x.first)) || x.first == "All" ) tree_name=x.second;
+  }
+
+  if (tree_name.empty()){
+    cout << "Cannot find any tree name declared in the configuration file or non of them match with the label" << endl;
+    exit(0);
   }
 
   if (m_weight_current.empty()){
@@ -228,39 +256,39 @@ TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
       cout << "ERROR: cannot open file: " << x << endl;
       exit(0);
     }
-    TTree *tree = (TTree*) f->Get("nominal_Loose");
+    TTree *tree = (TTree*) f->Get(tree_name.c_str());
     if (!tree) {
       cout << "ERROR: cannot open tree: " << x << endl;
     }
     vector<string> activeVars = CheckVars(tree);
     tree->SetBranchStatus("*",0);
     for (auto av : activeVars) tree->SetBranchStatus(av.c_str(),1);
-    TFile *f_tmp = new TFile("f_tmp.root","recreate");
+    vector<Counter> counter;
     for (auto val : TreeSplit(tree->GetEntries())){
-      TTree *tr = GetTree(tree,val.first,val.second);
-      Counter c = AssignEvents(loaders,tr,x,tmp_param_map);
-      tot_train+=c.count_train;tot_test+=c.count_test;
-      totw_train+=c.weight_train;totw_test+=c.weight_test;
-      cout << "Read/Total events : " << val.second << "/" << tree->GetEntries() 
-	   << " || Training/Test events : " << c.count_train << "/" << c.count_test << "\r" << flush;
+      AssignEvents(loaders,tree,x,val,tmp_param_map,counter);
+      cout << "Read/Total events : " << val.second << "/" << tree->GetEntries();
+      for (int i=0;i<split_size;i++){
+	tot_train[i]+=counter[i].count_train;tot_test[i]+=counter[i].count_test;
+	totw_train[i]+=counter[i].weight_train;totw_test[i]+=counter[i].weight_test;
+	cout << " || Split " << i << " Training/Test events : " << counter[i].count_train << "/" << counter[i].count_test;
+      }
+      cout << "\r" << flush;
     }
-    f_tmp->Close();
-    if( remove("f_tmp.root") != 0 )
-      {cout << "\nError deleting temporary root file." << endl;}
-    else
-      {cout << "\nTemporary root file successfully deleted." << endl;}
     delete tree;
     f->Close();
     cout << "\n" <<endl;
   }
 
   cout << m_label_current << " SAMPLE INFO:" << endl;
-  cout << "Total training events: " << tot_train << ", weighted: " << totw_train << endl;
-  cout << "Total test events:     " << tot_test << ", weighted: " << totw_test << endl;
-
+  for (int i=0;i<split_size;i++){
+    cout << "Split " << i << endl;
+    cout << "Total training events: " << tot_train[i] << ", weighted: " << totw_train[i] << endl;
+    cout << "Total test events:     " << tot_test[i] << ", weighted: " << totw_test[i] << endl;
+  }
+  
   if (m_parameterized){
     cout << "\nParameterization:" << endl;
-    unsigned total_event = tot_train+tot_test;
+    unsigned total_event = tmp_param_map.size();
     vector<double> param_vec,weights;
     for (auto const& x : tmp_param_map)
       {
@@ -284,17 +312,21 @@ TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
 
 }
 
-Counter
-TMVAConf::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tree, const string name, map<int,int> &tmp_param_map)
+void
+TMVAConf::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, const string name, pair<int,int> split, map<int,int> &tmp_param_map, vector<Counter> &c)
 {
-
-  unsigned tmp_train=0,tmp_test=0;
-  float tmpw_train=0,tmpw_test=0;
+  
+  const int split_size = m_split.size(); 
+  
+  unsigned tmp_train[split_size]={0},tmp_test[split_size]={0};
+  float tmpw_train[split_size]={0},tmpw_test[split_size]={0};
     
   random_device rd;
   mt19937 gen(rd());    
   discrete_distribution<int> d(begin(m_weights), end(m_weights));
 
+  TFile *f_tmp = new TFile("f_tmp.root","recreate");
+  TTree *tree = GetTree(tr,split.first,split.second);
   ReadTree read(name,tree,m_variables);
   int noe = read.GetNoE();
   for (int i=0;i<noe;i++){
@@ -312,19 +344,23 @@ TMVAConf::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tree, co
       for (auto var : m_variables_other) {read.SetSingleVariable(var);vars.push_back(read.GetInputSingle(i));}
       if (split_cond){
 	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
-	tmp_train++;
-	tmpw_train+=weight;
+	tmp_train[cond_index]++;
+	tmpw_train[cond_index]+=weight;
       }
       else{
 	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
-	tmp_test++;
-	tmpw_test+=weight;
+	tmp_test[cond_index]++;
+	tmpw_test[cond_index]+=weight;
       }
       cond_index++;
     }
   }
 
-  return {tmp_test,tmp_train,tmpw_test,tmpw_train};
+  for (int i=0;i<split_size;i++) c.push_back({tmp_test[i],tmp_train[i],tmpw_test[i],tmpw_train[i]});
+  
+  f_tmp->Close();
+  if( remove("f_tmp.root") != 0 )
+    {cout << "\nError deleting temporary root file." << endl;}
 }
 
 TTree*
@@ -338,7 +374,7 @@ TMVAConf::TreeSplit(int noe)
 {
   vector<pair<Long64_t,Long64_t>> val;
 
-  int min = 10000;
+  int min = 5000;
 
   if (noe<min){
     return {{noe,0}};
