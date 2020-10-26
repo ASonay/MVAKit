@@ -45,13 +45,12 @@ int main(int argc,char **argv)
     for (auto var : variablesSpec) loader->AddSpectator(var);
     loaders.push_back(loader);
   }
-
   conf.SetEvents(loaders);
   // Reading part-----------------------------------
   // Training part----------------------------------
   for (unsigned i=0;i<split.size();i++){
     loaders.at(i)->PrepareTrainingAndTestTree(TCut(""),conf.GetSamplingOpt());
-    TString factory_name = "factory_"+to_string(i);
+    TString factory_name = "factory_"+conf.GetClassifierOpt()+"_"+to_string(i);
     TFile *outputFile = TFile::Open( factory_name+".root", "RECREATE" );
     TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, conf.GetFactoryOpt() );
     TString title = "Score";

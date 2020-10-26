@@ -14,6 +14,15 @@
 
 using namespace std;
 
+
+struct Counter{
+  unsigned count_test;
+  unsigned count_train;
+  float weight_test;
+  float weight_train;
+};
+  
+
 class TMVAConf{
 public:
   TMVAConf(const string name);
@@ -40,7 +49,7 @@ private:
   vector<string> comaSep(const string str);
   
   bool CheckDigit(const string str);
-  bool isVariableExist(const string var, const vector<string> trvars);
+  bool isVariableExist(const string var, const vector<string> trvars, vector<string> &activeVars);
   bool StringCompare(const string str1, const string str2);
   
   double FindDigit(const string file,const string var);
@@ -48,7 +57,12 @@ private:
   
   void ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vector<string> files);
 
-  void CheckVars(TTree *tree);
+  Counter AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tree, const string name, map<int,int> &tmp_param_map);
+
+  TTree* GetTree(TTree *tree, Long64_t max, Long64_t first);
+  vector<pair<Long64_t,Long64_t>> TreeSplit(int noe);
+  
+  vector<string> CheckVars(TTree *tree);
   
 
   int m_split_per;
@@ -69,6 +83,10 @@ private:
 
   string m_conFile;
   string m_loadFile;
+
+  string m_label_current;
+  string m_weight_current;
+  string m_cut_current;
   
   vector<double> m_weights;
   vector<double> m_param_vec;

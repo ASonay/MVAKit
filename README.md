@@ -95,7 +95,7 @@ tmva_trainer --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,
 
 ## Multiclass Training
 
-By the different labeling of the declated ntuples, multiclass training is possible if proper options are given in the configuration file.
+By the different labeling of the declared ntuples, multiclass training is possible if proper options are given in the configuration file.
 
 Example run;  
 ```

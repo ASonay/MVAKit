@@ -1,3 +1,4 @@
+#include <thread> 
 #include "TSystem.h"
 
 #include "../inc/TMVAConf.hpp"
@@ -181,97 +182,76 @@ TMVAConf::SetEvents(const vector<TMVA::DataLoader*> &loaders){
 
 void
 TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vector<string> files){
+
+  m_label_current = label;
   
-  cout << "\nSampling label : " << label << " for following samples:\n" << endl;
+  cout << "\nSampling label : " << m_label_current << " for following samples:\n" << endl;
 
   map<int,int> tmp_param_map;
   
   unsigned tot_train=0,tot_test=0;
   float totw_train=0,totw_test=0;
 
-  string cut_ex,weight_ex;
-
   if (m_weight.size()==0)
-    {weight_ex="1";}
+    {m_weight_current="1";}
   else{
     for (auto x : m_weight){
-      if (StringCompare(label,x.first)) weight_ex=x.second;
+      if (StringCompare(label,x.first)) m_weight_current=x.second;
     }
   }
 
   if (m_cut.size()==0)
-    {cut_ex="1";}
+    {m_cut_current="1";}
   else{
     for (auto x : m_cut){
-      if (StringCompare(label,x.first)) cut_ex=x.second;
+      if (StringCompare(label,x.first)) m_cut_current=x.second;
     }
   }
 
-  if (weight_ex.empty()){
+  if (m_weight_current.empty()){
     cout << "You defined weight but not matched any of the label!" << endl;
     exit(0);
   }
 
-  if (cut_ex.empty()){
+  if (m_cut_current.empty()){
     cout << "You defined cut but not matched any of the label!" << endl;
     exit(0);
   }
 
-  cout << "CUT EXPRESSION: " << cut_ex << endl;
-  cout << "WEIGHT EXPRESSION: " << weight_ex << "\n" << endl;
-  
-  random_device rd;
-  mt19937 gen(rd());    
-  discrete_distribution<int> d(begin(m_weights), end(m_weights));
+  cout << "CUT EXPRESSION: " << m_cut_current << endl;
+  cout << "WEIGHT EXPRESSION: " << m_weight_current << "\n" << endl;
 
   for (auto x: files){
-    cout << "\nFile name to be readed : " << x << endl;
+    cout << "\nFile name to be readed : " << x << "\n" << endl;
     TFile *f = new TFile(x.c_str());
     if (!f) {
       cout << "ERROR: cannot open file: " << x << endl;
       exit(0);
     }
     TTree *tree = (TTree*) f->Get("nominal_Loose");
-    CheckVars(tree);
-    ReadTree read(x,tree,m_variables);
-    unsigned tmp_train=0,tmp_test=0;
-    int noe = read.GetNoE();
-    for (int i=0;i<noe;i++){
-      read.SetSingleVariable(cut_ex);
-      if (int(read.GetInputSingle(i))==0) continue;
-      unsigned cond_index=0;
-      for (auto sp : m_split){
-	int split_cond=0;
-	if (m_split_per==0) {
-	  read.SetSingleVariable(sp);split_cond=int(read.GetInputSingle(i));
-	}
-	else {split_cond = int(rand()%100 < m_split_per);}
-	read.SetSingleVariable(weight_ex);
-	Double_t weight = read.GetInputSingle(i);
-	vector<Double_t> vars = read.GetInput(i);
-	if (m_parameterized) vars.push_back(GetParam(x,tmp_param_map,gen,d));
-	for (auto var : m_variables_other) {read.SetSingleVariable(var);vars.push_back(read.GetInputSingle(i));}
-	if (split_cond){
-	  loaders[cond_index]->AddEvent(label,TMVA::Types::kTraining,vars,weight);
-	  tmp_train++;
-	  totw_train+=weight;
-	}
-	else{
-	  loaders[cond_index]->AddEvent(label,TMVA::Types::kTesting,vars,weight);
-	  tmp_test++;
-	  totw_test+=weight;
-	}
-	cond_index++;
-      }
+    vector<string> activeVars = CheckVars(tree);
+    tree->SetBranchStatus("*",0);
+    for (auto av : activeVars) tree->SetBranchStatus(av.c_str(),1);
+    TFile *f_tmp = new TFile("f_tmp.root","recreate");
+    for (auto val : TreeSplit(tree->GetEntries())){
+      TTree *tr = GetTree(tree,val.first,val.second);
+      Counter c = AssignEvents(loaders,tr,x,tmp_param_map);
+      tot_train+=c.count_train;tot_test+=c.count_test;
+      totw_train+=c.weight_train;totw_test+=c.weight_test;
+      cout << "Read/Total events : " << val.second << "/" << tree->GetEntries() 
+	   << " || Training/Test events : " << c.count_train << "/" << c.count_test << "\r" << flush;
     }
-    tot_train+=tmp_train;tot_test+=tmp_test;
-    cout << "Training events : " << tmp_train << endl;
-    cout << "Test events : " << tmp_test << endl;
+    f_tmp->Close();
+    if( remove("f_tmp.root") != 0 )
+      {cout << "\nError deleting temporary root file." << endl;}
+    else
+      {cout << "\nTemporary root file successfully deleted." << endl;}
+    delete tree;
     f->Close();
     cout << "\n" <<endl;
   }
 
-  cout << label << " SAMPLE INFO:" << endl;
+  cout << m_label_current << " SAMPLE INFO:" << endl;
   cout << "Total training events: " << tot_train << ", weighted: " << totw_train << endl;
   cout << "Total test events:     " << tot_test << ", weighted: " << totw_test << endl;
 
@@ -299,6 +279,73 @@ TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
     }
   }
 
+}
+
+Counter
+TMVAConf::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tree, const string name, map<int,int> &tmp_param_map)
+{
+
+  unsigned tmp_train=0,tmp_test=0;
+  float tmpw_train=0,tmpw_test=0;
+    
+  random_device rd;
+  mt19937 gen(rd());    
+  discrete_distribution<int> d(begin(m_weights), end(m_weights));
+
+  ReadTree read(name,tree,m_variables);
+  int noe = read.GetNoE();
+  for (int i=0;i<noe;i++){
+    unsigned cond_index=0;
+    for (auto sp : m_split){
+      int split_cond=0;
+      if (m_split_per==0) {
+	read.SetSingleVariable(sp);split_cond=int(read.GetInputSingle(i));
+      }
+      else {split_cond = int(rand()%100 < m_split_per);}
+      read.SetSingleVariable(m_weight_current);
+      Double_t weight = read.GetInputSingle(i);
+      vector<Double_t> vars = read.GetInput(i);
+      if (m_parameterized) vars.push_back(GetParam(name,tmp_param_map,gen,d));
+      for (auto var : m_variables_other) {read.SetSingleVariable(var);vars.push_back(read.GetInputSingle(i));}
+      if (split_cond){
+	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
+	tmp_train++;
+	tmpw_train+=weight;
+      }
+      else{
+	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
+	tmp_test++;
+	tmpw_test+=weight;
+      }
+      cond_index++;
+    }
+  }
+
+  return {tmp_test,tmp_train,tmpw_test,tmpw_train};
+}
+
+TTree*
+TMVAConf::GetTree(TTree *tree, Long64_t max, Long64_t first)
+{
+  return tree->CopyTree(m_cut_current.c_str(),"fast",max,first);
+}
+
+vector<pair<Long64_t,Long64_t>>
+TMVAConf::TreeSplit(int noe)
+{
+  vector<pair<Long64_t,Long64_t>> val;
+
+  int min = 10000;
+
+  if (noe<min){
+    return {{noe,0}};
+  }
+  else{
+    for (int i=0;i<noe/min;i++){
+      val.push_back(make_pair(min,min*i));
+    }
+    return val;
+  }
 }
 
 vector<string>
@@ -398,22 +445,23 @@ TMVAConf::GetParam(string file,map<int,int> &pmap,mt19937 &gen,discrete_distribu
   return param;
 }
 
-void
+vector<string>
 TMVAConf::CheckVars(TTree *tree)
 {
-  vector<string> trvars;
-
-  for (auto x : *tree->GetListOfLeaves()) trvars.push_back(x->GetName());
+  vector<string> trVars;
+  vector<string> activeVars;
+  
+  for (auto x : *tree->GetListOfLeaves()) trVars.push_back(x->GetName());
 
   for (auto x : m_variables){
-    if (!isVariableExist(x,trvars)){
+    if (!isVariableExist(x,trVars,activeVars)){
       cout << x << " is not include any of the leaf in the tree." << endl;
       exit(0);
     }
   }
   
   for (auto x : m_variables_other){
-    if (!isVariableExist(x,trvars)){
+    if (!isVariableExist(x,trVars,activeVars)){
       cout << x << " is not include any of the leaf in the tree." << endl;
       exit(0);
     }
@@ -421,7 +469,7 @@ TMVAConf::CheckVars(TTree *tree)
 
   if (m_split_per==0){
     for (auto x : m_split){
-      if (!isVariableExist(x,trvars)){
+      if (!isVariableExist(x,trVars,activeVars)){
 	cout << x << " is not include any of the leaf in the tree." << endl;
 	exit(0);
       }
@@ -430,7 +478,7 @@ TMVAConf::CheckVars(TTree *tree)
   
   for (auto x : m_weight){
     if (!CheckDigit(x.second)){
-      if (!isVariableExist(x.second,trvars)){
+      if (!isVariableExist(x.second,trVars,activeVars)){
 	cout << x.second << " is not include any of the leaf in the tree." << endl;
 	exit(0);
       }
@@ -439,12 +487,14 @@ TMVAConf::CheckVars(TTree *tree)
 
   for (auto x : m_cut){
     if (!CheckDigit(x.second)){
-      if (!isVariableExist(x.second,trvars)){
+      if (!isVariableExist(x.second,trVars,activeVars)){
 	cout << x.second << " is not include any of the leaf in the tree." << endl;
 	exit(0);
       }
     }
   }
+
+  return activeVars;
 }
 
 bool
@@ -466,13 +516,18 @@ TMVAConf::CheckDigit(const string str)
 }
 
 bool
-TMVAConf::isVariableExist(const string var, const vector<string> trvars)
+TMVAConf::isVariableExist(const string var, const vector<string> trVars, vector<string> &activeVars)
 {
   bool check=false;
   
-  for (auto y : trvars){
+  for (auto y : trVars){
     if (var.find(y) != string::npos){
       check=true;
+      bool is_filled=false;
+      for (auto x : activeVars){
+	if (x==y) is_filled=true;
+      }
+      if (!is_filled) activeVars.push_back(y);
     }
   }
 
