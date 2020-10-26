@@ -229,6 +229,9 @@ TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
       exit(0);
     }
     TTree *tree = (TTree*) f->Get("nominal_Loose");
+    if (!tree) {
+      cout << "ERROR: cannot open tree: " << x << endl;
+    }
     vector<string> activeVars = CheckVars(tree);
     tree->SetBranchStatus("*",0);
     for (auto av : activeVars) tree->SetBranchStatus(av.c_str(),1);
