@@ -14,16 +14,24 @@ source setup.sh
 source build.sh
 ```
 
-**Running :**  
+**Running :**
+* Training,
 ```
-tmva_trainer --ntup <ntup1.root> label1 --ntup <ntup2.root> label2 --ConfFile <ConfFile.txt>
+tmva_train --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --ConfFile <ConfFile.txt>
 ```
+* Evaluating,
+```
+tmva_eval --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --xml <file1.xml>,..,<filen.xml> <cond1>,..,<condn> --ConfFile <ConfFile.txt> --par <value> --var <Variable Name>
+```
+
+, where the `--par` and the `--var` optional for value of the parameterized training and variable name to be recorded in ntuple, respectively.
+
 
 Root files can be registered by using wildcards to different labels and labels can be created as many as needed.  
 
 Example run;
 ```
-tmva_trainer --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttH_tttt_m400_MgPy8_mc16* Signal --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttbar_PhPy8_AFII_AllFilt_mc16* Bkg --conf config/config_bdt.conf
+tmva_train --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttH_tttt_m400_MgPy8_mc16* Signal --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttbar_PhPy8_AFII_AllFilt_mc16* Bkg --conf config/config_bdt.conf
 ```
 
 This will run the binary classification by the BDT classifier depending on the selections defined in configuration file.
@@ -95,7 +103,7 @@ The only thing you should do for parameterizing training is specifying `ParamVar
 
 Example run;  
 ```
-tmva_trainer --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttH_tttt_m*_MgPy8_mc16* Signal --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttbar_PhPy8_AFII_AllFilt_mc16* Bkg --conf config/config_massparam_bdt.conf
+tmva_train --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttH_tttt_m*_MgPy8_mc16* Signal --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge10}j/ttbar_PhPy8_AFII_AllFilt_mc16* Bkg --conf config/config_massparam_bdt.conf
 ```
 
 ## Multiclass Training
@@ -104,7 +112,7 @@ By the different labeling of the declared ntuples, multiclass training is possib
 
 Example run;  
 ```
-tmva_trainer --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttH_tttt_m*_mc16a.root Signal --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttbar_PhPy8_AFII_AllFilt_mc16a.root Bkg1 --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttW_Sherpa_mc16a.root Bkg2 --conf config/config_massparam_mclass_DNN.conf
+tmva_train --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttH_tttt_m*_mc16a.root Signal --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttbar_PhPy8_AFII_AllFilt_mc16a.root Bkg1 --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttW_Sherpa_mc16a.root Bkg2 --conf config/config_massparam_mclass_DNN.conf
 ```
 
 Contact : @asonay

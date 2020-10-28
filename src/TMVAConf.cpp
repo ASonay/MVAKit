@@ -1,4 +1,3 @@
-#include <thread> 
 #include "TSystem.h"
 #include "TROOT.h"
 
@@ -7,11 +6,10 @@
 
 using namespace std;
 
-TMVAConf::TMVAConf(const string name):
-  m_split_per(0),
-  m_parameterized(false)
+TMVAConf::TMVAConf(const string name)
 {
-  cout << "Configuration has been registered for " << name << ".\n" << endl;
+  m_confName = name;
+  cout << "Configuration will be setup for " << name << ".\n" << endl;
   m_trainingOpt = "!H:!V:NTrees=600:BoostType=Grad:Shrinkage=0.05:UseBaggedBoost:BaggedSampleFraction=0.6:SeparationType=GiniIndex:nCuts=30:MaxDepth=2:NegWeightTreatment=IgnoreNegWeightsInTraining";
   m_factoryOpt = "!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification";
   m_samplingOpt = "nTrain_Signal=0:nTrain_Background=0:NormMode=EqualNumEvents:V";
@@ -24,8 +22,23 @@ TMVAConf::~TMVAConf()
 void
 TMVAConf::Parser(int argc,char **argv)
 {
+
+  string app_name = argv[0];
+  string command;
+  if (m_confName=="Training")
+    {command = app_name+" --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --ConfFile <ConfFile.txt>";}
+  else if (m_confName=="Evaluate")
+    {command = app_name+" --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --xml <file1.xml>,..,<filen.xml> <cond1>,..,<condn> --ConfFile <ConfFile.txt>";}
+  else
+    {
+      cout << "Could not find any proper configuration name." << endl;
+      cout << "'Training' or 'Evaluate' should be." << endl;
+      exit(0);
+    }
+  
   bool is_ntup=false;
   bool is_file=false;
+  bool is_xml=false;
 
   for (int i=1;i<argc;i++){
     string check = argv[i];
@@ -45,33 +58,45 @@ TMVAConf::Parser(int argc,char **argv)
 	    }
 	}
       }
+    else if (check=="--xml")
+      {m_xmlFile = ComaSep(argv[i+1]);m_cond = ComaSep(argv[i+2]);is_xml=true;i+=2;}
+    else if (check=="--par")
+      {m_param = argv[i+1];i++;}
+    else if (check=="--var")
+      {m_cname = argv[i+1];i++;}
     else if ((check=="--ConfFile" || check=="--conf") && !is_file)
-      {m_conFile = argv[i+1];is_file=true;i++;}
+      {m_confFile = argv[i+1];is_file=true;i++;}
     else{
       cout << "Usage of the script :" << endl;
-      cout << "./tmva_trainer --ntup <ntup1.root> label1 --ntup <ntup2.root> label2 --ConfFile <ConfFile.txt>" << endl;
+      cout << command << endl;
       exit(0);
     }
   }
 
   if (!is_ntup){
     cout << "Usage of the script :" << endl;
-    cout << "./tmva_trainer --ntup <ntup1.root> label1 --ntup <ntup2.root> label2 --ConfFile <ConfFile.txt>" << endl;
+    cout << command << endl;
     exit(0);
   }
 
   if (!is_file){
     cout << "Usage of the script :" << endl;
-    cout << "./tmva_trainer --ntup <ntup1.root> label1 --ntup <ntup2.root> label2 --ConfFile <ConfFile.txt>" << endl;
+    cout << command << endl;
     exit(0);
   }
 
-  cout << "\nConfiguration File: " << m_conFile << endl;
+  if (!is_xml && m_confName=="Evaluate"){
+    cout << "Usage of the script :" << endl;
+    cout << command << endl;
+    exit(0);
+  }
+
+  cout << "\nConfiguration File: " << m_confFile << endl;
 }
 
 void
 TMVAConf::ReadConf(){
-  ifstream in(m_conFile);
+  ifstream in(m_confFile);
   string str;
 
   if (in.fail()) {cout << "Your variable list is missing!\n"; exit(0);}
@@ -125,15 +150,15 @@ TMVAConf::ReadConf(){
     }
     else if (str.compare("Split:")==0){
       in >> str;
-      m_split=comaSep(str);
+      m_split=ComaSep(str);
     }
     else if (str.compare("LoadFiles:")==0){
       in >> str;
-      m_loadFile=comaSep(str);
+      m_loadFile=ComaSep(str);
     }
     else if (str.compare("LoadLibs:")==0){
       in >> str;
-      m_loadLib=comaSep(str);
+      m_loadLib=ComaSep(str);
     }
     else{
       cout << "Your config file is badly formatted.." << endl;
@@ -141,254 +166,29 @@ TMVAConf::ReadConf(){
       exit(0);
     }
   }
-  if (m_split.size()==0)
-    m_split.push_back("Split:50:50");
-
-  if (m_split[0].find("Split:") != string::npos)
-    {m_split_per = atoi(m_split[0].substr(6).c_str());}
-
-  if (!m_paramvar.empty()){
-    cout << "\nParameterization detected for : " << m_paramvar << endl;
-    m_parameterized=true;
-  }
 
   for (auto x : m_loadLib){
     if ( gSystem->Load(x.c_str())==0)
-      {cout << "Your library " << x << " successfully loaded." << endl;}
+      {cout << "Your library, " << x << " successfully loaded." << endl;}
     else{
-      cout << "Your library " << x << " cannot be loaded." << endl;
+      cout << "Your library, " << x << " cannot be loaded." << endl;
       exit(0);
     }
   }
 
   for (auto x : m_loadFile){
-    gROOT->ProcessLineSync((".L "+x+"+").c_str());
-  }
-
-  if (m_parameterized){
-    const int columnId = 0;
-    const string paramFind = m_paramvar;
-    sort(m_ntups.begin(), m_ntups.end(),
-	 [&columnId,&paramFind](const pair<string,vector<string>> &a, const pair<string,vector<string>> &b) 
-	 {
-	   return a.second[columnId].find(paramFind) != string::npos && b.second[columnId].find(paramFind) == string::npos;
-	 });
-    if (m_ntups[0].second[0].find(m_paramvar) == string::npos){
-      cout << "Your parameter : " << m_paramvar << "does not match with any file." << endl;
+    if (gROOT->LoadMacro((x+"+").c_str())==0)
+      {cout << "Your macro, " << x << " successfully loaded." << endl;}
+    else{
+      cout << "Your macro, " << x << " cannot be loaded." << endl;
       exit(0);
     }
   }
-}
 
-void
-TMVAConf::SetEvents(const vector<TMVA::DataLoader*> &loaders){
-  
-  if (m_variables.size()<1){
-    cout << "Variables has to enter." << endl;
-    exit(0);
-  }
-  
-  cout << "\nVariables:" << endl;
-  for (auto var : m_variables)
-    {cout << var << endl;}
-  
-  for (auto x : m_ntups)
-    {ReadEvents(loaders,x.first,x.second);}
-}
-
-void
-TMVAConf::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vector<string> files){
-
-  m_label_current = label;
-  
-  cout << "\nSampling label : " << m_label_current << " for following samples:\n" << endl;
-
-  map<int,int> tmp_param_map;
-
-  const int split_size = m_split.size();   
-  
-  unsigned tot_train[split_size]={0},tot_test[split_size]={0};
-  float totw_train[split_size]={0},totw_test[split_size]={0};
-
-  if (m_weight.size()==0)
-    {m_weight_current="1";}
-  else{
-    for (auto x : m_weight){
-      if (StringCompare(label,x.first)) m_weight_current=x.second;
-    }
-  }
-
-  if (m_cut.size()==0)
-    {m_cut_current="1";}
-  else{
-    for (auto x : m_cut){
-      if (StringCompare(label,x.first)) m_cut_current=x.second;
-    }
-  }
-
-  string tree_name;
-  for (auto x : m_tree){
-    if ( (StringCompare(label,x.first)) || x.first == "All" ) tree_name=x.second;
-  }
-
-  if (tree_name.empty()){
-    cout << "Cannot find any tree name declared in the configuration file or non of them match with the label" << endl;
-    exit(0);
-  }
-
-  if (m_weight_current.empty()){
-    cout << "You defined weight but not matched any of the label!" << endl;
-    exit(0);
-  }
-
-  if (m_cut_current.empty()){
-    cout << "You defined cut but not matched any of the label!" << endl;
-    exit(0);
-  }
-
-  cout << "CUT EXPRESSION: " << m_cut_current << endl;
-  cout << "WEIGHT EXPRESSION: " << m_weight_current << "\n" << endl;
-
-  for (auto x: files){
-    cout << "\nFile name to be readed : " << x << "\n" << endl;
-    TFile *f = new TFile(x.c_str());
-    if (!f) {
-      cout << "ERROR: cannot open file: " << x << endl;
-      exit(0);
-    }
-    TTree *tree = (TTree*) f->Get(tree_name.c_str());
-    if (!tree) {
-      cout << "ERROR: cannot open tree: " << x << endl;
-    }
-    vector<string> activeVars = CheckVars(tree);
-    tree->SetBranchStatus("*",0);
-    for (auto av : activeVars) tree->SetBranchStatus(av.c_str(),1);
-    vector<Counter> counter;
-    for (auto val : TreeSplit(tree->GetEntries())){
-      AssignEvents(loaders,tree,x,val,tmp_param_map,counter);
-      cout << "Read/Total events : " << val.second << "/" << tree->GetEntries();
-      for (int i=0;i<split_size;i++){
-	tot_train[i]+=counter[i].count_train;tot_test[i]+=counter[i].count_test;
-	totw_train[i]+=counter[i].weight_train;totw_test[i]+=counter[i].weight_test;
-	cout << " || Split " << i << " Training/Test events : " << counter[i].count_train << "/" << counter[i].count_test;
-      }
-      cout << "\r" << flush;
-    }
-    delete tree;
-    f->Close();
-    cout << "\n" <<endl;
-  }
-
-  cout << m_label_current << " SAMPLE INFO:" << endl;
-  for (int i=0;i<split_size;i++){
-    cout << "Split " << i << endl;
-    cout << "Total training events: " << tot_train[i] << ", weighted: " << totw_train[i] << endl;
-    cout << "Total test events:     " << tot_test[i] << ", weighted: " << totw_test[i] << endl;
-  }
-  
-  if (m_parameterized){
-    cout << "\nParameterization:" << endl;
-    unsigned total_event = tmp_param_map.size();
-    vector<double> param_vec,weights;
-    for (auto const& x : tmp_param_map)
-      {
-	double param = x.first;
-	double ratio = 1.0*((double)x.second/(double)total_event);
-	cout << param
-	     << ':' 
-	     << x.second
-	     << ':'
-	     << ratio
-	     << endl ;
-	  param_vec.push_back(param);
-	  weights.push_back(ratio);
-      }
-    if (m_param_map.size()==0) {
-      m_param_map=tmp_param_map;
-      m_param_vec=param_vec;
-      m_weights=weights;
-    }
-  }
-
-}
-
-void
-TMVAConf::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, const string name, pair<int,int> split, map<int,int> &tmp_param_map, vector<Counter> &c)
-{
-  
-  const int split_size = m_split.size(); 
-  
-  unsigned tmp_train[split_size]={0},tmp_test[split_size]={0};
-  float tmpw_train[split_size]={0},tmpw_test[split_size]={0};
-    
-  random_device rd;
-  mt19937 gen(rd());    
-  discrete_distribution<int> d(begin(m_weights), end(m_weights));
-
-  TFile *f_tmp = new TFile("f_tmp.root","recreate");
-  TTree *tree = GetTree(tr,split.first,split.second);
-  ReadTree read(name,tree,m_variables);
-  int noe = read.GetNoE();
-  for (int i=0;i<noe;i++){
-    unsigned cond_index=0;
-    for (auto sp : m_split){
-      int split_cond=0;
-      if (m_split_per==0) {
-	read.SetSingleVariable(sp);split_cond=int(read.GetInputSingle(i));
-      }
-      else {split_cond = int(rand()%100 < m_split_per);}
-      read.SetSingleVariable(m_weight_current);
-      Double_t weight = read.GetInputSingle(i);
-      vector<Double_t> vars = read.GetInput(i);
-      if (m_parameterized) vars.push_back(GetParam(name,tmp_param_map,gen,d));
-      for (auto var : m_variables_other) {read.SetSingleVariable(var);vars.push_back(read.GetInputSingle(i));}
-      if (split_cond){
-	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
-	tmp_train[cond_index]++;
-	tmpw_train[cond_index]+=weight;
-      }
-      else{
-	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
-	tmp_test[cond_index]++;
-	tmpw_test[cond_index]+=weight;
-      }
-      cond_index++;
-    }
-  }
-
-  for (int i=0;i<split_size;i++) c.push_back({tmp_test[i],tmp_train[i],tmpw_test[i],tmpw_train[i]});
-  
-  f_tmp->Close();
-  if( remove("f_tmp.root") != 0 )
-    {cout << "\nError deleting temporary root file." << endl;}
-}
-
-TTree*
-TMVAConf::GetTree(TTree *tree, Long64_t max, Long64_t first)
-{
-  return tree->CopyTree(m_cut_current.c_str(),"fast",max,first);
-}
-
-vector<pair<Long64_t,Long64_t>>
-TMVAConf::TreeSplit(int noe)
-{
-  vector<pair<Long64_t,Long64_t>> val;
-
-  int min = 5000;
-
-  if (noe<min){
-    return {{noe,0}};
-  }
-  else{
-    for (int i=0;i<noe/min;i++){
-      val.push_back(make_pair(min,min*i));
-    }
-    return val;
-  }
 }
 
 vector<string>
-TMVAConf::comaSep(const string str){
+TMVAConf::ComaSep(const string str){
   stringstream ss( str );
   vector<string> result;
 
@@ -400,14 +200,6 @@ TMVAConf::comaSep(const string str){
     }
 
   return result;
-}
-
-double
-TMVAConf:: FindDigit(const string file,const string var){
-  auto strPos = file.find(var);
-  string str_tmp = file.substr(strPos+var.length());
-  double val = atoi(str_tmp.c_str());
-  return val;
 }
 
 vector<TString>
@@ -434,7 +226,7 @@ TMVAConf::GetTVariables(){
     newvars.push_back(var_tmp);
   }
 
-  if (m_parameterized){
+  if (!m_paramvar.empty()){
     newvars.push_back(m_paramvar);
   }
   
@@ -467,122 +259,9 @@ TMVAConf::GetTVariablesOther(){
   return newvars;
 }
 
-double
-TMVAConf::GetParam(string file,map<int,int> &pmap,mt19937 &gen,discrete_distribution<int> &d)
-{
-  double param=0;
-
-  if (m_param_map.size()==0){
-    param = FindDigit(file,m_paramvar);
-  }
-  else{
-    param=m_param_vec[d(gen)];
-  }
-
-  pmap[(int)param] += 1;
-  
-  return param;
-}
-
-vector<string>
-TMVAConf::CheckVars(TTree *tree)
-{
-  vector<string> trVars;
-  vector<string> activeVars;
-  
-  for (auto x : *tree->GetListOfLeaves()) trVars.push_back(x->GetName());
-
-  for (auto x : m_variables){
-    if (!isVariableExist(x,trVars,activeVars)){
-      cout << x << " is not include any of the leaf in the tree." << endl;
-      exit(0);
-    }
-  }
-  
-  for (auto x : m_variables_other){
-    if (!isVariableExist(x,trVars,activeVars)){
-      cout << x << " is not include any of the leaf in the tree." << endl;
-      exit(0);
-    }
-  }
-
-  if (m_split_per==0){
-    for (auto x : m_split){
-      if (!isVariableExist(x,trVars,activeVars)){
-	cout << x << " is not include any of the leaf in the tree." << endl;
-	exit(0);
-      }
-    }
-  }
-  
-  for (auto x : m_weight){
-    if (!CheckDigit(x.second)){
-      if (!isVariableExist(x.second,trVars,activeVars)){
-	cout << x.second << " is not include any of the leaf in the tree." << endl;
-	exit(0);
-      }
-    }
-  }
-
-  for (auto x : m_cut){
-    if (!CheckDigit(x.second)){
-      if (!isVariableExist(x.second,trVars,activeVars)){
-	cout << x.second << " is not include any of the leaf in the tree." << endl;
-	exit(0);
-      }
-    }
-  }
-
-  return activeVars;
-}
-
-bool
-TMVAConf::CheckDigit(const string str)
-{
-  string negsign = "-";
-  bool isDigit=find_if(str.begin(), 
-		       str.end(), [&negsign](unsigned char c) { return !isdigit(c) && negsign!=c; }) == str.end();
-
-  if (isDigit){
-    double val = atof(str.c_str());
-    if (val<=0){
-      cout << "Your value " << str << ", has to be positive and different than zero." << endl;
-      exit(0);
-    }
-  }
-  
-  return isDigit;
-}
-
-bool
-TMVAConf::isVariableExist(const string var, const vector<string> trVars, vector<string> &activeVars)
-{
-  bool check=false;
-  
-  for (auto y : trVars){
-    if (var.find(y) != string::npos){
-      check=true;
-      bool is_filled=false;
-      for (auto x : activeVars){
-	if (x==y) is_filled=true;
-      }
-      if (!is_filled) activeVars.push_back(y);
-    }
-  }
-
-  return check;  
-}
-
-bool
-TMVAConf::StringCompare(const string str1, const string str2)
-{
-
-  string a = str1; string b = str2;
-  
-  transform(a.begin(), a.end(), a.begin(),
-		 [](unsigned char c){ return tolower(c); });
-  transform(b.begin(), b.end(), b.begin(),
-		 [](unsigned char c){ return tolower(c); });
-  
-  return a.find(b) != string::npos || b.find(a) != string::npos;
+vector<TString>
+TMVAConf::GetTXML(){
+  vector<TString> newxml;
+  for (auto x : m_xmlFile) newxml.push_back(x);
+  return newxml;
 }

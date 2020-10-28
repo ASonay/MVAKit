@@ -8,20 +8,10 @@
 #include <stdlib.h>
 #include <iterator>
 
-#include "TMVA/DataLoader.h"
-
-#include "ReadTree.hpp"
 
 using namespace std;
 
 
-struct Counter{
-  unsigned count_test;
-  unsigned count_train;
-  float weight_test;
-  float weight_train;
-};
-  
 
 class TMVAConf{
 public:
@@ -32,42 +22,29 @@ public:
   
   void ReadConf();
 
-  void SetEvents(const vector<TMVA::DataLoader*> &loaders);
-
-  vector<string> GetSplit() {return m_split;}
+  vector<pair<string,vector<string>>> GetFilesName() {return m_ntups;}
+  vector<pair<string,string>> GetWeights() {return m_weight;}
+  vector<pair<string,string>> GetCuts() {return m_cut;}
+  vector<pair<string,string>> GetTrees() {return m_tree;}
   vector<string> GetVariables() {return m_variables;}
   vector<string> GetVariablesOther() {return m_variables_other;}
-  vector<TString> GetTVariables();
-  vector<TString> GetTVariablesOther();
+  vector<string> GetSplit() {return m_split;}
+  vector<string> GetXML() {return m_xmlFile;}
+  vector<string> GetCond() {return m_cond;}
+  string GetParameterVariable() {return m_paramvar;}
   TString GetTrainingOpt() {return m_trainingOpt;}
   TString GetFactoryOpt() {return m_factoryOpt;}
   TString GetClassifierOpt() {return m_classifierOpt;}
   TString GetSamplingOpt() {return m_samplingOpt;}
+  vector<TString> GetTXML();
+  vector<TString> GetTVariables();
+  vector<TString> GetTVariablesOther();
+  string GetParameter() {return m_param;}
+  string GetClassName() {return m_cname;}
 
 private:
 
-  vector<string> comaSep(const string str);
-  
-  bool CheckDigit(const string str);
-  bool isVariableExist(const string var, const vector<string> trvars, vector<string> &activeVars);
-  bool StringCompare(const string str1, const string str2);
-  
-  double FindDigit(const string file,const string var);
-  double GetParam(string file,map<int,int> &pmap,mt19937 &gen,discrete_distribution<int> &d);
-  
-  void ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vector<string> files);
-
-  void AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tree, const string name, pair<int,int> split, map<int,int> &tmp_param_map, vector<Counter> &c);
-
-  TTree* GetTree(TTree *tree, Long64_t max, Long64_t first);
-  vector<pair<Long64_t,Long64_t>> TreeSplit(int noe);
-  
-  vector<string> CheckVars(TTree *tree);
-  
-
-  int m_split_per;
-  
-  bool m_parameterized;
+  vector<string> ComaSep(const string str);
   
   vector<pair<string,vector<string>>> m_ntups;
   vector<pair<string,string>> m_weight;
@@ -76,6 +53,8 @@ private:
   vector<string> m_variables;
   vector<string> m_variables_other;
   vector<string> m_split;
+  vector<string> m_xmlFile;
+  vector<string> m_cond;
   vector<string> m_loadFile;
   vector<string> m_loadLib;
   string m_paramvar;
@@ -84,15 +63,14 @@ private:
   TString m_classifierOpt;
   TString m_samplingOpt;
 
-  string m_conFile;
+  string m_confFile;
+  string m_confName;
 
   string m_label_current;
   string m_weight_current;
   string m_cut_current;
   
-  vector<double> m_weights;
-  vector<double> m_param_vec;
-  map<int,int> m_param_map;
-
+  string m_param;
+  string m_cname;
 
 };

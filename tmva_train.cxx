@@ -18,6 +18,7 @@
 #include "TTreeReaderValue.h"
 
 #include "inc/TMVAConf.hpp"
+#include "inc/TMVARead.hpp"
 //#include "inc/ReadTree.hpp"
 
 
@@ -26,7 +27,7 @@ using namespace std;
 int main(int argc,char **argv)
 {
   // Configuration part-----------------------------
-  TMVAConf conf("conf");
+  TMVAConf conf("Training");
     
   conf.Parser(argc,argv);
   conf.ReadConf();
@@ -45,7 +46,8 @@ int main(int argc,char **argv)
     for (auto var : variablesSpec) loader->AddSpectator(var);
     loaders.push_back(loader);
   }
-  conf.SetEvents(loaders);
+  TMVARead treader(conf);
+  treader.SetEvents(loaders);
   // Reading part-----------------------------------
   // Training part----------------------------------
   for (unsigned i=0;i<split.size();i++){

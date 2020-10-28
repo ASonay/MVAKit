@@ -1,5 +1,7 @@
-NAME=tmva_trainer
-EXEC=$(NAME)
+APP1=tmva_train
+APP2=tmva_eval
+EXEC1=$(APP1)
+EXEC2=$(APP2)
 
 #-----------configure ROOT-----------#
 ifdef ROOTSYS
@@ -32,11 +34,19 @@ OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
 
-App: $(NAME).cpp $(OBJECTS)
-	@echo "Comiling App..."
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(NAME).cpp $(OBJECTS) $(LIBS)
+all: App1 App2
+
+App1: $(APP1).cxx $(OBJECTS)
+	@echo "Compiling "$(APP1)"..."
+	$(CXX) $(CXXFLAGS) -o $(APP1) $(APP1).cxx $(OBJECTS) $(LIBS)
+	@echo "-----------------------------------------------------"
+
+App2: $(APP2).cxx $(OBJECTS)
+	@echo "Compiling "$(APP2)"..."
+	$(CXX) $(CXXFLAGS) -o $(APP2) $(APP2).cxx $(OBJECTS) $(LIBS)
 	@echo "-----------------------------------------------------"
 
 clean:
-	@rm -fv $(EXEC)
+	@rm -fv $(EXEC1)
+	@rm -fv $(EXEC2)
 

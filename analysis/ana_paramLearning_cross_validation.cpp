@@ -111,19 +111,19 @@ void draw_bdt_test_train(string name, TH1F* S_t, TH1F* B_t, TH1F* S_tr, TH1F* B_
 
 }
 
-void ana_paramLearning(string filename,string path="loader_0/")
+void ana_paramLearning_cross_validation()
 {
 
   string class_name = "Score";
+  string cut = "nJets>=10&&nBTags_MV2c10_70==3";
   
-  TFile *f = new TFile(filename.c_str());
 
-  string testTree_name = path+"TestTree";
-  string trainTree_name = path+"TrainTree";
-  
-  TTree *t_test = (TTree*)f->Get(testTree_name.c_str());
-  TTree *t_train = (TTree*)f->Get(trainTree_name.c_str());
-
+  TFile *f1 = new TFile("/afs/cern.ch/work/a/asonay/bsm4top_bdt_weight_cv/ljets/factory_BDT_0.root");
+  TFile *f2 = new TFile("/afs/cern.ch/work/a/asonay/bsm4top_bdt_weight_cv/ljets/factory_BDT_1.root");
+  TTree *t_train_1 = (TTree*)f1->Get("loader_0/TrainTree");
+  TTree *t_test_1 = (TTree*)f1->Get("loader_0/TestTree");
+  TTree *t_train_2 = (TTree*)f2->Get("loader_1/TrainTree");
+  TTree *t_test_2 = (TTree*)f2->Get("loader_1/TestTree");
 
   vector<string> MP = {"400","500","600","700","800","900","1000"};
 
@@ -135,11 +135,15 @@ void ana_paramLearning(string filename,string path="loader_0/")
   
   for (auto mp : MP){
     string cut_exp_bkg = "(classID&&ttH_tttt_m=="+mp+"&&"+cut+")*weight";
-    TH1F *hBkg_test = getHist(t_test,"htestBkg",class_name.c_str(),cut_exp_bkg);
-    TH1F *hBkg_train = getHist(t_train,"htrainBkg",class_name.c_str(),cut_exp_bkg);
+    TH1F *hBkg_test = getHist(t_test_1,"htestBkg",class_name.c_str(),cut_exp_bkg);
+    hBkg_test->Add(getHist(t_test_2,"htestBkg2",class_name.c_str(),cut_exp_bkg));
+    TH1F *hBkg_train = getHist(t_train_1,"htrainBkg",class_name.c_str(),cut_exp_bkg);
+    hBkg_train->Add(getHist(t_train_2,"htrainBkg2",class_name.c_str(),cut_exp_bkg));
     string cut_exp_sig = "(!classID&&ttH_tttt_m=="+mp+"&&"+cut+")*weight";
-    TH1F *hSig_test = getHist(t_test,"htestSig"+mp,class_name.c_str(),cut_exp_sig);
-    TH1F *hSig_train = getHist(t_train,"htrainSig"+mp,class_name.c_str(),cut_exp_sig);
+    TH1F *hSig_test = getHist(t_test_1,"htestSig"+mp,class_name.c_str(),cut_exp_sig);
+    hSig_test->Add(getHist(t_test_2,"htestSig2"+mp,class_name.c_str(),cut_exp_sig));
+    TH1F *hSig_train = getHist(t_train_1,"htrainSig"+mp,class_name.c_str(),cut_exp_sig);
+    hSig_train->Add(getHist(t_train_2,"htrainSig2"+mp,class_name.c_str(),cut_exp_sig));
     draw_bdt_test_train(mp,hSig_train,hBkg_train,hSig_test,hBkg_test);
 
     TMVA::ROCCalc calc_train(hSig_train,hBkg_train);
