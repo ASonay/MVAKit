@@ -114,7 +114,7 @@ void check_crossvalidation()
   TTree *tree_train_2 = (TTree*)f2->Get("loader_1/TrainTree");
   TTree *tree_test_2 = (TTree*)f2->Get("loader_1/TestTree");
 
-  TH1F *hSig_1 = getHist(tr_merged,"hSig_1","BDT_score_ttH_tttt_m400","(nBTags_MV2c10_70>=3)*((3219.56+32988.1)*(runNumber==284500)+44307.4*(runNumber==300000)+58450.1*(runNumber==310000))*(weight_normalise_merged*weight_mc*weight_pileup*weight_leptonSF*weight_jvt*weight_bTagSF_MV2c10_Continuous)");
+  TH1F *hSig_1 = getHist(tr_merged,"hSig_1","BDT_score_ttH_tttt_m500","(nBTags_MV2c10_70>=3)*((3219.56+32988.1)*(runNumber==284500)+44307.4*(runNumber==300000)+58450.1*(runNumber==310000))*(weight_normalise_merged*weight_mc*weight_pileup*weight_leptonSF*weight_jvt*weight_bTagSF_MV2c10_Continuous)");
 
   TH1F *hSig_2 = getHist(tree_test_1,"hSig_2","Score","(!classID&&ttH_tttt_m==400&&nJets>=10)*weight");
   hSig_2->Add(getHist(tree_test_2,"hSig_2_0","Score","(!classID&&ttH_tttt_m==400&&nJets>=10)*weight"));

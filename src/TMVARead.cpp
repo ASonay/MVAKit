@@ -88,10 +88,11 @@ TMVARead::EvaluateEvents(const vector<TMVA::Reader*> &tmva_reader, const vector<
   double param_val = 0;
   if (!m_cname.empty()) {
     bdt_name = m_cname;
-    param_val = atof(m_param.c_str());
   }
   if (m_parameterized){
     bdt_name += "_"+m_paramvar+m_param;
+    param_val = atof(m_param.c_str());
+    cout << "\nThe parameter value : " << param_val << "\n" << endl;
     if (m_param.empty()){
       cout << "You declared ParamVar in the config file, but you did not give any parameter by --par." << endl;
       exit(0);
