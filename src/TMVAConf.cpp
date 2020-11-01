@@ -1,7 +1,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-#include "../inc/TMVAConf.hpp"
+#include "TMVATool/TMVAConf.hpp"
 
 
 using namespace std;

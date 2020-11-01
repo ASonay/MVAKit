@@ -17,9 +17,8 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-#include "inc/TMVAConf.hpp"
-#include "inc/TMVARead.hpp"
-//#include "inc/ReadTree.hpp"
+#include "TMVATool/TMVAConf.hpp"
+#include "TMVATool/TMVARead.hpp"
 
 
 using namespace std;

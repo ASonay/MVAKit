@@ -1,6 +1,6 @@
 #include <iomanip>
 
-#include "../inc/ReadTree.hpp"
+#include "TMVATool/ReadTree.hpp"
 
 using namespace std;
 

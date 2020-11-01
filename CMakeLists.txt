@@ -35,27 +35,29 @@ set( CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -pedantic -O3 -g -fPIC" )
 # Add ROOT system directory and require ROOT.
 find_package( ROOT 6.10.06 REQUIRED COMPONENTS Core MathCore Tree TMVA )
 
+link_libraries(stdc++fs)
+
 # ------------------------------------------------
 # TMVATool library
 # ------------------------------------------------
 
 set( lib_headers
-  inc/ReadTree.hpp
-  inc/TMVAConf.hpp
-  inc/TMVARead.hpp)
+  TMVATool/ReadTree.hpp
+  TMVATool/TMVAConf.hpp
+  TMVATool/TMVARead.hpp )
 set( lib_sources
   src/ReadTree.cpp
   src/TMVAConf.cpp
-  src/TMVARead.cpp)
+  src/TMVARead.cpp )
 
 add_library( TMVATool SHARED ${lib_headers} ${lib_sources} )
 target_include_directories( TMVATool
   PUBLIC ${ROOT_INCLUDE_DIRS}
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> $<INSTALL_INTERFACE:> )
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> $<INSTALL_INTERFACE:>)
 target_link_libraries( TMVATool ${ROOT_LIBRARIES} )
 set_property( TARGET TMVATool
-  PROPERTY PUBLIC_HEADER ${lib_headers} )
-target_include_directories(TMVATool PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
+   PROPERTY PUBLIC_HEADER ${lib_headers} )
+target_include_directories( TMVATool PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
 
 # Install the libraries.
 install( TARGETS TMVATool

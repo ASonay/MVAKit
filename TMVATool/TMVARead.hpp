@@ -11,7 +11,7 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Reader.h"
 
-#include "ReadTree.hpp"
+#include "TMVATool/ReadTree.hpp"
 
 using namespace std;
 

@@ -2,8 +2,8 @@
 
 #include "TSystem.h"
 
-#include "../inc/TMVAConf.hpp"
-#include "../inc/TMVARead.hpp"
+#include "TMVATool/TMVAConf.hpp"
+#include "TMVATool/TMVARead.hpp"
 
 using namespace std;
 
