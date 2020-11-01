@@ -36,7 +36,7 @@ tmva_train --ntup /eos/user/b/bsm4tops/bsm4teos/BSM4t-2121200-1LOS-v1/ljets{9,ge
 
 This will run the binary classification by the BDT classifier depending on the selections defined in configuration file.
 
-#Training
+# Training
 
 ## Configuration File
 
@@ -117,6 +117,6 @@ Example run;
 tmva_train --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttH_tttt_m*_mc16a.root Signal --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttbar_PhPy8_AFII_AllFilt_mc16a.root Bkg1 --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttW_Sherpa_mc16a.root Bkg2 --conf config/config_massparam_mclass_DNN.conf
 ```
 
-#Evaluating Results (Will be updated)
+# Evaluating Results (Will be updated)
 
 Contact : @asonay
