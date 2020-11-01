@@ -49,17 +49,15 @@ TH1F* getHist(TTree *tree,string hname, string var, string select, int bin=80, d
 
   cout << "Histogram entries : " << hist->GetEntries() << endl;
   
+  double sfac = bin/(xmax-xmin);
+  hist->Scale(sfac/hist->Integral());
+  
   return hist;
 }
 
 void draw_bdt_test_train(string name, TH1F* S_t, TH1F* B_t, TH1F* S_tr, TH1F* B_tr, int bin=80, double xmin=-0.93, double xmax=0.92)
 {
-  double sfac = bin/(xmax-xmin);
-  S_t->Scale(sfac/S_t->Integral());
-  B_t->Scale(sfac/B_t->Integral());
-  S_tr->Scale(sfac/S_tr->Integral());
-  B_tr->Scale(sfac/B_tr->Integral());
-  
+
   double ymin = 1e32;
   for (int i=0;i<bin;i++)
     if (ymin>S_t->GetBinContent(i+1)&&S_t->GetBinContent(i+1)>0.0)
@@ -116,6 +114,9 @@ void draw_bdt_test_train(string name, TH1F* S_t, TH1F* B_t, TH1F* S_tr, TH1F* B_
 void ana_single(string filename,string path="loader_0/")
 {
 
+  string class_name = "Score";
+  string cut = "1";
+
   TFile *f = new TFile(filename.c_str());
 
   string testTree_name = path+"TestTree";
@@ -124,11 +125,13 @@ void ana_single(string filename,string path="loader_0/")
   TTree *t_test = (TTree*)f->Get(testTree_name.c_str());
   TTree *t_train = (TTree*)f->Get(trainTree_name.c_str());
 
-  TH1F *hBkg_test = getHist(t_test,"htestBkg","BDTG","(classID)*weight");
-  TH1F *hBkg_train = getHist(t_train,"htrainBkg","BDTG","(classID)*weight");
+  string cut_exp_bkg = "(classID&&"+cut+")*weight";
+  TH1F *hBkg_test = getHist(t_test,"htestBkg",class_name.c_str(),cut_exp_bkg);
+  TH1F *hBkg_train = getHist(t_train,"htrainBkg",class_name.c_str(),cut_exp_bkg);
 
-  TH1F *hSig_test = getHist(t_test,"htestSig","BDTG","(!classID)*weight");
-  TH1F *hSig_train = getHist(t_train,"htrainSig","BDTG","(!classID)*weight");
+  string cut_exp_sig = "(!classID&&"+cut+")*weight";
+  TH1F *hSig_test = getHist(t_test,"htestSig",class_name.c_str(),cut_exp_sig);
+  TH1F *hSig_train = getHist(t_train,"htrainSig",class_name.c_str(),cut_exp_sig);
   draw_bdt_test_train("single",hSig_train,hBkg_train,hSig_test,hBkg_test);
 
   TMVA::ROCCalc calc_train(hSig_train,hBkg_train);
@@ -142,4 +145,16 @@ void ana_single(string filename,string path="loader_0/")
   double sep_test = GetSeparation(hSig_test,hBkg_test);
   cout << " SEP Train: " << sep_train << " SEP Test: " << sep_test << endl;
 
+  TH1 * hroc_train = calc_train.GetROC();
+  TH1 * hroc_test = calc_test.GetROC();
+
+  TCanvas *croc = new TCanvas("croc");
+
+  hroc_train->SetLineColor(kAzure+3);
+  hroc_train->Draw("hist L");
+  hroc_test->SetLineColor(kRed-4);
+  hroc_test->Draw("hist L same");
+
+  croc->SaveAs("plots/croc_single.png");
+  
 }

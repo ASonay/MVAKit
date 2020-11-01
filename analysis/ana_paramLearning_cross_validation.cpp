@@ -133,7 +133,7 @@ void ana_paramLearning_cross_validation()
 {
 
   string class_name = "Score";
-  string cut = "(nJets>=10&&nBTags_MV2c10_70>=4)";
+  string cut = "(nJets>=9&&nBTags_MV2c10_70>=3)";
   
 
   TFile *f1 = new TFile("/afs/cern.ch/work/a/asonay/bsm4top_bdt_weight_cv/ljets/factory_BDT_0.root");
@@ -143,9 +143,9 @@ void ana_paramLearning_cross_validation()
   TTree *t_train_2 = (TTree*)f2->Get("loader_1/TrainTree");
   TTree *t_test_2 = (TTree*)f2->Get("loader_1/TestTree");
 
-  vector<string> MP = {"900","1000"};
+  vector<string> MP = {"400","500","600","700","800","900","1000"};
 
-  vector<double> mass = {900,1000};
+  vector<double> mass = {400,500,600,700,800,900,1000};
   vector<double> v_roc_train;
   vector<double> v_roc_test;
   vector<double> v_roc_cv;
@@ -230,16 +230,16 @@ void ana_paramLearning_cross_validation()
   groccv->SetLineColor(kRed-4);groccv->SetLineWidth(4);groccv->SetLineStyle(2);
   groccv->SetMarkerColor(kRed-4);groccv->SetMarkerStyle(5);
 
-  groctrain->GetXaxis()->SetTitle("Mass");
-  groctrain->GetYaxis()->SetTitle("AUC");
-  groctrain->SetTitle("");
+  groccv->GetXaxis()->SetTitle("Mass");
+  groccv->GetYaxis()->SetTitle("AUC");
+  groccv->SetTitle("");
 
-  groctrain->Draw("alp");
+  groccv->Draw("alp");
+  groctrain->Draw("lp same");
   groctest->Draw("lp same");
-  groccv->Draw("lp same");
   
-  TLegend *l_roc = new TLegend(0.538993,0.823383,0.994077,0.997512);
-  l_roc->SetLineWidth(3);
+  TLegend *l_roc = new TLegend(0.140375,0.746269,0.457226,0.922886);
+  l_roc->SetLineWidth(0);
   l_roc->SetFillStyle(0);
   l_roc->AddEntry(groctrain,"Train","lp");
   l_roc->AddEntry(groctest,"Test","lp");
@@ -263,16 +263,16 @@ void ana_paramLearning_cross_validation()
   gsepcv->SetLineColor(kRed-4);gsepcv->SetLineWidth(4);gsepcv->SetLineStyle(2);
   gsepcv->SetMarkerColor(kRed-4);gsepcv->SetMarkerStyle(5);
 
-  gseptrain->GetXaxis()->SetTitle("Mass");
-  gseptrain->GetYaxis()->SetTitle("AUC");
-  gseptrain->SetTitle("");
+  gsepcv->GetXaxis()->SetTitle("Mass");
+  gsepcv->GetYaxis()->SetTitle("Sep");
+  gsepcv->SetTitle("");
 
-  gseptrain->Draw("alp");
+  gsepcv->Draw("alp");
+  gseptrain->Draw("lp same");
   gseptest->Draw("lp same");
-  gsepcv->Draw("lp same");
   
-  TLegend *l_sep = new TLegend(0.538993,0.823383,0.994077,0.997512);
-  l_sep->SetLineWidth(3);
+  TLegend *l_sep = new TLegend(0.140375,0.746269,0.457226,0.922886);
+  l_sep->SetLineWidth(0);
   l_sep->SetFillStyle(0);
   l_sep->AddEntry(gseptrain,"Train","lp");
   l_sep->AddEntry(gseptest,"Test","lp");

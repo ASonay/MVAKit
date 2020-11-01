@@ -115,6 +115,7 @@ void ana_paramLearning(string filename,string path="loader_0/")
 {
 
   string class_name = "Score";
+  string cut = "1";
   
   TFile *f = new TFile(filename.c_str());
 

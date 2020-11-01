@@ -22,6 +22,10 @@ public:
   
   void ReadConf();
 
+  void SetConf(string conf) {m_confFile=conf;}
+  void SetXML(string xml) {m_xmlFile=ComaSep(xml);}
+  void SetSplit(string split) {m_cond=ComaSep(split);}
+
   vector<pair<string,vector<string>>> GetFilesName() {return m_ntups;}
   vector<pair<string,string>> GetWeights() {return m_weight;}
   vector<pair<string,string>> GetCuts() {return m_cut;}

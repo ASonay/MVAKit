@@ -116,11 +116,16 @@ TMVARead::EvaluateEvents(const vector<TMVA::Reader*> &tmva_reader, const vector<
       int noe = read.GetNoE();
       for (int i=0;i<noe;i++){
 	vector<Double_t> vars = read.GetInput(i);
+	vector<Double_t> varsSpec;
 	if (m_parameterized) vars.push_back(param_val);
-	for (auto var : m_variables_other){read.SetSingleVariable(var);vars.push_back(read.GetInputSingle(i));}
+	for (auto var : m_variables_other)
+	  {read.SetSingleVariable(var);varsSpec.push_back(read.GetInputSingle(i));}
 	for (unsigned rsize=0;rsize<tmva_reader.size();rsize++){
 	  for(unsigned j=0;j<vars.size();j++){
 	    vec_variables[rsize][j]=vars[j];
+	  }
+	  for(unsigned j=0;j<varsSpec.size();j++){
+	    vec_variablesSpec[rsize][j]=varsSpec[j];
 	  }
 	}
 	for (unsigned rsize=0;rsize<tmva_reader.size();rsize++){
@@ -151,12 +156,12 @@ TMVARead::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
   
   cout << "\nSampling label : " << m_label_current << " for following samples:\n" << endl;
 
-  map<int,int> tmp_param_map;
+  map<int,double> tmp_param_map;
 
   const int split_size = m_split.size();   
   
-  unsigned tot_train[split_size]={0},tot_test[split_size]={0};
-  float totw_train[split_size]={0},totw_test[split_size]={0};
+  unsigned tot_train[]={0},tot_test[]={0};
+  double totw_train[]={0},totw_test[]={0};
 
   if (m_weight.size()==0)
     {m_weight_current="1";}
@@ -208,19 +213,23 @@ TMVARead::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
     if (!tree) {
       cout << "ERROR: cannot open tree: " << x << endl;
     }
+    else {
+      cout << "Total Number of Events : " << tree->GetEntries(m_cut_current.c_str()) << endl;
+    }
     vector<string> activeVars = CheckVars(tree);
     tree->SetBranchStatus("*",0);
     for (auto av : activeVars) tree->SetBranchStatus(av.c_str(),1);
-    for (auto val : TreeSplit(tree->GetEntries())){
+    for (auto val : TreeSplit((int)tree->GetEntries())){
       vector<Counter> counter;
       AssignEvents(loaders,tree,x,val,tmp_param_map,counter);
-      cout << "Read/Total events : " << val.second << "/" << tree->GetEntries();
+      cout << "Read/Total events : " << setw(8) << val.second << "/"
+	   << setw(8) << tree->GetEntries();
       for (int i=0;i<split_size;i++){
 	tot_train[i]+=counter[i].count_train;tot_test[i]+=counter[i].count_test;
 	totw_train[i]+=counter[i].weight_train;totw_test[i]+=counter[i].weight_test;
 	cout << " || Split " << setw(3) << i
-	     << " Training/Test events : " << setw(15) << counter[i].count_train
-	     << "/" << setw(15) << counter[i].count_test;
+	     << " Training/Test events : " << setw(5) << counter[i].count_train
+	     << "/" << setw(5) << counter[i].count_test;
       }
       cout << "\r" << flush;
     }
@@ -238,15 +247,17 @@ TMVARead::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
   
   if (m_parameterized){
     cout << "\nParameterization:" << endl;
-    unsigned total_event = tmp_param_map.size();
+    double total_event = 0.0;
+    for (int i=0;i<split_size;i++) total_event+=(totw_train[i]+totw_test[i])/(double)split_size;
+    cout << "Total weighted event : " << total_event << endl;
     vector<double> param_vec,weights;
     for (auto const& x : tmp_param_map)
       {
 	double param = x.first;
-	double ratio = 1.0*((double)x.second/(double)total_event);
+	double ratio = (1.0/(double)split_size)*((double)x.second/(double)total_event);
 	cout << param
 	     << ':' 
-	     << x.second
+	     << x.second/(double)split_size
 	     << ':'
 	     << ratio
 	     << endl ;
@@ -263,20 +274,21 @@ TMVARead::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
 }
 
 void
-TMVARead::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, const string name, pair<int,int> split, map<int,int> &tmp_param_map, vector<Counter> &c)
+TMVARead::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, const string name, pair<Long64_t,Long64_t> split, map<int,double> &tmp_param_map, vector<Counter> &c)
 {
   
   const int split_size = m_split.size(); 
   
-  unsigned tmp_train[split_size]={0},tmp_test[split_size]={0};
-  float tmpw_train[split_size]={0},tmpw_test[split_size]={0};
+  unsigned tmp_train[]={0},tmp_test[]={0};
+  float tmpw_train[]={0},tmpw_test[]={0};
     
   random_device rd;
   mt19937 gen(rd());    
   discrete_distribution<int> d(begin(m_weights), end(m_weights));
 
   TFile *f_tmp = new TFile("f_tmp.root","recreate");
-  TTree *tree = GetTree(tr,split.first,split.second);
+  TTree *tree = tr->CopyTree(m_cut_current.c_str(),"",split.first,split.second);
+
   ReadTree read(name,tree,m_variables);
   int noe = read.GetNoE();
   for (int i=0;i<noe;i++){
@@ -290,7 +302,7 @@ TMVARead::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, cons
       read.SetSingleVariable(m_weight_current);
       Double_t weight = read.GetInputSingle(i);
       vector<Double_t> vars = read.GetInput(i);
-      if (m_parameterized) vars.push_back(GetParam(name,tmp_param_map,gen,d));
+      if (m_parameterized) vars.push_back(GetParam(name,tmp_param_map,(double)weight,gen,d));
       for (auto var : m_variables_other) {read.SetSingleVariable(var);vars.push_back(read.GetInputSingle(i));}
       if (split_cond){
 	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
@@ -313,12 +325,6 @@ TMVARead::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, cons
     {cout << "\nError deleting temporary root file." << endl;}
 }
 
-TTree*
-TMVARead::GetTree(TTree *tree, Long64_t max, Long64_t first)
-{
-  return tree->CopyTree(m_cut_current.c_str(),"fast",max,first);
-}
-
 vector<pair<Long64_t,Long64_t>>
 TMVARead::TreeSplit(int noe)
 {
@@ -330,7 +336,7 @@ TMVARead::TreeSplit(int noe)
     return {{noe,0}};
   }
   else{
-    for (int i=0;i<noe/min;i++){
+    for (int i=0;i<((noe-1)/min)+1;i++){
       val.push_back(make_pair(min,min*i));
     }
     return val;
@@ -338,7 +344,7 @@ TMVARead::TreeSplit(int noe)
 }
 
 double
-TMVARead::GetParam(string file,map<int,int> &pmap,mt19937 &gen,discrete_distribution<int> &d)
+TMVARead::GetParam(string file,map<int,double> &pmap,double weight,mt19937 &gen,discrete_distribution<int> &d)
 {
   double param=0;
 
@@ -349,7 +355,7 @@ TMVARead::GetParam(string file,map<int,int> &pmap,mt19937 &gen,discrete_distribu
     param=m_param_vec[d(gen)];
   }
 
-  pmap[(int)param] += 1;
+  pmap[(int)param] += weight;
   
   return param;
 }

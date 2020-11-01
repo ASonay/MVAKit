@@ -99,7 +99,7 @@ TMVAConf::ReadConf(){
   ifstream in(m_confFile);
   string str;
 
-  if (in.fail()) {cout << "Your variable list is missing!\n"; exit(0);}
+  if (in.fail()) {cout << "Can not find config file : " << m_confFile << "\n"; exit(0);}
   
   while (in >> str){
     if (str.compare("Var:")==0){
