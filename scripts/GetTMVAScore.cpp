@@ -62,8 +62,10 @@ void Init(string dir,
 {
 
   string lib = dir + "build/lib/libTMVATool.so";
-  if ( gSystem->Load(lib.c_str())==0)
+  if (gSystem->Load(lib.c_str())==0)
     {cout << "Your library, " << lib << " successfully loaded." << endl;}
+  else if (gSystem->Load(lib.c_str())==1)
+    {cout << "Your library, " << lib << " successfully loaded before." << endl;}
   else{
     cout << "Your library, " << lib << " cannot be loaded." << endl;
     exit(0);
