@@ -4,7 +4,7 @@
 void validate_classifier()
 {
   
-  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/";
+  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/xs/";
   string original_file_path = "/eos/user/a/asonay/HBSM4top_ntuple/";
   string config_file = "config_massparam_bdt_crossvalidation.conf";
   string app_path = "../";
@@ -248,5 +248,9 @@ void validate_classifier()
   
   csep->SaveAs("plots/sep.png");
 
+  cout << "{" << flush;
+  for (auto x : v_roc_cv)
+    cout << x << "," << flush;
+  cout << "};" << endl;
 
 }

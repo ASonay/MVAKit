@@ -9,7 +9,8 @@ using namespace std;
 
 TMVARead::TMVARead(TMVAConf &c):
   m_split_per(0),
-  m_parameterized(false)
+  m_parameterized(false),
+  m_total_param_weight(0)
 {
   
   m_ntups = c.GetFilesName();
@@ -24,6 +25,7 @@ TMVARead::TMVARead(TMVAConf &c):
   m_cond = c.GetCond();
   m_param = c.GetParameter();
   m_cname = c.GetClassName();
+  m_psplit = c.GetParamSplit();
   
   if (m_split.size()==0)
     m_split.push_back("Split:50");
@@ -54,22 +56,6 @@ TMVARead::TMVARead(TMVAConf &c):
 
 TMVARead::~TMVARead()
 {}
-
-void
-TMVARead::SetEvents(const vector<TMVA::DataLoader*> &loaders){
-  
-  if (m_variables.size()<1){
-    cout << "Variables has to enter." << endl;
-    exit(0);
-  }
-  
-  cout << "\nVariables:" << endl;
-  for (auto var : m_variables)
-    {cout << var << endl;}
-  
-  for (auto x : m_ntups)
-    {ReadEvents(loaders,x.first,x.second);}
-}
 
 void
 TMVARead::EvaluateEvents(const vector<TMVA::Reader*> &tmva_reader, const vector<Float_t*> &vec_variables, const vector<Float_t*> &vec_variablesSpec, string name, TString method){
@@ -150,8 +136,26 @@ TMVARead::EvaluateEvents(const vector<TMVA::Reader*> &tmva_reader, const vector<
 }
 
 void
+TMVARead::SetEvents(const vector<TMVA::DataLoader*> &loaders){
+  
+  if (m_variables.size()<1){
+    cout << "Variables has to enter." << endl;
+    exit(0);
+  }
+  
+  cout << "\nVariables:" << endl;
+  for (auto var : m_variables)
+    {cout << var << endl;}
+  
+  for (auto x : m_ntups)
+    {ReadEvents(loaders,x.first,x.second);}
+}
+
+void
 TMVARead::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vector<string> files){
 
+  m_total=0;
+  
   m_label_current = label;
   
   cout << "\nSampling label : " << m_label_current << " for following samples:\n" << endl;
@@ -160,8 +164,11 @@ TMVARead::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
 
   const int split_size = m_split.size();   
   
-  unsigned tot_train[]={0},tot_test[]={0};
-  double totw_train[]={0},totw_test[]={0};
+  vector<unsigned> tot_train(split_size,0);
+  vector<unsigned> tot_test(split_size,0);
+  vector<float> totw_train(split_size,0.0);
+  vector<float> totw_test(split_size,0.0);
+
 
   if (m_weight.size()==0)
     {m_weight_current="1";}
@@ -247,27 +254,37 @@ TMVARead::ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vec
   
   if (m_parameterized){
     cout << "\nParameterization:" << endl;
-    double total_event = 0.0;
-    for (int i=0;i<split_size;i++) total_event+=(totw_train[i]+totw_test[i])/(double)split_size;
-    cout << "Total weighted event : " << total_event << endl;
+    cout << "Total count for random generation : " << m_total << endl;
     vector<double> param_vec,weights;
     for (auto const& x : tmp_param_map)
       {
 	double param = x.first;
-	double ratio = (1.0/(double)split_size)*((double)x.second/(double)total_event);
+	double ratio = (double)x.second/(double)m_total;
 	cout << param
 	     << ':' 
-	     << x.second/(double)split_size
+	     << x.second
 	     << ':'
 	     << ratio
 	     << endl ;
-	  param_vec.push_back(param);
-	  weights.push_back(ratio);
+	param_vec.push_back(param);
+	weights.push_back(ratio);
       }
     if (m_param_map.size()==0) {
       m_param_map=tmp_param_map;
       m_param_vec=param_vec;
       m_weights=weights;
+      cout << "\nYields of the selected samples for parameterization:" << endl;
+      for (auto const& x : m_param_sample_weights)
+	{
+	  double param = x.first;
+	  double ratio = (double)x.second/(double)m_total_param_weight;
+	  cout << param
+	       << ':' 
+	       << x.second
+	       << ':'
+	       << ratio
+	       << endl ;
+	}
     }
   }
 
@@ -279,8 +296,10 @@ TMVARead::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, cons
   
   const int split_size = m_split.size(); 
   
-  unsigned tmp_train[]={0},tmp_test[]={0};
-  float tmpw_train[]={0},tmpw_test[]={0};
+  vector<unsigned> tmp_train(split_size,0);
+  vector<unsigned> tmp_test(split_size,0);
+  vector<float> tmpw_train(split_size,0.0);
+  vector<float> tmpw_test(split_size,0.0);
     
   random_device rd;
   mt19937 gen(rd());    
@@ -300,17 +319,18 @@ TMVARead::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, cons
       }
       else {split_cond = int(rand()%100 < m_split_per);}
       read.SetSingleVariable(m_weight_current);
+      Double_t weight_param = 1.0;
       Double_t weight = read.GetInputSingle(i);
       vector<Double_t> vars = read.GetInput(i);
-      if (m_parameterized) vars.push_back(GetParam(name,tmp_param_map,(double)weight,gen,d));
+      if (m_parameterized) {vars.push_back(GetParam(name,tmp_param_map,weight,weight_param,gen,d));}
       for (auto var : m_variables_other) {read.SetSingleVariable(var);vars.push_back(read.GetInputSingle(i));}
       if (split_cond){
-	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
+	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight*weight_param);
 	tmp_train[cond_index]++;
 	tmpw_train[cond_index]+=weight;
       }
       else{
-	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
+	loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight*weight_param);
 	tmp_test[cond_index]++;
 	tmpw_test[cond_index]+=weight;
       }
@@ -318,7 +338,7 @@ TMVARead::AssignEvents(const vector<TMVA::DataLoader*> &loaders, TTree *tr, cons
     }
   }
 
-  for (int i=0;i<split_size;i++) c.push_back({tmp_test[i],tmp_train[i],tmpw_test[i],tmpw_train[i]});
+  for (int i=0;i<split_size;i++) {c.push_back({tmp_test[i],tmp_train[i],tmpw_test[i],tmpw_train[i]});}
   
   f_tmp->Close();
   if( remove("f_tmp.root") != 0 )
@@ -344,18 +364,36 @@ TMVARead::TreeSplit(int noe)
 }
 
 double
-TMVARead::GetParam(string file,map<int,double> &pmap,double weight,mt19937 &gen,discrete_distribution<int> &d)
+TMVARead::GetParam(string file,map<int,double> &pmap,Double_t weight,Double_t &weight_param,mt19937 &gen,discrete_distribution<int> &d)
 {
   double param=0;
 
   if (m_param_map.size()==0){
     param = FindDigit(file,m_paramvar);
+    m_param_sample_weights[(int)param]+=weight;
+    m_total_param_weight+=weight;
   }
   else{
-    param=m_param_vec[d(gen)];
+    int param_index=d(gen);
+    param=m_param_vec[param_index];
+    weight_param=((Double_t)m_param_sample_weights[param]/(Double_t)m_total_param_weight)
+      /((Double_t)m_param_map[param]);
   }
 
-  pmap[(int)param] += weight;
+  if (StringCompare(m_psplit,"cross") || StringCompare(m_psplit,"section") || StringCompare(m_psplit,"xs"))
+    {pmap[(int)param] += (double)weight;m_total += (double)weight;}
+  else if (StringCompare(m_psplit,"event") || StringCompare(m_psplit,"number") || StringCompare(m_psplit,"enum"))
+    {pmap[(int)param] += 1;m_total += 1.0;}
+  else if (StringCompare(m_psplit,"uni") || StringCompare(m_psplit,"uniform"))
+    {pmap[(int)param] = 1;m_total = (double)pmap.size();}
+  else
+    {
+      cout << "None of the known parameterization splitting found." << endl;
+      cout << "You should better to check," << endl;
+      cout << "ParamSplit: " << m_psplit << "in your config file." << endl;
+      cout << "Available options: Uni/Uniform, Cross-section/XS, Event number/Enum ..." << endl;
+      exit(0);
+    }
   
   return param;
 }

@@ -39,7 +39,7 @@ private:
   bool StringCompare(const string str1, const string str2);
   
   double FindDigit(const string file,const string var);
-  double GetParam(string file,map<int,double> &pmap,double weight,mt19937 &gen,discrete_distribution<int> &d);
+  double GetParam(string file,map<int,double> &pmap,Double_t weight,Double_t &weight_param,mt19937 &gen,discrete_distribution<int> &d);
   
   void ReadEvents(const vector<TMVA::DataLoader*> &loaders, string label, vector<string> files);
 
@@ -64,6 +64,7 @@ private:
   vector<string> m_xmlFile;
   vector<string> m_cond;
   string m_paramvar;
+  string m_psplit;
 
   string m_label_current;
   string m_weight_current;
@@ -72,8 +73,12 @@ private:
   vector<double> m_weights;
   vector<double> m_param_vec;
   map<int,double> m_param_map;
+  map<int,double> m_param_sample_weights;
 
   string m_param;
   string m_cname;
+
+  double m_total;
+  double m_total_param_weight;
 
 };

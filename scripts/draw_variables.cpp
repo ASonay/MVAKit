@@ -4,7 +4,7 @@ void draw_variables()
 {
 
   string original_file_path = "/eos/user/a/asonay/HBSM4top_ntuple/";
-  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/";
+  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/enum/";
   string class_name = "Score";
   string cut = "(nBTags_MV2c10_70>=3&&nJets>=9)";
   
@@ -57,6 +57,12 @@ void draw_variables()
     getHist(t_test_2,"cs_bkg2","1","(classID&&"+cut+")*weight",10,0,0)->GetMaximum();
   double cs_sig = getHist(t_test_1,"cs_sig1","1","(!classID&&"+cut+")*weight",10,0,0)->GetMaximum()+
     getHist(t_test_2,"cs_sig2","1","(!classID&&"+cut+")*weight",10,0,0)->GetMaximum();
+  double cn_bkg = t_test_1->GetEntries(("(classID&&"+cut+")").c_str())+t_test_2->GetEntries(("(classID&&"+cut+")").c_str());
+  double cn_sig = t_test_1->GetEntries(("(!classID&&"+cut+")").c_str())+t_test_2->GetEntries(("(!classID&&"+cut+")").c_str());
+
+  cout << "\nTotal Sig: " << cn_sig
+       << "  Total Bkg: " << cn_bkg
+       << "\n" << endl;
 
   cout << "\nTotal Weighted Sig: " << cs_sig
        << "  Total Weighted Bkg: " << cs_bkg
@@ -69,13 +75,24 @@ void draw_variables()
   h_mp_sig->SetLineWidth(3);h_mp_sig->SetLineColor(kOrange+1);h_mp_sig->SetLineStyle(1);
   h_mp_bkg->SetLineWidth(3);h_mp_bkg->SetLineColor(kAzure-3);h_mp_bkg->SetLineStyle(9);
   h_mp_sig->GetXaxis()->SetTitle("Mass");
+  TH1F *h_mpc_sig = getHist(t_test_1,"h_mpc_sig1","ttH_tttt_m","(!classID&&"+cut+")*1.0/"+to_string(cn_sig),80,300,1100);
+  h_mpc_sig->Add(getHist(t_test_2,"h_mpc_sig2","ttH_tttt_m","(!classID&&"+cut+")*1.0/"+to_string(cn_sig),80,300,1100));
+  TH1F *h_mpc_bkg = getHist(t_test_1,"h_mpc_bkg1","ttH_tttt_m","(classID&&"+cut+")*1.0/"+to_string(cn_bkg),80,300,1100);
+  h_mpc_bkg->Add(getHist(t_test_2,"h_mpc_bkg2","ttH_tttt_m","(classID&&"+cut+")*1.0/"+to_string(cn_bkg),80,300,1100));
+  h_mpc_sig->SetLineWidth(3);h_mpc_sig->SetLineColor(kOrange+1);h_mpc_sig->SetMarkerColor(kOrange+1);h_mpc_sig->SetMarkerStyle(21);h_mpc_sig->SetMarkerSize(2);
+  h_mpc_bkg->SetLineWidth(3);h_mpc_bkg->SetLineColor(kAzure-3);h_mpc_bkg->SetMarkerColor(kAzure-3);h_mpc_bkg->SetMarkerStyle(20);h_mpc_bkg->SetMarkerSize(2);
+  h_mpc_sig->GetXaxis()->SetTitle("Mass");
   h_mp_sig->Draw("hist");
   h_mp_bkg->Draw("hist same");
+  h_mpc_sig->Draw("e1 same");
+  h_mpc_bkg->Draw("e1 same");
   TLegend *l_mp = new TLegend(0.681145,0.746269,0.994077,0.922886);
   l_mp->SetLineWidth(3);
   l_mp->SetFillStyle(0);
-  l_mp->AddEntry(h_mp_sig,"Signal","l");
-  l_mp->AddEntry(h_mp_bkg,"Background","l");
+  l_mp->AddEntry(h_mpc_sig,("Signal (count: "+to_string((int)cn_sig)+")").c_str(),"e1p");
+  l_mp->AddEntry(h_mp_sig,("Signal (weighted: "+to_string(cs_sig)+")").c_str(),"l");
+  l_mp->AddEntry(h_mpc_bkg,("Background (count: "+to_string((int)cn_bkg)+")").c_str(),"e1p");
+  l_mp->AddEntry(h_mp_bkg,("Background (weighted: "+to_string(cs_bkg)+")").c_str(),"l");
   l_mp->Draw();
   c_mp->SaveAs("plots/variables/mp_plot.png");
 
@@ -83,11 +100,11 @@ void draw_variables()
   for (auto var : variables){
     TCanvas *cbkg = new TCanvas(("cbkg"+var.second).c_str());
     cbkg->SetTickx();cbkg->SetTicky();
-    string cut_exp_bkg = "(classID&&"+cut+")*weight";
+    string cut_exp_bkg = "(classID&&"+cut+")*1.0";
     TH1F *h_bkg = getHist(t_test_1,"hbkg_0"+var.first,var.second,cut_exp_bkg,80,0,0);
     double xmin = h_bkg->GetXaxis()->GetXmin();
     double xmax = h_bkg->GetXaxis()->GetXmax();
-    TH1F *h1 = getHist(tr_bkg,"h1_bkg"+var.second,var.first,cut+"*((NN_score_hf/(1.-NN_score_hf))*(NN_score_kin/(1.-NN_score_kin)))*((3219.56+32988.1)*(runNumber==284500)+44307.4*(runNumber==300000)+58450.1*(runNumber==310000))*(weight_normalise_merged*weight_mc*weight_pileup*weight_leptonSF*weight_jvt*weight_bTagSF_MV2c10_Continuous)",80,xmin,xmax);
+    TH1F *h1 = getHist(tr_bkg,"h1_bkg"+var.second,var.first,cut+"*1.0",80,xmin,xmax);
     TH1F *h2 = getHist(t_test_1,"h2_bkg"+var.first,var.second,cut_exp_bkg,80,xmin,xmax);
     h2->Add(getHist(t_test_2,"h2_bkg_add"+var.first,var.second,cut_exp_bkg,80,xmin,xmax));
     h1->SetLineWidth(3);h1->SetLineColor(kGray+3);h1->SetLineStyle(1);
@@ -120,11 +137,11 @@ void draw_variables()
     for (auto var : variables){
       TCanvas *csig = new TCanvas(("csig"+var.second+mp).c_str());
       csig->SetTickx();csig->SetTicky();
-      string cut_exp_sig = "(!classID&&ttH_tttt_m=="+mp+"&&"+cut+")*weight";
+      string cut_exp_sig = "(!classID&&ttH_tttt_m=="+mp+"&&"+cut+")*1.0";
       TH1F *h_sig = getHist(t_test_1,"hsig_0"+mp+var.first,var.second,cut_exp_sig,80,0,0);
       double xmin = h_sig->GetXaxis()->GetXmin();
       double xmax = h_sig->GetXaxis()->GetXmax();
-      TH1F *h1 = getHist(tr_sig,"h1"+mp+var.second,var.first,cut+"*((3219.56+32988.1)*(runNumber==284500)+44307.4*(runNumber==300000)+58450.1*(runNumber==310000))*(weight_normalise_merged*weight_mc*weight_pileup*weight_leptonSF*weight_jvt*weight_bTagSF_MV2c10_Continuous)",80,xmin,xmax);
+      TH1F *h1 = getHist(tr_sig,"h1"+mp+var.second,var.first,cut+"*1.0",80,xmin,xmax);
       TH1F *h2 = getHist(t_test_1,"h2"+mp+var.first,var.second,cut_exp_sig,80,xmin,xmax);
       h2->Add(getHist(t_test_2,"h2_add"+mp+var.first,var.second,cut_exp_sig,80,xmin,xmax));
       h1->SetLineWidth(3);h1->SetLineColor(kGray+3);h1->SetLineStyle(1);

@@ -60,7 +60,10 @@ void Init(string dir,
 	  string cnf
 	  )
 {
-
+  tmva_reader.clear();
+  vec_variables.clear();
+  vec_variablesSpec.clear();
+  cond.clear();
   string lib = dir + "build/lib/libTMVATool.so";
   if (gSystem->Load(lib.c_str())==0)
     {cout << "Your library, " << lib << " successfully loaded." << endl;}

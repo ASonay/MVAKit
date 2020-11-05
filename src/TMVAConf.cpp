@@ -6,7 +6,8 @@
 
 using namespace std;
 
-TMVAConf::TMVAConf(const string name)
+TMVAConf::TMVAConf(const string name):
+  m_psplit("Cross-section")
 {
   m_confName = name;
   cout << "Configuration will be setup for " << name << ".\n" << endl;
@@ -152,6 +153,10 @@ TMVAConf::ReadConf(){
       in >> str;
       m_split=ComaSep(str);
     }
+    else if (str.compare("ParamSplit:")==0){
+      in >> str;
+      m_psplit=str;
+    }
     else if (str.compare("LoadFiles:")==0){
       in >> str;
       m_loadFile=ComaSep(str);
@@ -168,8 +173,11 @@ TMVAConf::ReadConf(){
   }
 
   for (auto x : m_loadLib){
-    if ( gSystem->Load(x.c_str())==0)
+    int libLoad = gSystem->Load(x.c_str());
+    if ( libLoad==0)
       {cout << "Your library, " << x << " successfully loaded." << endl;}
+    else if ( libLoad==1)
+      {cout << "Your library, " << x << " successfully loaded before." << endl;}
     else{
       cout << "Your library, " << x << " cannot be loaded." << endl;
       exit(0);

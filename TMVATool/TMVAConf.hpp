@@ -44,6 +44,7 @@ public:
   vector<TString> GetTVariablesOther();
   string GetParameter() {return m_param;}
   string GetClassName() {return m_cname;}
+  string GetParamSplit() {return m_psplit;}
 
 private:
 
@@ -66,6 +67,8 @@ private:
   TString m_classifierOpt;
   TString m_samplingOpt;
 
+  string m_psplit;
+  
   string m_confFile;
   string m_confName;
 
