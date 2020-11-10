@@ -44,5 +44,6 @@ else
     echo -e "\nTo compile please use \e[1m\e[4mtmvatool-build\e[0m.\n"
 fi
 
-    
+export PATH=$PATH:$location
 export PATH=${PATH}${PATH:+:}${APP_HOME}/build/bin
+export PYTHONPATH=${PATH}${PATH:+:}${APP_HOME}/python
