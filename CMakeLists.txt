@@ -42,13 +42,16 @@ link_libraries(stdc++fs)
 # ------------------------------------------------
 
 set( lib_headers
+  TMVATool/Common.hpp
   TMVATool/ReadTree.hpp
-  TMVATool/TMVAConf.hpp
-  TMVATool/TMVARead.hpp )
+  TMVATool/Configuration.hpp
+  TMVATool/TMVATool.hpp )
 set( lib_sources
+  src/External.cpp
+  src/Common.cpp
   src/ReadTree.cpp
-  src/TMVAConf.cpp
-  src/TMVARead.cpp )
+  src/Configuration.cpp
+  src/TMVATool.cpp )
 
 add_library( TMVATool SHARED ${lib_headers} ${lib_sources} )
 target_include_directories( TMVATool
@@ -56,7 +59,7 @@ target_include_directories( TMVATool
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> $<INSTALL_INTERFACE:>)
 target_link_libraries( TMVATool ${ROOT_LIBRARIES} )
 set_property( TARGET TMVATool
-   PROPERTY PUBLIC_HEADER ${lib_headers} )
+  PROPERTY PUBLIC_HEADER ${lib_headers} )
 target_include_directories( TMVATool PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
 
 # Install the libraries.

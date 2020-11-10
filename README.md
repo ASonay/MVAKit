@@ -38,6 +38,8 @@ This will run the binary classification by the BDT classifier depending on the s
 
 # Training
 
+This tool aim to perform a training by using the TMVA software and control it wit the configuration file that will be explained below.
+
 ## Configuration File
 
 Following arguments are used inside the configuration file for controlling the tool,  
@@ -73,13 +75,15 @@ BDT
 
 * `ParamVar:` The variable for parameterized training. The ntuple file will be parameterized has to contain the name of this variable before the parameter value (see [Parameterized Training](#parameterized-training)).
 
-* `SigWeight:` Signal samples weight expression. (The phrase before `Weight:` refer the label and should be comparable with label.)
+  * `ParamSplit: (Parameterization specific)` This option specify the splitting for the samples that is not contains parameter. This could be based on weighted distribution of each parameter by "XS"/"Cross-section" (default) or based on number of events in each parameter by "Enum"/"Event-number" or it could be uniformly selected for each parameter by "Uni"/"Uniform" option.
+  
+  * `ParamScale (Parameterization specific)` This option will scale the samples that is not contains parameter to based on weighted distribution of parameters by "XS"/"Cross-section", or it will simply scale all the parameters to be flat by "Flat" option.
 
-* `BkgWeight:` Background samples weight expression. (The phrase before `Weight:` refer the label and should be comparable with label.)
+* `<label>Weight:` Weight expression. (The phrase before `Weight:` refer the label and should be comparable with the label defined after ntuples.)
 
-* `SigCut:` The cut will be applied for signal samples. (The phrase before `Cut:` refer the label and should be comparable with label.)
+* `<label>Scale:` Scaling factor for selected sample. It could be define for different selection (e.g. cut1;value1,...cutN;valueN) or different parameterization (e.g. param1;value1,..,param2;value2), the difference between selection and parameter, parameter must be digit that you have in the ntuple name that will be parameterized.. (The phrase before `Scale:` refer the label and should be comparable with the label defined after ntuples.)
 
-* `BkgCut:` The cut will be applied for background samples. (The phrase before `Cut:` refer the label and should be comparable with label.)
+* `<label>Cut:` The cut will be applied for the defined samples. (The phrase before `Cut:` refer the label and should be comparable with the label defined after ntuples.)
 
 * `Split:` Splitting option for categorizing events as training or testing samples (see [Splitting the Samples](#splitting-the-samples)).
 
@@ -117,6 +121,16 @@ Example run;
 tmva_train --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttH_tttt_m*_mc16a.root Signal --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttbar_PhPy8_AFII_AllFilt_mc16a.root Bkg1 --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttW_Sherpa_mc16a.root Bkg2 --conf config/config_massparam_mclass_DNN.conf
 ```
 
-# Evaluating Results (Will be updated)
+# Evaluating Results
+
+This section is explaining to evaluating results that you have done their trainings. Simply, following tool works for filling your existing ntuples with the TMVA score. Although it is working, it is still under development.
+```
+tmva_eval --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --xml <file1.xml>,..,<filen.xml> <cond1>,..,<condn> --ConfFile <ConfFile.txt> --par <value> --var <Variable Name>
+```
+For the cross validation, conditions has to be given in opposite way. Although it is working for multiple samples, the suggested way is using it for one ntuple at once (memory usage will be optimized later).
+
+The suggested way to evaluate the score is using the external script (e.g. [scripts/GetTMVAScore.cpp](scripts/GetTMVAScore.cpp)).
+
+
 
 Contact : @asonay

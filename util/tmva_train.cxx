@@ -17,8 +17,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-#include "TMVATool/TMVAConf.hpp"
-#include "TMVATool/TMVARead.hpp"
+#include "TMVATool/TMVATool.hpp"
 
 
 using namespace std;
@@ -26,14 +25,14 @@ using namespace std;
 int main(int argc,char **argv)
 {
   // Configuration part-----------------------------
-  TMVAConf conf("Training");
+  TMVATool tool("Training");
     
-  conf.Parser(argc,argv);
-  conf.ReadConf();
+  tool.Parser(argc,argv);
+  tool.ReadConf();
   
-  vector<string> split = conf.GetSplit();
-  vector<TString> variables = conf.GetTVariables();
-  vector<TString> variablesSpec = conf.GetTVariablesOther();
+  vector<string> split = tool.GetSplit();
+  vector<TString> variables = tool.GetTVariables();
+  vector<TString> variablesSpec = tool.GetTVariablesOther();
   // Configuration part-----------------------------
   // Reading part-----------------------------------
   vector<TMVA::DataLoader*> loaders;
@@ -45,17 +44,17 @@ int main(int argc,char **argv)
     for (auto var : variablesSpec) loader->AddSpectator(var);
     loaders.push_back(loader);
   }
-  TMVARead treader(conf);
-  treader.SetEvents(loaders);
+  tool.SetLoaders(loaders);
+  tool.SetEvents();
   // Reading part-----------------------------------
   // Training part----------------------------------
   for (unsigned i=0;i<split.size();i++){
-    loaders.at(i)->PrepareTrainingAndTestTree(TCut(""),conf.GetSamplingOpt());
-    TString factory_name = "factory_"+conf.GetClassifierOpt()+"_"+to_string(i);
+    loaders.at(i)->PrepareTrainingAndTestTree(TCut(""),tool.GetSamplingOpt());
+    TString factory_name = "factory_"+tool.GetClassifierOpt()+"_"+to_string(i);
     TFile *outputFile = TFile::Open( factory_name+".root", "RECREATE" );
-    TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, conf.GetFactoryOpt() );
+    TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, tool.GetFactoryOpt() );
     TString title = "Score";
-    factory->BookMethod(loaders.at(i),conf.GetClassifierOpt(),title,conf.GetTrainingOpt());
+    factory->BookMethod(loaders.at(i),tool.GetClassifierOpt(),title,tool.GetTrainingOpt());
     factory->TrainAllMethods();
     factory->TestAllMethods();
     factory->EvaluateAllMethods();

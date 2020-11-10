@@ -18,8 +18,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-#include "TMVATool/TMVAConf.hpp"
-#include "TMVATool/TMVARead.hpp"
+#include "TMVATool/TMVATool.hpp"
 
 
 using namespace std;
@@ -27,20 +26,20 @@ using namespace std;
 int main(int argc,char **argv)
 {
   // Configuration part-----------------------------
-  TMVAConf conf("Evaluate");
+  TMVATool tool("Evaluate");
     
-  conf.Parser(argc,argv);
-  conf.ReadConf();
+  tool.Parser(argc,argv);
+  tool.ReadConf();
   
-  vector<string> split = conf.GetSplit();
-  vector<TString> variables = conf.GetTVariables();
-  vector<TString> variablesSpec = conf.GetTVariablesOther();
-  vector<TString> weight_file = conf.GetTXML();
+  vector<string> split = tool.GetSplit();
+  vector<TString> variables = tool.GetTVariables();
+  vector<TString> variablesSpec = tool.GetTVariablesOther();
+  vector<TString> weight_file = tool.GetTXML();
   const int variables_size = variables.size();
   const int variablesSpec_size = variablesSpec.size();
   // Configuration part-----------------------------
   //Book TMVA---------------------------------------
-  TString method = conf.GetClassifierOpt()+" method";
+  TString method = tool.GetClassifierOpt()+" method";
   vector<TMVA::Reader*> tmva_reader;
   vector<Float_t*> vec_variables;
   vector<Float_t*> vec_variablesSpec;
@@ -59,7 +58,7 @@ int main(int argc,char **argv)
   }
   //Book TMVA---------------------------------------
   //Evaluate TMVA-----------------------------------
-  TMVARead treader(conf);
-  treader.EvaluateEvents(tmva_reader,vec_variables,vec_variablesSpec,string(conf.GetClassifierOpt()),method);
+  tool.SetReaders(tmva_reader);
+  tool.EvaluateEvents(vec_variables,vec_variablesSpec,string(tool.GetClassifierOpt()),method);
   //Evaluate TMVA-----------------------------------
 }

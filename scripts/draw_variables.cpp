@@ -4,7 +4,7 @@ void draw_variables()
 {
 
   string original_file_path = "/eos/user/a/asonay/HBSM4top_ntuple/";
-  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/enum/";
+  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/enum_scaled/";
   string class_name = "Score";
   string cut = "(nBTags_MV2c10_70>=3&&nJets>=9)";
   
@@ -52,7 +52,7 @@ void draw_variables()
   TTree *tr_bkg = chain_bkg;
 
   TCanvas *c_mp = new TCanvas("c_mp");
-  c_mp->SetTickx();c_mp->SetTicky();
+  c_mp->SetTickx();c_mp->SetTicky();c_mp->SetLogy();c_mp->SetGridy();
   double cs_bkg = getHist(t_test_1,"cs_bkg1","1","(classID&&"+cut+")*weight",10,0,0)->GetMaximum()+
     getHist(t_test_2,"cs_bkg2","1","(classID&&"+cut+")*weight",10,0,0)->GetMaximum();
   double cs_sig = getHist(t_test_1,"cs_sig1","1","(!classID&&"+cut+")*weight",10,0,0)->GetMaximum()+
@@ -81,20 +81,29 @@ void draw_variables()
   h_mpc_bkg->Add(getHist(t_test_2,"h_mpc_bkg2","ttH_tttt_m","(classID&&"+cut+")*1.0/"+to_string(cn_bkg),80,300,1100));
   h_mpc_sig->SetLineWidth(3);h_mpc_sig->SetLineColor(kOrange+1);h_mpc_sig->SetMarkerColor(kOrange+1);h_mpc_sig->SetMarkerStyle(21);h_mpc_sig->SetMarkerSize(2);
   h_mpc_bkg->SetLineWidth(3);h_mpc_bkg->SetLineColor(kAzure-3);h_mpc_bkg->SetMarkerColor(kAzure-3);h_mpc_bkg->SetMarkerStyle(20);h_mpc_bkg->SetMarkerSize(2);
-  h_mpc_sig->GetXaxis()->SetTitle("Mass");
-  h_mp_sig->Draw("hist");
+
+  TH2F *hcan_mp = new TH2F("hcan_mp","",100,350,1050,100,0.01,2.0);
+  hcan_mp->GetXaxis()->SetTitle("Mass");
+  hcan_mp->GetYaxis()->SetTitle("Ratio %");
+  hcan_mp->Draw();
+  
+  h_mp_sig->Draw("hist same");
   h_mp_bkg->Draw("hist same");
   h_mpc_sig->Draw("e1 same");
   h_mpc_bkg->Draw("e1 same");
-  TLegend *l_mp = new TLegend(0.681145,0.746269,0.994077,0.922886);
+  TLegend *l_mp = new TLegend(0.581145,0.826269,0.994077,0.992886);
   l_mp->SetLineWidth(3);
   l_mp->SetFillStyle(0);
-  l_mp->AddEntry(h_mpc_sig,("Signal (count: "+to_string((int)cn_sig)+")").c_str(),"e1p");
-  l_mp->AddEntry(h_mp_sig,("Signal (weighted: "+to_string(cs_sig)+")").c_str(),"l");
-  l_mp->AddEntry(h_mpc_bkg,("Background (count: "+to_string((int)cn_bkg)+")").c_str(),"e1p");
-  l_mp->AddEntry(h_mp_bkg,("Background (weighted: "+to_string(cs_bkg)+")").c_str(),"l");
+  l_mp->AddEntry(h_mpc_sig,("Signal unweighted ("+to_string((int)cn_sig)+")").c_str(),"e1p");
+  l_mp->AddEntry(h_mp_sig,("Signal weighted ("+to_string((int)cs_sig)+")").c_str(),"l");
+  l_mp->AddEntry(h_mpc_bkg,("Background unweighted ("+to_string((int)cn_bkg)+")").c_str(),"e1p");
+  l_mp->AddEntry(h_mp_bkg,("Background weighted ("+to_string((int)cs_bkg)+")").c_str(),"l");
   l_mp->Draw();
   c_mp->SaveAs("plots/variables/mp_plot.png");
+
+  for (int i=0;i<7;i++){
+    cout << h_mp_sig->GetBinCenter(i+1) << " " << 1.0/h_mp_sig->GetBinContent(i+1) << endl;
+  }
 
   
   for (auto var : variables){

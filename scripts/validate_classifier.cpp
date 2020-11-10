@@ -4,7 +4,7 @@
 void validate_classifier()
 {
   
-  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/xs/";
+  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/enum_scaled/";
   string original_file_path = "/eos/user/a/asonay/HBSM4top_ntuple/";
   string config_file = "config_massparam_bdt_crossvalidation.conf";
   string app_path = "../";
