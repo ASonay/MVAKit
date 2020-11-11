@@ -22,8 +22,8 @@ echo -e "*External tool to control TMVA by configuration.*"
 echo -e "*Developed by Anil Sonay, anil.sonay@cern.ch    *"
 echo -e "*************************************************\n"
 
-export APP_HOME=$location
-echo -e "\nAPP Home Dir : " ${APP_HOME}
+export TMVATOOL_HOME=$location
+echo -e "\nTMVATool Home Dir : " ${TMVATOOL_HOME}
 
 #setup root and LCG environment
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
@@ -36,7 +36,7 @@ alias tmvatool-make='cd build/; make -j4; cd ../'
 alias tmvatool-clean='rm -rf build/'
 alias tmvatool-build='mkdir build && cd build; cmake ../; make -j4; cd ../'
 
-if [ -d "${APP_HOME}/build/bin" ] 
+if [ -d "${TMVATOOL_HOME}/build/bin" ] 
 then
     echo -e "Your build/bin directory already exist."
     echo -e "\nTo recompile please use \e[1m\e[4mtmvatool-make\e[0m.\n"
@@ -45,5 +45,5 @@ else
 fi
 
 export PATH=$PATH:$location
-export PATH=${PATH}${PATH:+:}${APP_HOME}/build/bin
-export PYTHONPATH=${PATH}${PATH:+:}${APP_HOME}/python
+export PATH=${PATH}${PATH:+:}${TMVATOOL_HOME}/build/bin
+export PYTHONPATH=${PYTHONPATH}${PYTHONPATH:+:}${TMVATOOL_HOME}/python

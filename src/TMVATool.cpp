@@ -564,21 +564,23 @@ TMVATool::GetWeight()
   }
 }
 
-const char *
+char *
 TMVATool::GetLabel(void)
 {
-  const char *r_pt;
+  delete[] label_r_pt;
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;
-    return r_pt;
+    return NULL;
   }
   else if (Common::StringCompare(m_event_sample,"train")){
-    r_pt=m_dataTrain[m_split_index][m_event_current-1].Label.c_str();
-    return r_pt;
+    label_r_pt = new char[m_dataTrain[m_split_index][m_event_current-1].Label.length()+1];
+    strcpy(label_r_pt,m_dataTrain[m_split_index][m_event_current-1].Label.c_str());
+    return label_r_pt;
   }
   else if (Common::StringCompare(m_event_sample,"test")){
-    r_pt=m_dataTest[m_split_index][m_event_current-1].Label.c_str();
-    return r_pt;
+    label_r_pt = new char[m_dataTest[m_split_index][m_event_current-1].Label.length()+1];
+    strcpy(label_r_pt,m_dataTest[m_split_index][m_event_current-1].Label.c_str());
+    return label_r_pt;
   }
   else {
     cout << "Your sample could be testing or training." << endl;
@@ -590,7 +592,7 @@ float *
 TMVATool::GetVars(void)
 {
   int n = m_variables.size();
-  delete vars_r_pt;
+  delete[] vars_r_pt;
   vars_r_pt = new float[n];
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;
@@ -614,7 +616,7 @@ float *
 TMVATool::GetSpectatorVars(void)
 {
   int n = m_variables_other.size();
-  delete varsSpec_r_pt;
+  delete[] varsSpec_r_pt;
   varsSpec_r_pt = new float[n];
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;

@@ -48,7 +48,7 @@ public:
   void SetReaders(TMVA::Reader* reader);
   void SetReaders(const vector<TMVA::Reader*> &readers);
   float GetWeight();
-  const char *GetLabel(void);
+  char *GetLabel(void);
   float *GetVars(void);
   float *GetSpectatorVars(void);
   int NextEvent(char *sample,int split_index,int start=0,int max=-1);
@@ -93,6 +93,7 @@ private:
   
   float *vars_r_pt;
   float *varsSpec_r_pt;
+  char *label_r_pt;
   
 };
 #endif

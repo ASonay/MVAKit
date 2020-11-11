@@ -10,7 +10,7 @@ extern "C" {
   void TMVATool_SetEvents(TMVATool* tool){ tool->SetEvents(); }
   int TMVATool_NextEvent(TMVATool* tool,char *sample,int split_index,int start=0,int max=0){ return tool->NextEvent(sample,split_index,start,max); }
   float TMVATool_GetWeight(TMVATool* tool){ return tool->GetWeight(); }
-  const char *TMVATool_GetLabel(TMVATool* tool){ return tool->GetLabel(); }
+  char *TMVATool_GetLabel(TMVATool* tool){ return tool->GetLabel(); }
   float *TMVATool_GetVars(TMVATool* tool){ return tool->GetVars(); }
   float *TMVATool_GetSpectatorVars(TMVATool* tool){ return tool->GetSpectatorVars(); }
   int TMVATool_GetNVar(TMVATool* tool){ return tool->GetNVar(); }
