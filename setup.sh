@@ -32,9 +32,9 @@ LCG_setup="views LCG_97a x86_64-centos7-gcc8-opt"
 echo -e "LCG setup will be used, " ${LCG_setup}
 lsetup "${LCG_setup}"
 
-alias tmvatool-make='cd build/; make -j4; cd ../'
-alias tmvatool-clean='rm -rf build/'
-alias tmvatool-build='mkdir build && cd build; cmake ../; make -j4; cd ../'
+alias tmvatool-make='cd ${TMVATOOL_HOME}/build/; make -j4; cd ../'
+alias tmvatool-clean='rm -rf ${TMVATOOL_HOME}/build/'
+alias tmvatool-build='mkdir ${TMVATOOL_HOME}/build && cd ${TMVATOOL_HOME}/build; cmake ../; make -j4; cd ../'
 
 if [ -d "${TMVATOOL_HOME}/build/bin" ] 
 then
