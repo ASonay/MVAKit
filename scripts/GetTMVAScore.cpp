@@ -26,8 +26,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-#include "TMVATool/TMVAConf.hpp"
-#include "TMVATool/TMVARead.hpp"
+#include "TMVATool/TMVATool.hpp"
 
 using namespace std;
 
@@ -74,21 +73,22 @@ void Init(string dir,
     exit(0);
   }
   // Configuration part-----------------------------
-  TMVAConf conf("Evaluate");
+  TMVATool tool("Evaluate");
 
-  conf.SetConf(cnf);
-  conf.SetXML(xml);
-  conf.ReadConf();
+  tool.SetConf(cnf);
+  tool.SetXML(xml);
+  tool.isClassification(0);
+  tool.ReadConf();
 
-  vector<string> split = conf.GetSplit();cond=GetCond(split);
-  vector<TString> variables = conf.GetTVariables();
-  vector<TString> variablesSpec = conf.GetTVariablesOther();
-  vector<TString> weight_file = conf.GetTXML();
+  vector<string> split = tool.GetSplit();cond=GetCond(split);
+  vector<TString> variables = tool.GetTVariables();
+  vector<TString> variablesSpec = tool.GetTVariablesOther();
+  vector<TString> weight_file = tool.GetTXML();
   const int variables_size = variables.size();
   const int variablesSpec_size = variablesSpec.size();
   // Configuration part-----------------------------
   //Book TMVA---------------------------------------
-  method = conf.GetClassifierOpt()+" method";
+  method = tool.GetClassifierOpt()+" method";
   for (auto wf : weight_file){
     TMVA::Reader* rdr= new TMVA::Reader( "!Color:!Silent" );
     Float_t *local_variables = new Float_t[variables_size];

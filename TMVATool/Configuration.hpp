@@ -28,6 +28,7 @@ public:
 
   void SetConf(string conf) {m_confFile=conf;}
   void SetXML(string xml) {m_xmlFile=Common::StringSep(xml);}
+  void isClassification(int b) {m_classification=b;}
 
   vector<pair<string,vector<string>>> GetFilesName() {return m_ntups;}
   vector<pair<string,map<string,double>>> GetScales() {return m_scale;}
@@ -44,6 +45,9 @@ public:
   TString GetFactoryOpt() {return m_factoryOpt;}
   TString GetClassifierOpt() {return m_classifierOpt;}
   TString GetSamplingOpt() {return m_samplingOpt;}
+  char *GetArchitectureOpt() {return c_architectureOpt;}
+  char *GetEngineOpt() {return c_engineOpt;}
+  char *GetLabelOpt() {return c_labelOpt;}
   vector<TString> GetTXML();
   vector<TString> GetTVariables();
   vector<TString> GetTVariablesOther();
@@ -51,6 +55,8 @@ public:
   string GetClassName() {return m_cname;}
   string GetParamSplit() {return m_psplit;}
   string GetParamScale() {return m_pscale;}
+  int GetNSplit() {return m_nsplit;}
+  int GetNLabel() {return m_nlabel;}
 
 protected:
   
@@ -66,6 +72,7 @@ protected:
   vector<string> m_cond;
   vector<string> m_loadFile;
   vector<string> m_loadLib;
+  vector<string> m_labels;
   string m_paramvar;
   TString m_trainingOpt;
   TString m_factoryOpt;
@@ -81,8 +88,11 @@ protected:
   int m_split_per;
   int m_nvar;
   int m_nvarSpec;
+  int m_nlabel;
+  int m_nsplit;
   
   bool m_parameterized;
+  bool m_classification;
  
 private:
 
@@ -90,6 +100,11 @@ private:
 
   string m_confFile;
   string m_confName;
+
+  char *c_architectureOpt;
+  char *c_engineOpt;
+  char *c_labelOpt;
+
 
 };
 #endif

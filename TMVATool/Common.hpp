@@ -31,6 +31,10 @@ namespace Common {
   bool StringCompare(const string str1, const string str2);
   //
   //
+  // String find regardless case
+  bool StringFind(const string str1, const string str2);
+  //
+  //
   // Check if string digit
   bool CheckDigit(const string str);
   //

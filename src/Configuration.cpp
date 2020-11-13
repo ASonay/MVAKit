@@ -9,7 +9,8 @@ using namespace std;
 Configuration::Configuration(const char *name):
   m_psplit("Cross-section"),
   m_split_per(0),
-  m_parameterized(false)
+  m_parameterized(false),
+  m_classification(true)
 {
   m_confName = string(name);
   cout << "Configuration will be setup for " << m_confName << ".\n" << endl;
@@ -56,6 +57,7 @@ Configuration::Parser(int argc,char **argv)
 	  else
 	    {
 	      m_ntups.push_back(make_pair(check,tmp));
+	      m_labels.push_back(check);
 	      i=j;
 	      break;
 	    }
@@ -95,7 +97,6 @@ Configuration::Parser(int argc,char **argv)
     exit(0);
   }
 
-  cout << "\nConfiguration File: " << m_confFile << endl;
 }
 
 void
@@ -104,7 +105,7 @@ Configuration::ReadConf(){
   string str;
 
   if (in.fail()) {cout << "Can not find config file : " << m_confFile << "\n"; exit(0);}
-  
+  cout << "\nStart reading configuration file : " << m_confFile << endl;
   while (in >> str){
     if (str.compare("Var:")==0){
       in >> str;
@@ -132,7 +133,7 @@ Configuration::ReadConf(){
       m_weight.push_back(make_pair(label,str));
     }
     else if (str.find("Cut:")!=string::npos){
-      auto strPos = str.find("Cut:");
+     auto strPos = str.find("Cut:");
       string label = str.substr(0,strPos);
       in >> str;
       m_cut.push_back(make_pair(label,str));
@@ -143,21 +144,27 @@ Configuration::ReadConf(){
       in >> str;
       m_tree.push_back(make_pair(label,str));
     }
-    else if (str.compare("TrainingOpt:")==0){
+    else if (str.compare("TrainingOpt:")==0 || str.compare("ArchitectureOpt:")==0){
       in >> str;
       m_trainingOpt=str;
+      c_architectureOpt = new char[str.length()+1];
+      strcpy(c_architectureOpt,str.c_str());
     }
     else if (str.compare("FactoryOpt:")==0){
-      in >> str;
+     in >> str;
       m_factoryOpt=str;
     }
-    else if (str.compare("ClassifierOpt:")==0){
+    else if (str.compare("ClassifierOpt:")==0 || str.compare("EngineOpt:")==0){
       in >> str;
       m_classifierOpt=str;
+      c_engineOpt = new char[str.length()+1];
+      strcpy(c_engineOpt,str.c_str());
     }
-    else if (str.compare("SamplingOpt:")==0){
+    else if (str.compare("SamplingOpt:")==0 || str.compare("LabelOpt:")==0){
       in >> str;
       m_samplingOpt=str;
+      c_labelOpt = new char[str.length()+1];
+      strcpy(c_labelOpt,str.c_str());
     }
     else if (str.compare("Split:")==0){
       in >> str;
@@ -185,9 +192,13 @@ Configuration::ReadConf(){
       exit(0);
     }
   }
+  
+  cout << "\nFinished to read configuration..\n" << endl;
 
+  m_nlabel = m_labels.size();
   m_nvar=m_variables.size();
   m_nvarSpec=m_variables_other.size();
+  m_nsplit=m_split.size();
 
   for (auto x : m_loadLib){
     int libLoad = gSystem->Load(x.c_str());
@@ -210,7 +221,7 @@ Configuration::ReadConf(){
     }
   }
   
-  if (m_split.size()==0)
+  if (m_nsplit==0)
     m_split.push_back("Split:50");
 
   if (m_split[0].find("Split:") != string::npos)
@@ -219,6 +230,14 @@ Configuration::ReadConf(){
   if (!m_paramvar.empty()){
     cout << "\nParameterization detected for : " << m_paramvar << endl;
     m_parameterized=true;
+  }
+    if (m_nlabel<2){
+    cout << "You should at least have two different label for classification." << endl;
+  }
+    
+  if (m_nlabel<2 && m_classification){
+    cout << "You should at least have two different label for classification." << endl;
+    exit(0);
   }
   
   if (m_parameterized && m_xmlFile.empty()){

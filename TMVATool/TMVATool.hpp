@@ -49,6 +49,10 @@ public:
   void SetReaders(const vector<TMVA::Reader*> &readers);
   float GetWeight();
   char *GetLabel(void);
+  char *GetLabelName(int index);
+  char *GetVariableName(int index);
+  char *GetSpectatorVariableName(int index);
+  char *GetParamName();
   float *GetVars(void);
   float *GetSpectatorVars(void);
   int NextEvent(char *sample,int split_index,int start=0,int max=-1);
@@ -65,10 +69,13 @@ private:
 
   void AssignEvents(TTree *tree, const string name, pair<Long64_t,Long64_t> split, map<int,double> &tmp_param_map, vector<Counter> &c);
 
+  void ResetCurrent();
+
   vector<pair<Long64_t,Long64_t>> TreeSplit(int noe);
   
   vector<string> CheckVars(TTree *tree);
- 
+  
+  vector<string> m_activeVars;
   string m_label_current;
   string m_weight_current;
   string m_cut_current;
@@ -94,6 +101,8 @@ private:
   float *vars_r_pt;
   float *varsSpec_r_pt;
   char *label_r_pt;
+  char *m_label_name;
+  char *m_variable_name;
   
 };
 #endif

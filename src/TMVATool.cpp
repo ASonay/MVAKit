@@ -137,7 +137,7 @@ TMVATool::SetEvents(){
   if (m_loaders.size()==0){
     cout << "\nNo TMVA loader detected, data will be recorded in containers." << endl;
   }
-  else if (m_loaders.size()!=m_split.size()){
+  else if (m_loaders.size()!=(unsigned)split_size){
     cout << "\nTMVA loaders quantity has to be equal with nfold.." << endl;
     exit(0);
   }
@@ -158,8 +158,8 @@ void
 TMVATool::ReadEvents(string label, vector<string> files){
 
   m_total=0;
-  
   m_label_current = label;
+  ResetCurrent();
   
   cout << "\nSampling label : " << m_label_current << " for following samples:\n" << endl;
 
@@ -177,8 +177,12 @@ TMVATool::ReadEvents(string label, vector<string> files){
     {m_weight_current="1";}
   else{
     for (auto x : m_weight){
-      if (Common::StringCompare(label,x.first) || (Common::StringCompare("All",x.first)))
+      if (Common::StringFind(label,x.first) || (Common::StringCompare("All",x.first)))
 	{m_weight_current=x.second;}
+    }
+    if (m_weight_current.empty()){
+      cout << "Your weight couldn't match with any label in " << label <<" , will be use 1 instead." << endl;
+      m_weight_current="1";
     }
   }
 
@@ -186,8 +190,12 @@ TMVATool::ReadEvents(string label, vector<string> files){
     {m_cut_current="1";}
   else{
     for (auto x : m_cut){
-      if (Common::StringCompare(label,x.first) || (Common::StringCompare("All",x.first)))
+      if (Common::StringFind(label,x.first) || (Common::StringCompare("All",x.first)))
 	{m_cut_current=x.second;}
+    }
+    if (m_cut_current.empty()){
+      cout << "Your cut couldn't match with any label in " << label <<" , will be use 1 instead." << endl;
+      m_cut_current="1";
     }
   }
 
@@ -195,14 +203,18 @@ TMVATool::ReadEvents(string label, vector<string> files){
     {m_scale_current["single"]=1.0;}
   else{
     for (auto x : m_scale){
-      if (Common::StringCompare(label,x.first) || (Common::StringCompare("All",x.first)))
+      if (Common::StringFind(label,x.first) || (Common::StringCompare("All",x.first)))
 	{m_scale_current=x.second;}
+    }
+    if (m_scale_current.empty()){
+      cout << "Your scale couldn't match with any label in " << label <<" , will be use 1 instead." << endl;
+      m_scale_current["single"]=1.0;
     }
   }
 
   string tree_name;
   for (auto x : m_tree){
-    if ( (Common::StringCompare(label,x.first)) || (Common::StringCompare("All",x.first)) )
+    if ( (Common::StringFind(label,x.first)) || (Common::StringCompare("All",x.first)) )
       {tree_name=x.second;}
   }
 
@@ -213,16 +225,6 @@ TMVATool::ReadEvents(string label, vector<string> files){
 
   if (tree_name.empty()){
     cout << "Cannot find any tree name declared in the configuration file or non of them match with the label" << endl;
-    exit(0);
-  }
-
-  if (m_weight_current.empty()){
-    cout << "You defined weight but not matched any of the label!" << endl;
-    exit(0);
-  }
-
-  if (m_cut_current.empty()){
-    cout << "You defined cut but not matched any of the label!" << endl;
     exit(0);
   }
 
@@ -243,9 +245,9 @@ TMVATool::ReadEvents(string label, vector<string> files){
     else {
       cout << "Total Number of Events : " << tree->GetEntries(m_cut_current.c_str()) << endl;
     }
-    vector<string> activeVars = CheckVars(tree);
+    m_activeVars = CheckVars(tree);
     tree->SetBranchStatus("*",0);
-    for (auto av : activeVars) tree->SetBranchStatus(av.c_str(),1);
+    for (auto av : m_activeVars) tree->SetBranchStatus(av.c_str(),1);
     for (auto val : TreeSplit((int)tree->GetEntries())){
       vector<Counter> counter;
       AssignEvents(tree,x,val,tmp_param_map,counter);
@@ -341,16 +343,33 @@ TMVATool::AssignEvents(TTree *tr, const string name, pair<Long64_t,Long64_t> spl
       weight*=scale;
       vector<Double_t> vars = read.GetInput(i);
       vector<Double_t> varsSpec;
-      if (m_parameterized) {vars.push_back(GetParam(name,tmp_param_map,weight,gen,d));}
+      if (m_parameterized) {vars.push_back((Double_t)GetParam(name,tmp_param_map,weight,gen,d));}
       for (auto var : m_variables_other)
 	{read.SetSingleVariable(var);varsSpec.push_back(read.GetInputSingle(i));}
+      unsigned par_pos=vars.size()-1;
       if (split_cond){
 	if (m_loaders.size()!=0){
 	  for (auto var : varsSpec) vars.push_back(var);
-	  m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
+	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
+	    m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
+	  }
+	  else {
+	    for (auto par : m_param_vec){
+	      vars[par_pos]=(Double_t)par;
+	      m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
+	    }
+	  }
 	}
 	else{
-	  m_dataTrain[cond_index].push_back({vars,varsSpec,weight,m_label_current});
+	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
+	    m_dataTrain[cond_index].push_back({vars,varsSpec,weight,m_label_current});
+	  }
+	  else {
+	    for (auto par : m_param_vec){
+	      vars[par_pos]=(Double_t)par;
+	      m_dataTrain[cond_index].push_back({vars,varsSpec,weight,m_label_current});
+	    }
+	  }
 	}
 	tmp_train[cond_index]++;
 	tmpw_train[cond_index]+=weight;
@@ -358,10 +377,26 @@ TMVATool::AssignEvents(TTree *tr, const string name, pair<Long64_t,Long64_t> spl
       else{
 	if (m_loaders.size()!=0){
 	  for (auto var : varsSpec) vars.push_back(var);
-	  m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
+	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
+	    m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
+	  }
+	  else {
+	    for (auto par : m_param_vec){
+	      vars[par_pos]=(Double_t)par;
+	      m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
+	    }
+	  }
 	}
 	else{
-	  m_dataTest[cond_index].push_back({vars,varsSpec,weight,m_label_current});
+	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
+	    m_dataTest[cond_index].push_back({vars,varsSpec,weight,m_label_current});
+	  }
+	  else {
+	    for (auto par : m_param_vec){
+	      vars[par_pos]=(Double_t)par;
+	      m_dataTest[cond_index].push_back({vars,varsSpec,weight,m_label_current});
+	    }
+	  }
 	}
 	tmp_test[cond_index]++;
 	tmpw_test[cond_index]+=weight;
@@ -408,11 +443,13 @@ TMVATool::GetParam(string file,map<int,double> &pmap,Double_t &weight,mt19937 &g
     m_total_param_weight+=weight;
   }
   else{
+    if (Common::StringCompare(m_psplit,"duplicate")) return param;
     int param_index=d(gen);
     param=m_param_vec[param_index];
     Double_t scale = m_scale_current[to_string((int)param)] != 0.0 ? m_scale_current[to_string((int)param)] : 1.0;
     weight*=scale;
     if (Common::StringCompare(m_pscale,"cross") || Common::StringCompare(m_pscale,"section") || Common::StringCompare(m_pscale,"xs")){
+      cout << "test " << m_pscale << endl;
       weight*=((Double_t)m_param_sample_weights[(int)param]/(Double_t)m_total_param_weight)
 	/((Double_t)m_param_map[(int)param]);
     }
@@ -427,6 +464,8 @@ TMVATool::GetParam(string file,map<int,double> &pmap,Double_t &weight,mt19937 &g
   else if (Common::StringCompare(m_psplit,"event") || Common::StringCompare(m_psplit,"number") || Common::StringCompare(m_psplit,"enum"))
     {pmap[(int)param] += 1;m_total += 1.0;}
   else if (Common::StringCompare(m_psplit,"uni") || Common::StringCompare(m_psplit,"uniform"))
+    {pmap[(int)param] = 1;m_total = (double)pmap.size();}
+  else if (Common::StringCompare(m_psplit,"duplicate"))
     {pmap[(int)param] = 1;m_total = (double)pmap.size();}
   else
     {
@@ -517,11 +556,15 @@ int
 TMVATool::NextEvent(char *sample,int split_index,int start,int max)
 {
   m_split_index=split_index;
-  if (m_split_index>(int)m_split.size()){
+  if (m_split_index>(int)m_nsplit){
     cout << "Your split quantity can not be more than splitting samples." << endl;
     exit(0);
   }
-  m_event_sample=string(sample);
+  if (m_event_sample!=string(sample)){
+    cout << "Starting to iterate events for " << sample << endl;
+    m_event_sample=string(sample);
+    m_event_current=0;
+  }
   int max_size;
   if (Common::StringCompare(m_event_sample,"train")) {
     max_size = (int)m_dataTrain[split_index].size();
@@ -567,7 +610,6 @@ TMVATool::GetWeight()
 char *
 TMVATool::GetLabel(void)
 {
-  delete[] label_r_pt;
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;
     return NULL;
@@ -592,7 +634,7 @@ float *
 TMVATool::GetVars(void)
 {
   int n = m_variables.size();
-  delete[] vars_r_pt;
+  if (m_parameterized) n+=1;
   vars_r_pt = new float[n];
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;
@@ -616,7 +658,6 @@ float *
 TMVATool::GetSpectatorVars(void)
 {
   int n = m_variables_other.size();
-  delete[] varsSpec_r_pt;
   varsSpec_r_pt = new float[n];
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;
@@ -634,4 +675,43 @@ TMVATool::GetSpectatorVars(void)
     cout << "Your sample could be testing or training." << endl;
     exit(0);
   }
+}
+
+void
+TMVATool::ResetCurrent(){
+  m_weight_current.clear();
+  m_cut_current.clear();
+  m_scale_current.clear();
+}
+
+char *
+TMVATool::GetLabelName(int index)
+{
+  m_label_name = new char[m_labels[index].length()+1];
+  strcpy(m_label_name,m_labels[index].c_str());
+  return m_label_name;
+}
+
+char *
+TMVATool::GetVariableName(int index)
+{
+  m_variable_name = new char[m_variables[index].length()+1];
+  strcpy(m_variable_name,m_variables[index].c_str());
+  return m_variable_name;
+}
+
+char *
+TMVATool::GetParamName()
+{
+  m_variable_name = new char[m_paramvar.length()+1];
+  strcpy(m_variable_name,m_paramvar.c_str());
+  return m_variable_name;
+}
+
+char *
+TMVATool::GetSpectatorVariableName(int index)
+{
+  m_variable_name = new char[m_variables_other[index].length()+1];
+  strcpy(m_variable_name,m_variables_other[index].c_str());
+  return m_variable_name;
 }

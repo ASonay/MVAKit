@@ -51,7 +51,22 @@ Common::StringCompare(const string str1, const string str2)
   transform(b.begin(), b.end(), b.begin(),
 		 [](unsigned char c){ return tolower(c); });
   
-  return a.find(b) != string::npos || b.find(a) != string::npos;
+  return (a.find(b) != string::npos || b.find(a) != string::npos)
+    && !a.empty() && !b.empty();
+}
+
+bool
+Common::StringFind(const string str1, const string str2)
+{
+
+  string a = str1; string b = str2;
+  
+  transform(a.begin(), a.end(), a.begin(),
+		 [](unsigned char c){ return tolower(c); });
+  transform(b.begin(), b.end(), b.begin(),
+		 [](unsigned char c){ return tolower(c); });
+  
+  return a==b;
 }
 
 bool

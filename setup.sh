@@ -44,6 +44,7 @@ else
     echo -e "\nTo compile please use \e[1m\e[4mtmvatool-build\e[0m.\n"
 fi
 
-export PATH=$PATH:$location
+export CPATH=${CPATH}${CPATH:+:}${TMVATOOL_HOME}
 export PATH=${PATH}${PATH:+:}${TMVATOOL_HOME}/build/bin
+export PATH=${PATH}${PATH:+:}${TMVATOOL_HOME}/share
 export PYTHONPATH=${PYTHONPATH}${PYTHONPATH:+:}${TMVATOOL_HOME}/python

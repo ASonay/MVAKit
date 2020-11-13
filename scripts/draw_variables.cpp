@@ -4,7 +4,7 @@ void draw_variables()
 {
 
   string original_file_path = "/eos/user/a/asonay/HBSM4top_ntuple/";
-  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/enum_scaled/";
+  string tmva_path = "../../bsm4top_bdt_weight_cv/ljets/duplicate/";
   string class_name = "Score";
   string cut = "(nBTags_MV2c10_70>=3&&nJets>=9)";
   
@@ -105,7 +105,7 @@ void draw_variables()
     cout << h_mp_sig->GetBinCenter(i+1) << " " << 1.0/h_mp_sig->GetBinContent(i+1) << endl;
   }
 
-  
+  /*
   for (auto var : variables){
     TCanvas *cbkg = new TCanvas(("cbkg"+var.second).c_str());
     cbkg->SetTickx();cbkg->SetTicky();
@@ -342,5 +342,5 @@ void draw_variables()
     }
     
   }
-  
+  */  
 }
