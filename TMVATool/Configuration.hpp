@@ -45,9 +45,13 @@ public:
   TString GetFactoryOpt() {return m_factoryOpt;}
   TString GetClassifierOpt() {return m_classifierOpt;}
   TString GetSamplingOpt() {return m_samplingOpt;}
-  char *GetArchitectureOpt() {return c_architectureOpt;}
-  char *GetEngineOpt() {return c_engineOpt;}
-  char *GetLabelOpt() {return c_labelOpt;}
+  char *GetArchitectureOpt() {return &m_trainingOpt[0];}
+  char *GetEngineOpt() {return &m_classifierOpt[0];}
+  char *GetLabelOpt() {return &m_samplingOpt[0];}
+  char *GetLabelName(int index) {return &m_labels[index][0];}
+  char *GetVariableName(int index) {return &m_variables[index][0];}
+  char *GetSpectatorVariableName(int index) {return &m_variables_other[index][0];}
+  char *GetParamName() {return &m_paramvar[0];}
   vector<TString> GetTXML();
   vector<TString> GetTVariables();
   vector<TString> GetTVariablesOther();
@@ -57,6 +61,8 @@ public:
   string GetParamScale() {return m_pscale;}
   int GetNSplit() {return m_nsplit;}
   int GetNLabel() {return m_nlabel;}
+
+  void FreeMem(void *ptr) {printf("freeing address: %p\n", ptr);free(ptr);}
 
 protected:
   
@@ -100,11 +106,6 @@ private:
 
   string m_confFile;
   string m_confName;
-
-  char *c_architectureOpt;
-  char *c_engineOpt;
-  char *c_labelOpt;
-
 
 };
 #endif

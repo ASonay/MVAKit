@@ -1,8 +1,9 @@
 
-def ModifyLabel(y,dic={'sig':1.0,'bkg':0.0}):
-    for i in range(len(y)):
-        y[i]=dic[y[i]]
-        
+def GetDigitLabel(label,dic={'sig':1.0,'bkg':0.0}):
+    y=[]
+    for l in label:
+        y.append(dic[l])
+    return y
 
 def Labeling(string):
     label_tags_dic = {}
@@ -107,9 +108,9 @@ def TrainKerasModel(model,opt,x,y,w):
     print (model.summary())
     model.fit(np.array(x), np.array(y), sample_weight = np.array(w), epochs=nepoch, batch_size=batch)
 
-from ROOT import TFile, TTree
+from ROOT import TFile, TTree, vector
 from array import array
-def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2):
+def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_pred,w2):
 
     noo=1
     if isinstance(y1[0],list):
@@ -118,7 +119,8 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2
 
     variable_size = len(var)
     variableSpec_size = len(varSpec)
-    
+
+    label = vector('string')()
     class_id = array('i', [ 0 ]*noo )
     variables = variable_size*[0]
     variablesSpec = variableSpec_size*[0]
@@ -133,6 +135,7 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2
     t1 = TTree('tr_train','Tree for Training Output')
     t2 = TTree('tr_test','Tree for Test Output')
 
+    t1.Branch('label',label)
     t1.Branch('class_id',class_id,'class_id['+str(noo)+']/I')
     for i in range(variable_size):
         t1.Branch(var[i],variables[i],var[i]+'/F')
@@ -141,6 +144,7 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2
     t1.Branch('weight',weight,'weight/F')
     t1.Branch('score',score,'score['+str(noo)+']/F')
 
+    t2.Branch('label',label)
     t2.Branch('class_id',class_id,'class_id['+str(noo)+']/I')
     for i in range(variable_size):
         t2.Branch(var[i],variables[i],var[i]+'/F')
@@ -150,6 +154,8 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2
     t2.Branch('score',score,'score['+str(noo)+']/F')
 
     for i in range(len(x1)):
+        label.clear()
+        label.push_back(l1[i])
         if noo > 1:
             for j in range(noo):
                 class_id[j] = int(y1[i][j])
@@ -166,6 +172,8 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2
     t1.Write()
 
     for i in range(len(x2)):
+        label.clear()
+        label.push_back(l2[i])
         if noo > 1:
             for j in range(noo):
                 class_id[j] = int(y2[i][j])
@@ -202,8 +210,86 @@ def ScaleWeights(y,w):
     sum_wpos_check = sum( w[i] for i in range(len(y)) if y[i] == 1.0  )
     sum_wneg_check = sum( w[i] for i in range(len(y)) if y[i] == 0.0  )
 
-    print ('Weights:: W(1)=%g, W(0)=%g' % (sum_wpos, sum_wneg))
+    print ('\n======Weight Statistic========================================')
+    print ('Weights::        W(1)=%g, W(0)=%g' % (sum_wpos, sum_wneg))
     print ('Scaled weights:: W(1)=%g, W(0)=%g' % (sum_wpos_check, sum_wneg_check))
+    print ('==============================================================')
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.naive_bayes import GaussianNB
+from sklearn.pipeline import make_pipeline
+from sklearn.externals.joblib import dump
+from sklearn import metrics
+def PCAStdTransform(x_train,y_train,x_test,y_test,varnames=[],save_loc='keras_output/feature_weight/'):
+    ncomp = len(x_train[0])
+    #-------------------------------------------------------------------
+    std_clf = make_pipeline(StandardScaler(), PCA(n_components=ncomp), GaussianNB())
+    std_clf.fit(x_train, y_train)
+    pred_test_std = std_clf.predict(x_test)
+    print('\nPrediction accuracy for the standardized test dataset with PCA')
+    print('{:.2%}\n'.format(metrics.accuracy_score(y_test, pred_test_std)))
+    pca_std = std_clf.named_steps['pca']
+    scaler = std_clf.named_steps['standardscaler']
+    x_train_scaled = pca_std.transform(scaler.transform(x_train))
+    x_test_scaled = pca_std.transform(scaler.transform(x_test))
+    #-------------------------------------------------------------------
+    print ('\n======PCA Transformation=====================================')
+    print ('%-40s'%('Variables')),
+    for i in range(ncomp):
+        varname = 'Var_'+str(i)
+        if varnames[i]: varname = varnames[i]
+        if i!=ncomp-1:
+            print (' | %s'%(varname)),
+        else:
+            print (' | %s'%(varname))
+    for i in range(ncomp):
+        varname = 'Var_'+str(i)
+        if varnames[i]: varname = varnames[i]
+        print ('%-40s'%(varname)),
+        for j,x in enumerate(pca_std.components_[i]):
+            if j!=ncomp-1:
+                print ('| %-8.2e'%(x)),
+            else:
+                print ('| %-8.2e'%(x))
+    print ('==============================================================')
+    print ('\n======STD Transformation=====================================')
+    print ('%-40s | %-8s | %-8s | %-8s | %-8s'%('Variables','min','max','mean','variance'))
+    for i in range(ncomp):
+        column=[x[i] for x in x_train]
+        min_c=min(column) 
+        max_c=max(column)
+        varname = 'Var_'+str(i)
+        if varnames[i]: varname = varnames[i]
+        print ('%-40s | %-6.2e | %-6.2e | %-6.2e | %-6.2e'%(varname,min_c,max_c,scaler.mean_[i],scaler.var_[i]))
+    print ('==============================================================')
+    #-------------------------------------------------------------------    
+    dump(scaler, save_loc+'std_scaler_'+str(i)+'.bin', compress=True)
+    dump(pca_std, save_loc+'pca_'+str(i)+'.bin', compress=True)
+    return x_train_scaled,x_test_scaled
+
+def StdTransform(x_train,x_test,varnames=[],save_loc='keras_output/feature_weight/'):
+    ncomp = len(x_train[0])
+    #-------------------------------------------------------------------
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+    x_train_scaled = scaler.transform(x_train)
+    x_test_scaled = scaler.transform(x_test)
+    #-------------------------------------------------------------------
+    print ('\n======STD Transformation=====================================')
+    print ('%-40s | %-8s | %-8s | %-8s | %-8s'%('Variables','min','max','mean','variance'))
+    for i in range(ncomp):
+        column=[x[i] for x in x_train]
+        min_c=min(column) 
+        max_c=max(column)
+        varname = 'Var_'+str(i)
+        if varnames[i]: varname = varnames[i]
+        print ('%-40s | %-6.2e | %-6.2e | %-6.2e | %-6.2e'%(varname,min_c,max_c,scaler.mean_[i],scaler.var_[i]))
+    print ('==============================================================')
+    #-------------------------------------------------------------------    
+    dump(scaler, save_loc+'std_scaler_'+str(i)+'.bin', compress=True)
+    return x_train_scaled,x_test_scaled
+
 
 
 def CorrectNames(var):

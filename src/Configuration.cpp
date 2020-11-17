@@ -147,24 +147,18 @@ Configuration::ReadConf(){
     else if (str.compare("TrainingOpt:")==0 || str.compare("ArchitectureOpt:")==0){
       in >> str;
       m_trainingOpt=str;
-      c_architectureOpt = new char[str.length()+1];
-      strcpy(c_architectureOpt,str.c_str());
     }
     else if (str.compare("FactoryOpt:")==0){
-     in >> str;
+      in >> str;
       m_factoryOpt=str;
     }
     else if (str.compare("ClassifierOpt:")==0 || str.compare("EngineOpt:")==0){
       in >> str;
       m_classifierOpt=str;
-      c_engineOpt = new char[str.length()+1];
-      strcpy(c_engineOpt,str.c_str());
     }
     else if (str.compare("SamplingOpt:")==0 || str.compare("LabelOpt:")==0){
       in >> str;
       m_samplingOpt=str;
-      c_labelOpt = new char[str.length()+1];
-      strcpy(c_labelOpt,str.c_str());
     }
     else if (str.compare("Split:")==0){
       in >> str;

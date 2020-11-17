@@ -47,14 +47,10 @@ public:
   void SetLoaders(const vector<TMVA::DataLoader*> &loaders);
   void SetReaders(TMVA::Reader* reader);
   void SetReaders(const vector<TMVA::Reader*> &readers);
-  float GetWeight();
+  double GetWeight();
   char *GetLabel(void);
-  char *GetLabelName(int index);
-  char *GetVariableName(int index);
-  char *GetSpectatorVariableName(int index);
-  char *GetParamName();
-  float *GetVars(void);
-  float *GetSpectatorVars(void);
+  double *GetVars(void);
+  double *GetSpectatorVars(void);
   int NextEvent(char *sample,int split_index,int start=0,int max=-1);
   int GetNVar() {return m_nvar;}
   int GetNSpectatorVar() {return m_nvarSpec;}
@@ -97,12 +93,6 @@ private:
 
   vector<vector<DataContainer>> m_dataTrain;
   vector<vector<DataContainer>> m_dataTest;
-  
-  float *vars_r_pt;
-  float *varsSpec_r_pt;
-  char *label_r_pt;
-  char *m_label_name;
-  char *m_variable_name;
   
 };
 #endif

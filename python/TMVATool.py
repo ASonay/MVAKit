@@ -11,11 +11,11 @@ class TMVATool(object):
             print('Cannot fing your C++ library. Please check if TMVATool has been built')
             exit()
         self.__lib = cdll.LoadLibrary(cpp_lib)
-        self.__lib.TMVATool_GetWeight.restype = c_float
-        self.__lib.TMVATool_GetVars.restype = POINTER(c_float)
-        self.__lib.TMVATool_GetSpectatorVars.restype = POINTER(c_float)
+        self.__lib.TMVATool_GetWeight.restype = c_double
+        self.__lib.TMVATool_GetVars.restype = POINTER(c_double)
+        self.__lib.TMVATool_GetSpectatorVars.restype = POINTER(c_double)
         self.__lib.TMVATool_GetLabel.restype = c_char_p
-        self.__lib.TMVATool_GetLabelName.restype = c_char_p
+        #self.__lib.TMVATool_GetLabelName.restype = c_void_p
         self.__lib.TMVATool_GetVariableName.restype = c_char_p
         self.__lib.TMVATool_GetSpectatorVariableName.restype = c_char_p
         self.__lib.TMVATool_GetParamName.restype = c_char_p
@@ -68,7 +68,7 @@ class TMVATool(object):
 
     def NextEvent(self,sample,index,minimum=0,maximum=-1):
         return self.__lib.TMVATool_NextEvent(self.__obj,c_char_p(sample),index,minimum,maximum)
-        
+
     def GetArchitectureOpt(self):
         ptr=self.__lib.TMVATool_GetArchitectureOpt(self.__obj)
         return ptr
@@ -100,7 +100,8 @@ class TMVATool(object):
         
     def GetLabelName(self,index):
         ptr=self.__lib.TMVATool_GetLabelName(self.__obj,c_int(index))
-        return ptr
+        val=cast(ptr,c_char_p).value
+        return val
         
     def GetVariableName(self,index):
         ptr=self.__lib.TMVATool_GetVariableName(self.__obj,c_int(index))
@@ -122,7 +123,5 @@ class TMVATool(object):
             xspec.append(self.GetSpectatorVars())
             y.append(self.GetLabel())
             w.append(self.GetWeight())
-        labelTag = Labeling(self.GetLabelOpt())
-        ModifyLabel(y,labelTag)
         
         return x,xspec,y,w

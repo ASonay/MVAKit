@@ -264,6 +264,7 @@ TMVATool::ReadEvents(string label, vector<string> files){
     }
     delete tree;
     f->Close();
+    delete f;
     cout << "\n" <<endl;
   }
 
@@ -346,30 +347,13 @@ TMVATool::AssignEvents(TTree *tr, const string name, pair<Long64_t,Long64_t> spl
       if (m_parameterized) {vars.push_back((Double_t)GetParam(name,tmp_param_map,weight,gen,d));}
       for (auto var : m_variables_other)
 	{read.SetSingleVariable(var);varsSpec.push_back(read.GetInputSingle(i));}
-      unsigned par_pos=vars.size()-1;
       if (split_cond){
 	if (m_loaders.size()!=0){
 	  for (auto var : varsSpec) vars.push_back(var);
-	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
-	    m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
-	  }
-	  else {
-	    for (auto par : m_param_vec){
-	      vars[par_pos]=(Double_t)par;
-	      m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
-	    }
-	  }
+	  m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,vars,weight);
 	}
 	else{
-	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
-	    m_dataTrain[cond_index].push_back({vars,varsSpec,weight,m_label_current});
-	  }
-	  else {
-	    for (auto par : m_param_vec){
-	      vars[par_pos]=(Double_t)par;
-	      m_dataTrain[cond_index].push_back({vars,varsSpec,weight,m_label_current});
-	    }
-	  }
+	  m_dataTrain[cond_index].push_back({vars,varsSpec,weight,m_label_current});
 	}
 	tmp_train[cond_index]++;
 	tmpw_train[cond_index]+=weight;
@@ -377,26 +361,10 @@ TMVATool::AssignEvents(TTree *tr, const string name, pair<Long64_t,Long64_t> spl
       else{
 	if (m_loaders.size()!=0){
 	  for (auto var : varsSpec) vars.push_back(var);
-	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
-	    m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
-	  }
-	  else {
-	    for (auto par : m_param_vec){
-	      vars[par_pos]=(Double_t)par;
-	      m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
-	    }
-	  }
+	  m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,vars,weight);
 	}
 	else{
-	  if (m_param_map.size()==0 || !Common::StringCompare(m_psplit,"duplicate")) {
-	    m_dataTest[cond_index].push_back({vars,varsSpec,weight,m_label_current});
-	  }
-	  else {
-	    for (auto par : m_param_vec){
-	      vars[par_pos]=(Double_t)par;
-	      m_dataTest[cond_index].push_back({vars,varsSpec,weight,m_label_current});
-	    }
-	  }
+	  m_dataTest[cond_index].push_back({vars,varsSpec,weight,m_label_current});
 	}
 	tmp_test[cond_index]++;
 	tmpw_test[cond_index]+=weight;
@@ -406,8 +374,10 @@ TMVATool::AssignEvents(TTree *tr, const string name, pair<Long64_t,Long64_t> spl
   }
 
   for (int i=0;i<split_size;i++) {c.push_back({tmp_test[i],tmp_train[i],tmpw_test[i],tmpw_train[i]});}
-  
+
+  delete tree;
   f_tmp->Close();
+  delete f_tmp;
   if( remove("f_tmp.root") != 0 )
     {cout << "\nError deleting temporary root file." << endl;}
 }
@@ -443,13 +413,11 @@ TMVATool::GetParam(string file,map<int,double> &pmap,Double_t &weight,mt19937 &g
     m_total_param_weight+=weight;
   }
   else{
-    if (Common::StringCompare(m_psplit,"duplicate")) return param;
     int param_index=d(gen);
     param=m_param_vec[param_index];
     Double_t scale = m_scale_current[to_string((int)param)] != 0.0 ? m_scale_current[to_string((int)param)] : 1.0;
     weight*=scale;
     if (Common::StringCompare(m_pscale,"cross") || Common::StringCompare(m_pscale,"section") || Common::StringCompare(m_pscale,"xs")){
-      cout << "test " << m_pscale << endl;
       weight*=((Double_t)m_param_sample_weights[(int)param]/(Double_t)m_total_param_weight)
 	/((Double_t)m_param_map[(int)param]);
     }
@@ -464,8 +432,6 @@ TMVATool::GetParam(string file,map<int,double> &pmap,Double_t &weight,mt19937 &g
   else if (Common::StringCompare(m_psplit,"event") || Common::StringCompare(m_psplit,"number") || Common::StringCompare(m_psplit,"enum"))
     {pmap[(int)param] += 1;m_total += 1.0;}
   else if (Common::StringCompare(m_psplit,"uni") || Common::StringCompare(m_psplit,"uniform"))
-    {pmap[(int)param] = 1;m_total = (double)pmap.size();}
-  else if (Common::StringCompare(m_psplit,"duplicate"))
     {pmap[(int)param] = 1;m_total = (double)pmap.size();}
   else
     {
@@ -590,7 +556,7 @@ TMVATool::NextEvent(char *sample,int split_index,int start,int max)
   }
 }
 
-float
+double
 TMVATool::GetWeight()
 {
   if (m_event_current==0) {
@@ -603,7 +569,7 @@ TMVATool::GetWeight()
     {return m_dataTest[m_split_index][m_event_current-1].Weight;}
   else {
     cout << "Your sample could be testing or training." << endl;
-    exit(0);
+    return 0;
   }
 }
 
@@ -615,65 +581,52 @@ TMVATool::GetLabel(void)
     return NULL;
   }
   else if (Common::StringCompare(m_event_sample,"train")){
-    label_r_pt = new char[m_dataTrain[m_split_index][m_event_current-1].Label.length()+1];
-    strcpy(label_r_pt,m_dataTrain[m_split_index][m_event_current-1].Label.c_str());
-    return label_r_pt;
+    return &m_dataTrain[m_split_index][m_event_current-1].Label[0];
   }
   else if (Common::StringCompare(m_event_sample,"test")){
-    label_r_pt = new char[m_dataTest[m_split_index][m_event_current-1].Label.length()+1];
-    strcpy(label_r_pt,m_dataTest[m_split_index][m_event_current-1].Label.c_str());
-    return label_r_pt;
+    return &m_dataTest[m_split_index][m_event_current-1].Label[0];
   }
   else {
     cout << "Your sample could be testing or training." << endl;
-    exit(0);
+    return NULL;
   }
 }
 
-float *
+double *
 TMVATool::GetVars(void)
 {
-  int n = m_variables.size();
-  if (m_parameterized) n+=1;
-  vars_r_pt = new float[n];
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;
-    return vars_r_pt;
+    return NULL;
   }
   else if (Common::StringCompare(m_event_sample,"train")){
-    for (int i=0;i<n;i++) {vars_r_pt[i]=m_dataTrain[m_split_index][m_event_current-1].Vars[i];}
-    return vars_r_pt;
+    return &m_dataTrain[m_split_index][m_event_current-1].Vars[0];
   }
   else if (Common::StringCompare(m_event_sample,"test")){
-    for (int i=0;i<n;i++) {vars_r_pt[i]=m_dataTest[m_split_index][m_event_current-1].Vars[i];}     
-    return vars_r_pt;
+    return &m_dataTest[m_split_index][m_event_current-1].Vars[0];
   }
   else {
     cout << "Your sample could be testing or training." << endl;
-    exit(0);
+    return NULL;
   }
 }
 
-float *
+double *
 TMVATool::GetSpectatorVars(void)
 {
-  int n = m_variables_other.size();
-  varsSpec_r_pt = new float[n];
   if (m_event_current==0) {
     cout << "Returning 0. Try your chance with NextEvent." << endl;
-    return varsSpec_r_pt;
+    return NULL;
   }
   else if (Common::StringCompare(m_event_sample,"train")){
-    for (int i=0;i<n;i++) {varsSpec_r_pt[i]=m_dataTrain[m_split_index][m_event_current-1].VarsSpec[i];}
-    return varsSpec_r_pt;
+    return &m_dataTrain[m_split_index][m_event_current-1].VarsSpec[0];
   }
   else if (Common::StringCompare(m_event_sample,"test")){
-    for (int i=0;i<n;i++) {varsSpec_r_pt[i]=m_dataTest[m_split_index][m_event_current-1].VarsSpec[i];}     
-    return varsSpec_r_pt;
+    return &m_dataTest[m_split_index][m_event_current-1].VarsSpec[0];
   }
   else {
     cout << "Your sample could be testing or training." << endl;
-    exit(0);
+    return NULL;
   }
 }
 
@@ -682,36 +635,4 @@ TMVATool::ResetCurrent(){
   m_weight_current.clear();
   m_cut_current.clear();
   m_scale_current.clear();
-}
-
-char *
-TMVATool::GetLabelName(int index)
-{
-  m_label_name = new char[m_labels[index].length()+1];
-  strcpy(m_label_name,m_labels[index].c_str());
-  return m_label_name;
-}
-
-char *
-TMVATool::GetVariableName(int index)
-{
-  m_variable_name = new char[m_variables[index].length()+1];
-  strcpy(m_variable_name,m_variables[index].c_str());
-  return m_variable_name;
-}
-
-char *
-TMVATool::GetParamName()
-{
-  m_variable_name = new char[m_paramvar.length()+1];
-  strcpy(m_variable_name,m_paramvar.c_str());
-  return m_variable_name;
-}
-
-char *
-TMVATool::GetSpectatorVariableName(int index)
-{
-  m_variable_name = new char[m_variables_other[index].length()+1];
-  strcpy(m_variable_name,m_variables_other[index].c_str());
-  return m_variable_name;
 }
