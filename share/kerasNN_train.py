@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from TMVAFunc import *
-from TMVATool import TMVATool
+from pymva.tool import TMVATool
+from pymva.extra import *
 import sys,os
 import numpy as np
 from scipy.sparse import coo_matrix
@@ -36,9 +36,9 @@ for i in range(tool.GetNSplit()):
                                                               label_train,y_train,
                                                               w_train,random_state=0);
     
-    ScaleWeights(y_train,w_train)
-    x_train_scaled,x_test_scaled=PCAStdTransform(x_train,y_train,x_test,y_test,tool.Variables)
-    #x_train_scaled,x_test_scaled=StdTransform(x_train,x_test,tool.Variables)
+    #ScaleWeights(y_train,w_train)
+    #x_train_scaled,x_test_scaled=PCAStdTransform(x_train,y_train,x_test,tool.Variables)
+    x_train_scaled,x_test_scaled=StdTransform(x_train,x_test,tool.Variables)
 
     #train data
     model = GetKerasModel(tool.NVar,tool.GetArchitectureOpt())

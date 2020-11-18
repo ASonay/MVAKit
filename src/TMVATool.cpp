@@ -8,7 +8,6 @@
 using namespace std;
 
 TMVATool::TMVATool(const char *name) : Configuration(name),
-				       m_event_current(0),
 				       m_total_param_weight(0)
 {}
 
@@ -317,9 +316,10 @@ TMVATool::AssignEvents(TTree *tr, const string name, pair<Long64_t,Long64_t> spl
   mt19937 gen(rd());    
   discrete_distribution<int> d(begin(m_weights), end(m_weights));
 
-  TFile *f_tmp = new TFile("f_tmp.root","recreate");
+  TFile *f_tmp = new TFile("f_tmp.root","recreate","Tmp",0);
   TTree *tree = tr->CopyTree(m_cut_current.c_str(),"",split.first,split.second);
-
+  f_tmp->Write();
+  
   ReadTree read(name,tree,m_variables);
   int noe = read.GetNoE();
   for (int i=0;i<noe;i++){
@@ -519,114 +519,44 @@ TMVATool::isVariableExist(const string var, const vector<string> trVars, vector<
 }
 
 int
-TMVATool::NextEvent(char *sample,int split_index,int start,int max)
+TMVATool::PassEvent(char *sample,int split_index,char label[],double &w, double vars[], double varsSpec[])
 {
-  m_split_index=split_index;
-  if (m_split_index>(int)m_nsplit){
-    cout << "Your split quantity can not be more than splitting samples." << endl;
-    exit(0);
-  }
-  if (m_event_sample!=string(sample)){
-    cout << "Starting to iterate events for " << sample << endl;
-    m_event_sample=string(sample);
-    m_event_current=0;
-  }
-  int max_size;
-  if (Common::StringCompare(m_event_sample,"train")) {
-    max_size = (int)m_dataTrain[split_index].size();
-  }
-  else if (Common::StringCompare(m_event_sample,"test")) {
-    max_size = (int)m_dataTest[split_index].size();
-  }
-  else {
-    cout << "Your sample could be testing or training." << endl;
-    exit(0);
-  }
-  if (start!=0) {m_event_current=start;}
-  if (max!=-1 && max>m_event_current && max<=max_size) {max_size=max;}
-
-  if (max_size <= m_event_current) {
-    cout << "You reached maximum number of events" << endl;
-    m_event_current=0;
-    return 0;
-  }
-  else{
-    m_event_current++;
+  string event_sample = string(sample);
+  if (Common::StringCompare(event_sample,"train") && m_dataTrain[split_index].size() !=0) {
+    strcpy(label,m_dataTrain[split_index][0].Label.c_str());
+    w = m_dataTrain[split_index][0].Weight;
+    for (auto it = m_dataTrain[split_index][0].Vars.begin();
+	 it != m_dataTrain[split_index][0].Vars.end(); ++it){
+      int index = distance(m_dataTrain[split_index][0].Vars.begin(), it);
+      vars[index] = m_dataTrain[split_index][0].Vars[index];
+    }
+    for (auto it = m_dataTrain[split_index][0].VarsSpec.begin();
+	 it != m_dataTrain[split_index][0].VarsSpec.end(); ++it){
+      int index = distance(m_dataTrain[split_index][0].VarsSpec.begin(), it);
+      varsSpec[index] = m_dataTrain[split_index][0].VarsSpec[index];
+    }
+    m_dataTrain[split_index].erase(m_dataTrain[split_index].begin());
     return 1;
   }
-}
-
-double
-TMVATool::GetWeight()
-{
-  if (m_event_current==0) {
-    cout << "Returning 0. Try your chance with NextEvent." << endl;
+  else if (Common::StringCompare(event_sample,"test") && m_dataTest[split_index].size() !=0) {
+    strcpy(label,m_dataTest[split_index][0].Label.c_str());
+    w = m_dataTest[split_index][0].Weight;
+    for (auto it = m_dataTest[split_index][0].Vars.begin();
+	 it != m_dataTest[split_index][0].Vars.end(); ++it){
+      int index = distance(m_dataTest[split_index][0].Vars.begin(), it);
+      vars[index] = m_dataTest[split_index][0].Vars[index];
+    }
+    for (auto it = m_dataTest[split_index][0].VarsSpec.begin();
+	 it != m_dataTest[split_index][0].VarsSpec.end(); ++it){
+      int index = distance(m_dataTest[split_index][0].VarsSpec.begin(), it);
+      varsSpec[index] = m_dataTest[split_index][0].VarsSpec[index];
+    }
+    m_dataTest[split_index].erase(m_dataTest[split_index].begin());
+    return 1;
+  }
+  else{
+    cout << "You passed all the events" << endl;
     return 0;
-  }
-  else if (Common::StringCompare(m_event_sample,"train"))
-    {return m_dataTrain[m_split_index][m_event_current-1].Weight;}
-  else if (Common::StringCompare(m_event_sample,"test"))
-    {return m_dataTest[m_split_index][m_event_current-1].Weight;}
-  else {
-    cout << "Your sample could be testing or training." << endl;
-    return 0;
-  }
-}
-
-char *
-TMVATool::GetLabel(void)
-{
-  if (m_event_current==0) {
-    cout << "Returning 0. Try your chance with NextEvent." << endl;
-    return NULL;
-  }
-  else if (Common::StringCompare(m_event_sample,"train")){
-    return &m_dataTrain[m_split_index][m_event_current-1].Label[0];
-  }
-  else if (Common::StringCompare(m_event_sample,"test")){
-    return &m_dataTest[m_split_index][m_event_current-1].Label[0];
-  }
-  else {
-    cout << "Your sample could be testing or training." << endl;
-    return NULL;
-  }
-}
-
-double *
-TMVATool::GetVars(void)
-{
-  if (m_event_current==0) {
-    cout << "Returning 0. Try your chance with NextEvent." << endl;
-    return NULL;
-  }
-  else if (Common::StringCompare(m_event_sample,"train")){
-    return &m_dataTrain[m_split_index][m_event_current-1].Vars[0];
-  }
-  else if (Common::StringCompare(m_event_sample,"test")){
-    return &m_dataTest[m_split_index][m_event_current-1].Vars[0];
-  }
-  else {
-    cout << "Your sample could be testing or training." << endl;
-    return NULL;
-  }
-}
-
-double *
-TMVATool::GetSpectatorVars(void)
-{
-  if (m_event_current==0) {
-    cout << "Returning 0. Try your chance with NextEvent." << endl;
-    return NULL;
-  }
-  else if (Common::StringCompare(m_event_sample,"train")){
-    return &m_dataTrain[m_split_index][m_event_current-1].VarsSpec[0];
-  }
-  else if (Common::StringCompare(m_event_sample,"test")){
-    return &m_dataTest[m_split_index][m_event_current-1].VarsSpec[0];
-  }
-  else {
-    cout << "Your sample could be testing or training." << endl;
-    return NULL;
   }
 }
 

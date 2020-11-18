@@ -47,11 +47,7 @@ public:
   void SetLoaders(const vector<TMVA::DataLoader*> &loaders);
   void SetReaders(TMVA::Reader* reader);
   void SetReaders(const vector<TMVA::Reader*> &readers);
-  double GetWeight();
-  char *GetLabel(void);
-  double *GetVars(void);
-  double *GetSpectatorVars(void);
-  int NextEvent(char *sample,int split_index,int start=0,int max=-1);
+  int PassEvent(char *sample,int split_index,char label[],double &w, double vars[], double varsSpec[]);
   int GetNVar() {return m_nvar;}
   int GetNSpectatorVar() {return m_nvarSpec;}
 
@@ -75,9 +71,6 @@ private:
   string m_label_current;
   string m_weight_current;
   string m_cut_current;
-  string m_event_sample;
-  int m_event_current;
-  int m_split_index;
   map<string,double> m_scale_current;
   
   vector<double> m_weights;

@@ -45,13 +45,13 @@ public:
   TString GetFactoryOpt() {return m_factoryOpt;}
   TString GetClassifierOpt() {return m_classifierOpt;}
   TString GetSamplingOpt() {return m_samplingOpt;}
-  char *GetArchitectureOpt() {return &m_trainingOpt[0];}
-  char *GetEngineOpt() {return &m_classifierOpt[0];}
-  char *GetLabelOpt() {return &m_samplingOpt[0];}
-  char *GetLabelName(int index) {return &m_labels[index][0];}
-  char *GetVariableName(int index) {return &m_variables[index][0];}
-  char *GetSpectatorVariableName(int index) {return &m_variables_other[index][0];}
-  char *GetParamName() {return &m_paramvar[0];}
+  void GetArchitectureOpt(char carr[]) {strcpy(carr,string(m_trainingOpt).c_str());}
+  void GetEngineOpt(char carr[]) {strcpy(carr,string(m_classifierOpt).c_str());}
+  void GetLabelOpt(char carr[]) {strcpy(carr,string(m_samplingOpt).c_str());}
+  void GetLabelName(int index, char carr[]) {strcpy(carr,m_labels[index].c_str());}
+  void GetVariableName(int index, char carr[]) {strcpy(carr,m_variables[index].c_str());}
+  void GetSpectatorVariableName(int index, char carr[]) {strcpy(carr,m_variables_other[index].c_str());}
+  void GetParamName(char carr[]) {strcpy(carr,m_paramvar.c_str());}
   vector<TString> GetTXML();
   vector<TString> GetTVariables();
   vector<TString> GetTVariablesOther();
@@ -61,8 +61,6 @@ public:
   string GetParamScale() {return m_pscale;}
   int GetNSplit() {return m_nsplit;}
   int GetNLabel() {return m_nlabel;}
-
-  void FreeMem(void *ptr) {printf("freeing address: %p\n", ptr);free(ptr);}
 
 protected:
   

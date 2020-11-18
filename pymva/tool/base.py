@@ -1,5 +1,4 @@
 from ctypes import *
-from TMVAFunc import *
 import os
 
 class TMVATool(object):
@@ -11,17 +10,6 @@ class TMVATool(object):
             print('Cannot fing your C++ library. Please check if TMVATool has been built')
             exit()
         self.__lib = cdll.LoadLibrary(cpp_lib)
-        self.__lib.TMVATool_GetWeight.restype = c_double
-        self.__lib.TMVATool_GetVars.restype = POINTER(c_double)
-        self.__lib.TMVATool_GetSpectatorVars.restype = POINTER(c_double)
-        self.__lib.TMVATool_GetLabel.restype = c_char_p
-        #self.__lib.TMVATool_GetLabelName.restype = c_void_p
-        self.__lib.TMVATool_GetVariableName.restype = c_char_p
-        self.__lib.TMVATool_GetSpectatorVariableName.restype = c_char_p
-        self.__lib.TMVATool_GetParamName.restype = c_char_p
-        self.__lib.TMVATool_GetArchitectureOpt.restype = c_char_p
-        self.__lib.TMVATool_GetEngineOpt.restype = c_char_p
-        self.__lib.TMVATool_GetLabelOpt.restype = c_char_p
         self.__nsplit = 0
         self.__nlabel = 0
         self.NVar = 0
@@ -70,58 +58,68 @@ class TMVATool(object):
         return self.__lib.TMVATool_NextEvent(self.__obj,c_char_p(sample),index,minimum,maximum)
 
     def GetArchitectureOpt(self):
-        ptr=self.__lib.TMVATool_GetArchitectureOpt(self.__obj)
-        return ptr
+        s=create_string_buffer(b'\000' * 1024)
+        self.__lib.TMVATool_GetArchitectureOpt(self.__obj,s)
+        val=s.value
+        print ('Architecture Opt:: %s'%(val))
+        return val
         
     def GetEngineOpt(self):
-        ptr=self.__lib.TMVATool_GetEngineOpt(self.__obj)
-        return ptr
+        s=create_string_buffer(b'\000' * 1024)
+        self.__lib.TMVATool_GetEngineOpt(self.__obj,s)
+        val=s.value
+        print ('Engine Opt:: %s'%(val))
+        return val
         
     def GetLabelOpt(self):
-        ptr=self.__lib.TMVATool_GetLabelOpt(self.__obj)
-        return ptr
-        
-    def GetWeight(self):
-        return self.__lib.TMVATool_GetWeight(self.__obj)
-        
-    def GetVars(self):
-        ptr=self.__lib.TMVATool_GetVars(self.__obj)
-        Vars=[ptr[i] for i in range(self.NVar)]
-        return Vars
-        
-    def GetSpectatorVars(self):
-        ptr=self.__lib.TMVATool_GetSpectatorVars(self.__obj)
-        Vars=[ptr[i] for i in range(self.NVarSpec)]
-        return Vars
-        
-    def GetLabel(self):
-        ptr=self.__lib.TMVATool_GetLabel(self.__obj)
-        return ptr
+        s=create_string_buffer(b'\000' * 1024)
+        self.__lib.TMVATool_GetLabelOpt(self.__obj,s)
+        val=s.value
+        print ('Label Opt:: %s'%(val))
+        return val
         
     def GetLabelName(self,index):
-        ptr=self.__lib.TMVATool_GetLabelName(self.__obj,c_int(index))
-        val=cast(ptr,c_char_p).value
+        s=create_string_buffer(b'\000' * 1024)
+        self.__lib.TMVATool_GetLabelName(self.__obj,c_int(index),s)
+        val=s.value
+        print ('Label %i:: %s'%(index,val))
         return val
         
     def GetVariableName(self,index):
-        ptr=self.__lib.TMVATool_GetVariableName(self.__obj,c_int(index))
-        return ptr
+        s=create_string_buffer(b'\000' * 1024)
+        self.__lib.TMVATool_GetVariableName(self.__obj,c_int(index),s)
+        val=s.value
+        return val
         
     def GetSpectatorVariableName(self,index):
-        ptr=self.__lib.TMVATool_GetSpectatorVariableName(self.__obj,c_int(index))
-        return ptr
+        s=create_string_buffer(b'\000' * 1024)
+        self.__lib.TMVATool_GetSpectatorVariableName(self.__obj,c_int(index),s)
+        val=s.value
+        return val
         
     def GetParamName(self):
-        ptr=self.__lib.TMVATool_GetParamName(self.__obj)
-        return ptr
+        s=create_string_buffer(b'\000' * 1024)
+        self.__lib.TMVATool_GetParamName(self.__obj,s)
+        val=s.value
+        return val
 
     def GetEvents(self,sample,index):
         x,xspec,y,w=[],[],[],[]
 
-        while self.NextEvent(sample,index):
-            x.append(self.GetVars())
-            xspec.append(self.GetSpectatorVars())
-            y.append(self.GetLabel())
-            w.append(self.GetWeight())
-        
+        l=create_string_buffer(b'\000' * 128)
+        var=(c_double*self.NVar)()
+        varSpec=(c_double*self.NVarSpec)()
+        weight=c_double()
+        while self.__lib.TMVATool_PassEvent(self.__obj,c_char_p(sample),c_int(index),l,byref(weight),byref(var),byref(varSpec)):
+            y.append(l.value)
+            w.append(weight.value)
+            xtmp=[]
+            for i in range(self.NVar):
+                xtmp.append(var[i])
+            xtmpSpec=[]
+            for i in range(self.NVarSpec):
+                xtmpSpec.append(varSpec[i])
+            x.append(xtmp)
+            xspec.append(xtmpSpec)
+            
         return x,xspec,y,w

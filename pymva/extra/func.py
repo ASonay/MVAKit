@@ -114,14 +114,14 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
 
     noo=1
     if isinstance(y1[0],list):
-        noo=np.array(y1).shape[1]
+        noo=len(y1[0])
     print('\nNumber of Outputs:',noo)
 
     variable_size = len(var)
     variableSpec_size = len(varSpec)
 
     label = vector('string')()
-    class_id = array('i', [ 0 ]*noo )
+    class_id = vector('int')()
     variables = variable_size*[0]
     variablesSpec = variableSpec_size*[0]
     for i in range(variable_size):
@@ -129,63 +129,69 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
     for i in range(variableSpec_size):
         variablesSpec[i] = array('f', [ 0. ] )
     weight = array('f', [ 0. ] )
-    score = array('f', [ 0. ]*noo )
+    score = vector('float')()
 
     f = TFile(fil,'recreate')
     t1 = TTree('tr_train','Tree for Training Output')
     t2 = TTree('tr_test','Tree for Test Output')
 
     t1.Branch('label',label)
-    t1.Branch('class_id',class_id,'class_id['+str(noo)+']/I')
+    t1.Branch('class_id',class_id)
     for i in range(variable_size):
         t1.Branch(var[i],variables[i],var[i]+'/F')
     for i in range(variableSpec_size):
         t1.Branch(varSpec[i],variablesSpec[i],varSpec[i]+'/F')
     t1.Branch('weight',weight,'weight/F')
-    t1.Branch('score',score,'score['+str(noo)+']/F')
+    t1.Branch('score',score)
 
     t2.Branch('label',label)
-    t2.Branch('class_id',class_id,'class_id['+str(noo)+']/I')
+    t2.Branch('class_id',class_id)
     for i in range(variable_size):
         t2.Branch(var[i],variables[i],var[i]+'/F')
     for i in range(variableSpec_size):
         t2.Branch(varSpec[i],variablesSpec[i],varSpec[i]+'/F')
     t2.Branch('weight',weight,'weight/F')
-    t2.Branch('score',score,'score['+str(noo)+']/F')
+    t2.Branch('score',score)
 
     for i in range(len(x1)):
         label.clear()
         label.push_back(l1[i])
-        if noo > 1:
-            for j in range(noo):
-                class_id[j] = int(y1[i][j])
+        class_id.clear()
+        if isinstance(y1[i],list):
+            for y in y1[i]: class_id.push_back(int(y))
         else:
-            class_id[0] = int(y1[i])
+            class_id.push_back(int(y1[i]))
         for j in range(variable_size):
             variables[j][0] = x1[i][j]
         for j in range(variableSpec_size):
             variablesSpec[j][0] = x1spec[i][j]
         weight[0] = w1[i]
-        for j in range(noo):
-            score[j] = y1_pred[i][j]
+        score.clear()
+        if isinstance(y1_pred[i],list):
+            for y in y1_pred[i]: score.push_back(int(y))
+        else:
+            score.push_back(int(y1_pred[i]))
         t1.Fill()
     t1.Write()
 
     for i in range(len(x2)):
         label.clear()
         label.push_back(l2[i])
-        if noo > 1:
-            for j in range(noo):
-                class_id[j] = int(y2[i][j])
+        class_id.clear()
+        if isinstance(y2[i],list):
+            for y in y2[i]: class_id.push_back(int(y))
         else:
-            class_id[0] = int(y2[i])
+            class_id.push_back(int(y2[i]))
         for j in range(variable_size):
             variables[j][0] = x2[i][j]
         for j in range(variableSpec_size):
             variablesSpec[j][0] = x2spec[i][j]
         weight[0] = w2[i]
-        for j in range(noo):
-            score[j] = y2_pred[i][j]
+        score.clear()
+        if isinstance(y2_pred[i],list):
+            for y in y2_pred[i]: score.push_back(int(y))
+        else:
+            score.push_back(int(y2_pred[i]))
         t2.Fill()
     t2.Write()
 
@@ -221,14 +227,12 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import make_pipeline
 from sklearn.externals.joblib import dump
 from sklearn import metrics
-def PCAStdTransform(x_train,y_train,x_test,y_test,varnames=[],save_loc='keras_output/feature_weight/'):
+def PCAStdTransform(x_train,y_train,x_test,varnames=[],save_loc='keras_output/feature_weight/'):
     ncomp = len(x_train[0])
     #-------------------------------------------------------------------
     std_clf = make_pipeline(StandardScaler(), PCA(n_components=ncomp), GaussianNB())
     std_clf.fit(x_train, y_train)
     pred_test_std = std_clf.predict(x_test)
-    print('\nPrediction accuracy for the standardized test dataset with PCA')
-    print('{:.2%}\n'.format(metrics.accuracy_score(y_test, pred_test_std)))
     pca_std = std_clf.named_steps['pca']
     scaler = std_clf.named_steps['standardscaler']
     x_train_scaled = pca_std.transform(scaler.transform(x_train))
