@@ -41,6 +41,10 @@ namespace Common {
   //
   // Find digit in string
   double FindDigit(const string ref,const string var);
+  //
+  //
+  // Find digit in string
+  string GetMappedStr(map<string,string> str_map, int index);
 
 }
 #endif

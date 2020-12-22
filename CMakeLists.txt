@@ -6,7 +6,7 @@ if( NOT ${CMAKE_VERSION} VERSION_LESS 3.9 )
 endif()
 
 # Set the project's name and version.
-project( TMVATool )
+project( MVAKit )
 
 # Enable using CTest in the project.
 include( CTest )
@@ -33,57 +33,59 @@ set( CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -pedantic -O3 -g -fPIC" )
 # ------------------------------------------------
 
 # Add ROOT system directory and require ROOT.
-find_package( ROOT 6.10.06 REQUIRED COMPONENTS Core MathCore Tree TMVA )
+find_package( ROOT 6.10.06 REQUIRED COMPONENTS Core MathCore Tree TMVA PyMVA)
 
 link_libraries(stdc++fs)
 
 # ------------------------------------------------
-# TMVATool library
+# MVAKit library
 # ------------------------------------------------
 
 set( lib_headers
-  TMVATool/Common.hpp
-  TMVATool/ReadTree.hpp
-  TMVATool/Configuration.hpp
-  TMVATool/TMVATool.hpp )
+  MVAKit/Common.hpp
+  MVAKit/ReadTree.hpp
+  MVAKit/Configuration.hpp
+  MVAKit/MVAKit.hpp
+  MVAKit/EvalTMVA.hpp )
 set( lib_sources
   src/External.cpp
   src/Common.cpp
   src/ReadTree.cpp
   src/Configuration.cpp
-  src/TMVATool.cpp )
+  src/MVAKit.cpp
+  src/EvalTMVA.cpp )
 
-add_library( TMVATool SHARED ${lib_headers} ${lib_sources} )
-target_include_directories( TMVATool
+add_library( MVAKit SHARED ${lib_headers} ${lib_sources} )
+target_include_directories( MVAKit
   PUBLIC ${ROOT_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> $<INSTALL_INTERFACE:>)
-target_link_libraries( TMVATool ${ROOT_LIBRARIES} )
-set_property( TARGET TMVATool
+target_link_libraries( MVAKit ${ROOT_LIBRARIES} )
+set_property( TARGET MVAKit
   PROPERTY PUBLIC_HEADER ${lib_headers} )
-target_include_directories( TMVATool PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
+target_include_directories( MVAKit PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
 
 # Install the libraries.
-install( TARGETS TMVATool
-  EXPORT TMVAToolTargets
+install( TARGETS MVAKit
+  EXPORT MVAKitTargets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  PUBLIC_HEADER DESTINATION include/TMVATool )
+  PUBLIC_HEADER DESTINATION include/MVAKit )
 
 # ------------------------------------------------
-# TMVATool executables
+# MVAKit executables
 # ------------------------------------------------
 
 # Helper macro for building the project's executables.
-macro( TMVATool_add_executable name )
+macro( MVAKit_add_executable name )
   add_executable( ${name} ${ARGN} )
   target_include_directories( ${name} PUBLIC ${ROOT_INCLUDE_DIRS} )
-  target_link_libraries( ${name} TMVATool ${ROOT_LIBRARIES} )
+  target_link_libraries( ${name} MVAKit ${ROOT_LIBRARIES} )
   install( TARGETS ${name}
-    EXPORT TMVAToolTargets
+    EXPORT MVAKitTargets
     RUNTIME DESTINATION bin )
-endmacro( TMVATool_add_executable )
+endmacro( MVAKit_add_executable )
 
-TMVATool_add_executable( tmva_train util/tmva_train.cxx )
-TMVATool_add_executable( tmva_eval util/tmva_eval.cxx )
+MVAKit_add_executable( tmva_train util/tmva_train.cxx )
+MVAKit_add_executable( create_ntuple util/create_ntuple.cxx )
 
 add_definitions( -DTMVATOOL_HOME=${CMAKE_CURRENT_SOURCE_DIR} )

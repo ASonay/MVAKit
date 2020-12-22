@@ -9,6 +9,7 @@
 #include <iterator>
 #include <map>
 #include <vector>
+#include <stdarg.h>
 
 #include "TFile.h"
 #include "TTree.h"
@@ -22,48 +23,34 @@
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Reader.h"
+#include "TMVA/PyMethodBase.h"
+#include "TMVA/Tools.h"
 
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-#include "TMVATool/TMVATool.hpp"
+#include "MVAKit/EvalTMVA.hpp"
 
 using namespace std;
 
-vector<TMVA::Reader*> tmva_reader;
-vector<Float_t*> vec_variables;
-vector<Float_t*> vec_variablesSpec;
-vector<pair<int,int>> cond;
-TString method;
+bool isInit = false;
 
-vector<pair<int,int>> GetCond(vector<string> cond)
-{
-  vector<pair<int,int>> x;
-  for (auto c : cond){
-    string first=c.substr(c.find("%") + 1);
-    string second=c.substr(c.find("=") + 2);
-    int a=atoi(first.c_str());
-    int b=atoi(second.c_str());
-    x.push_back(make_pair(a,b));
-  }
-  reverse(x.begin(),x.end());
-  cout << "\nYour Selections:" << endl;
-  for (auto v : x){
-    cout << "<var>%" << v.first << "==" << v.second << endl;
-  }
-  return x;
-}
+map<int,pair<string,string>> training = {{0,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
+					 {1,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
+					 {2,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
+					 {3,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/os2l/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_kin.conf"}},
+					 {4,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/os2l/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_kin.conf"}},
+					 {5,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/os2l/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_kin.conf"}},
+					 {6,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/ljets/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_hf.conf"}},
+					 {99,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/multiclass/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_multiclass_hf.conf"}}
+};
 
-void Init(string dir,
-	  string xml,
-	  string cnf
-	  )
+map<int,unique_ptr<EvalTMVA>> evaluater;
+
+void GetTMVAScore()
 {
-  tmva_reader.clear();
-  vec_variables.clear();
-  vec_variablesSpec.clear();
-  cond.clear();
-  string lib = dir + "build/lib/libTMVATool.so";
+  string mvakit_dir = getenv("MVAKIT_HOME");
+  string lib = mvakit_dir + "/build/lib/libMVAKit.so";
   if (gSystem->Load(lib.c_str())==0)
     {cout << "Your library, " << lib << " successfully loaded." << endl;}
   else if (gSystem->Load(lib.c_str())==1)
@@ -72,83 +59,24 @@ void Init(string dir,
     cout << "Your library, " << lib << " cannot be loaded." << endl;
     exit(0);
   }
-  // Configuration part-----------------------------
-  TMVATool tool("Evaluate");
 
-  tool.SetConf(cnf);
-  tool.SetXML(xml);
-  tool.isClassification(0);
-  tool.ReadConf();
+  for (auto const &x : training)
+    {evaluater[x.first] = unique_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
 
-  vector<string> split = tool.GetSplit();cond=GetCond(split);
-  vector<TString> variables = tool.GetTVariables();
-  vector<TString> variablesSpec = tool.GetTVariablesOther();
-  vector<TString> weight_file = tool.GetTXML();
-  const int variables_size = variables.size();
-  const int variablesSpec_size = variablesSpec.size();
-  // Configuration part-----------------------------
-  //Book TMVA---------------------------------------
-  method = tool.GetClassifierOpt()+" method";
-  for (auto wf : weight_file){
-    TMVA::Reader* rdr= new TMVA::Reader( "!Color:!Silent" );
-    Float_t *local_variables = new Float_t[variables_size];
-    Float_t *local_variablesSpec = new Float_t[variablesSpec_size];
-    for(int i=0;i<variables_size;i++)
-      rdr->AddVariable(string(variables[i]).c_str() , &local_variables[i] );
-    for(int i=0;i<variablesSpec_size;i++)
-      rdr->AddSpectator(string(variablesSpec[i]).c_str() , &local_variablesSpec[i] );
-    vec_variables.push_back(local_variables);
-    vec_variablesSpec.push_back(local_variablesSpec);
-    rdr->BookMVA( method, wf );
-    tmva_reader.push_back(rdr);
+  for (auto const &x : evaluater){
+    x.second->Init();
+    cout << x.second->GetScoreRatio({1}) << endl;;
   }
+  
+  isInit=true;
 }
 
-Double_t GetScore(int en=0,
-		  Double_t var1=0,
-		  Double_t var2=0,
-		  Double_t var3=0,
-		  Double_t var4=0,
-		  Double_t var5=0,
-		  Double_t var6=0,
-		  Double_t var7=0,
-		  Double_t var8=0,
-		  Double_t var9=0,
-		  Double_t var10=0,
-		  Double_t var11=0,
-		  Double_t var12=0,
-		  Double_t var13=0,
-		  Double_t var14=0,
-		  Double_t var15=0,
-		  Double_t var16=0,
-		  Double_t var17=0
-		  )
-{
-  Double_t score = -999.;
-
-  for (unsigned rsize=0;rsize<tmva_reader.size();rsize++){
-    vec_variables[rsize][0]=var1;
-    vec_variables[rsize][1]=var2;
-    vec_variables[rsize][2]=var3;
-    vec_variables[rsize][3]=var4;
-    vec_variables[rsize][4]=var5;
-    vec_variables[rsize][5]=var6;
-    vec_variables[rsize][6]=var7;
-    vec_variables[rsize][7]=var8;
-    vec_variables[rsize][8]=var9;
-    vec_variables[rsize][9]=var10;
-    vec_variables[rsize][10]=var11;
-    vec_variables[rsize][11]=var12;
-    vec_variables[rsize][12]=var13;
-    vec_variables[rsize][13]=var14;
-    vec_variables[rsize][14]=var15;
-    vec_variables[rsize][15]=var16;
-    vec_variables[rsize][16]=var17;
-  }
-  for (unsigned rsize=0;rsize<tmva_reader.size();rsize++){
-    if (en%cond[rsize].first==cond[rsize].second)
-      score=tmva_reader[rsize]->EvaluateMVA( method );
-  }
-
-  return score;
+template<typename... Args>
+Double_t GetVal(int ev, int en, int cl1, int cl2, Args... args){
+  
+  if (!isInit) GetTMVAScore();
+  
+  vector<Double_t> x = { float{args}... };
+  
+  return evaluater[ev]->GetScoreRatio(x,en,cl1,cl2);
 }

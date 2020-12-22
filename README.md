@@ -10,18 +10,18 @@ source setup.sh
 ```
 
 **Compiling :**    
-- First time: `tmvatool-build`
-- Recompile: `tmvatool-make`
-- Clean folder: `tmvatool-clean`
+- First time: `mvakit-build`
+- Recompile: `mvakit-make`
+- Clean folder: `mvakit-clean`
 
 **Running :**
 * Training,
 ```
 tmva_train --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --ConfFile <ConfFile.txt>
 ```
-* Evaluating,
+* Creating Ntuple (External macros can be loaded in configuration in order to evaluate trained weights.),
 ```
-tmva_eval --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --xml <file1.xml>,..,<filen.xml> <cond1>,..,<condn> --ConfFile <ConfFile.txt> --par <value> --var <Variable Name>
+tmva_train --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --ConfFile <ConfFile.txt>
 ```
 
 , where the `--par` and the `--var` optional for value of the parameterized training and variable name to be recorded in ntuple, respectively.
@@ -121,16 +121,8 @@ Example run;
 tmva_train --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttH_tttt_m*_mc16a.root Signal --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttbar_PhPy8_AFII_AllFilt_mc16a.root Bkg1 --ntup /eos/atlas/atlascerngroupdisk/phys-top/4tops2019/ntuples/common-fw_tag212750/offline/SM4t-212750-1LOS-v3/ljetsge10j/ttW_Sherpa_mc16a.root Bkg2 --conf config/config_massparam_mclass_DNN.conf
 ```
 
-# Evaluating Results
-
-This section is explaining to evaluating results that you have done their trainings. Simply, following tool works for filling your existing ntuples with the TMVA score. Although it is working, it is still under development.
-```
-tmva_eval --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --xml <file1.xml>,..,<filen.xml> <cond1>,..,<condn> --ConfFile <ConfFile.txt> --par <value> --var <Variable Name>
-```
-For the cross validation, conditions has to be given in opposite way. Although it is working for multiple samples, the suggested way is using it for one ntuple at once (memory usage will be optimized later).
-
-The suggested way to evaluate the score is using the external script (e.g. [scripts/GetTMVAScore.cpp](scripts/GetTMVAScore.cpp)).
-
 # Python Extension (Will be updated)
+
+This framework can be used in python or can be used with TMVA python extensions..
 
 Contact : @asonay

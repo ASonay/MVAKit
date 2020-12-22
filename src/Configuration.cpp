@@ -1,7 +1,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-#include "TMVATool/Configuration.hpp"
+#include "MVAKit/Configuration.hpp"
 
 
 using namespace std;
@@ -10,7 +10,8 @@ Configuration::Configuration(const char *name):
   m_psplit("Cross-section"),
   m_split_per(0),
   m_parameterized(false),
-  m_classification(true)
+  m_classification(true),
+  m_execution(true)
 {
   m_confName = string(name);
   cout << "Configuration will be setup for " << m_confName << ".\n" << endl;
@@ -109,11 +110,19 @@ Configuration::ReadConf(){
   while (in >> str){
     if (str.compare("Var:")==0){
       in >> str;
-      m_variables.push_back(str);
+      vector<string> line = Common::StringSep(str,';');
+      if (line.size()>1)
+	{m_variables.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[1]));}
+      else
+	{m_variables.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[0]));}
     }
     else if (str.compare("OtherVar:")==0){
       in >> str;
-      m_variables_other.push_back(str);
+      vector<string> line = Common::StringSep(str,';');
+      if (line.size()>1)
+	{m_variables_other.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[1]));}
+      else
+	{m_variables_other.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[0]));}
     }
     else if (str.compare("ParamVar:")==0){
       in >> str;
@@ -144,21 +153,33 @@ Configuration::ReadConf(){
       in >> str;
       m_tree.push_back(make_pair(label,str));
     }
-    else if (str.compare("TrainingOpt:")==0 || str.compare("ArchitectureOpt:")==0){
+    else if (str.compare("TrainingOpt:")==0){
       in >> str;
       m_trainingOpt=str;
+    }
+    else if (str.compare("ArchitectureOpt:")==0){
+      in >> str;
+      m_arcOpt=str;
     }
     else if (str.compare("FactoryOpt:")==0){
       in >> str;
       m_factoryOpt=str;
     }
-    else if (str.compare("ClassifierOpt:")==0 || str.compare("EngineOpt:")==0){
+    else if (str.compare("ClassifierOpt:")==0){
       in >> str;
       m_classifierOpt=str;
     }
-    else if (str.compare("SamplingOpt:")==0 || str.compare("LabelOpt:")==0){
+    else if (str.compare("EngineOpt:")==0){
+      in >> str;
+      m_engOpt=str;
+    }
+    else if (str.compare("SamplingOpt:")==0){
       in >> str;
       m_samplingOpt=str;
+    }
+    else if (str.compare("LabelOpt:")==0){
+      in >> str;
+      m_labOpt=str;
     }
     else if (str.compare("Split:")==0){
       in >> str;
@@ -175,6 +196,10 @@ Configuration::ReadConf(){
     else if (str.compare("LoadFiles:")==0){
       in >> str;
       m_loadFile=Common::StringSep(str);
+    }
+    else if (str.compare("ExecuteFunctions:")==0){
+      in >> str;
+      m_exe=Common::StringSep(str,';');
     }
     else if (str.compare("LoadLibs:")==0){
       in >> str;
@@ -194,46 +219,49 @@ Configuration::ReadConf(){
   m_nvarSpec=m_variables_other.size();
   m_nsplit=m_split.size();
 
-  for (auto x : m_loadLib){
-    int libLoad = gSystem->Load(x.c_str());
-    if ( libLoad==0)
-      {cout << "Your library, " << x << " successfully loaded." << endl;}
-    else if ( libLoad==1)
-      {cout << "Your library, " << x << " successfully loaded before." << endl;}
-    else{
-      cout << "Your library, " << x << " cannot be loaded." << endl;
-      exit(0);
+  if (m_execution){
+    for (auto x : m_loadLib){
+      int libLoad = gSystem->Load(x.c_str());
+      if ( libLoad==0)
+	{cout << "Your library, " << x << " successfully loaded." << endl;}
+      else if ( libLoad==1)
+	{cout << "Your library, " << x << " successfully loaded before." << endl;}
+      else{
+	cout << "Your library, " << x << " cannot be loaded." << endl;
+	exit(0);
+      }
     }
-  }
 
-  for (auto x : m_loadFile){
-    if (gROOT->LoadMacro((x+"+").c_str())==0)
-      {cout << "Your macro, " << x << " successfully loaded." << endl;}
-    else{
-      cout << "Your macro, " << x << " cannot be loaded." << endl;
-      exit(0);
+    for (auto x : m_loadFile){
+      if (gROOT->LoadMacro((x+"+").c_str())==0)
+	{cout << "Your macro, " << x << " successfully loaded." << endl;}
+      else{
+	cout << "Your macro, " << x << " cannot be loaded." << endl;
+	exit(0);
+      }
+    }
+
+    for (auto x : m_exe){
+      gROOT->ProcessLine(x.c_str());
     }
   }
   
   if (m_nsplit==0)
-    m_split.push_back("Split:50");
+    m_split.push_back("Split;50");
 
-  if (m_split[0].find("Split:") != string::npos)
+  if (m_split[0].find("Split;") != string::npos)
     {m_split_per = atoi(m_split[0].substr(6).c_str());}
 
   if (!m_paramvar.empty()){
     cout << "\nParameterization detected for : " << m_paramvar << endl;
     m_parameterized=true;
   }
-    if (m_nlabel<2){
-    cout << "You should at least have two different label for classification." << endl;
-  }
     
   if (m_nlabel<2 && m_classification){
     cout << "You should at least have two different label for classification." << endl;
     exit(0);
   }
-  
+
   if (m_parameterized && m_xmlFile.empty()){
     const int columnId = 0;
     const string paramFind = m_paramvar;
@@ -252,9 +280,8 @@ Configuration::ReadConf(){
 vector<TString>
 Configuration::GetTVariables(){
   vector<TString> newvars;
-  for (auto var : m_variables){
-    string var_tmp = Common::RemoveSpecialChars(var);
-    newvars.push_back(var_tmp);
+  for (auto const& var : m_variables){
+    newvars.push_back(var.first);
   }
 
   if (!m_paramvar.empty()){
@@ -267,9 +294,31 @@ Configuration::GetTVariables(){
 vector<TString>
 Configuration::GetTVariablesOther(){
   vector<TString> newvars;
-  for (auto var : m_variables_other){
-    string var_tmp = Common::RemoveSpecialChars(var);
-    newvars.push_back(var_tmp);
+  for (auto const& var : m_variables_other){
+    newvars.push_back(var.first);
+  }
+  return newvars;
+}
+
+vector<string>
+Configuration::GetVariables(){
+  vector<string> newvars;
+  for (auto const& var : m_variables){
+    newvars.push_back(var.first);
+  }
+
+  if (!m_paramvar.empty()){
+    newvars.push_back(m_paramvar);
+  }
+  
+  return newvars;
+}
+
+vector<string>
+Configuration::GetVariablesOther(){
+  vector<string> newvars;
+  for (auto const& var : m_variables_other){
+    newvars.push_back(var.first);
   }
   return newvars;
 }

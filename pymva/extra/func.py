@@ -73,6 +73,7 @@ def GetKerasModel(input_dim,opt):
 
 import numpy as np
 from keras.optimizers import SGD,Adam,RMSprop
+from keras.models import Sequential
 def TrainKerasModel(model,opt,x,y,w):
     getopt = opt.split(',')
     optlist={}
@@ -107,10 +108,62 @@ def TrainKerasModel(model,opt,x,y,w):
     model.compile(loss=loss, optimizer=optim, metrics=['accuracy'])
     print (model.summary())
     model.fit(np.array(x), np.array(y), sample_weight = np.array(w), epochs=nepoch, batch_size=batch)
+    
+def CompileKerasModel(model,opt):
+    getopt = opt.split(',')
+    optlist={}
+    for o in getopt:
+        osplit=o.split(';')
+        if len(osplit) == 2:
+            optlist[osplit[0].upper()]=osplit[1]
+        else:
+            print ('Your options has to be like following,')
+            print ('opt1;val1,...,optn;valn')
+            exit()
+    
+    lrate=float(optlist['LRATE'])
+    momentum=float(optlist['MOMENTUM'])
+    nepoch=int(optlist['EPOCH'])
+    batch=int(optlist['BATCH'])
+    optimizer=optlist['OPTIMIZER']
+    loss=optlist['LOSS']
 
-from ROOT import TFile, TTree, vector
+    optim=None
+    if optimizer.upper() == 'SGD':
+        optim=SGD(lr=lrate, momentum=momentum)
+    elif optimizer.upper() == 'ADAM':
+        optim=Adam(lr=lrate)
+    elif optimizer.upper() == 'RMSPROP':
+        optim=RMSprop(lr=lrate, momentum=momentum)
+    else:
+        print ('Available optimizers: SGD,ADAM,RMSPROP')
+        print ('You choose none, SGD will be run..')
+        optim=SGD(lr=lrate, momentum=momentum)
+        
+    model.compile(loss=loss, optimizer=optim, metrics=['accuracy'])
+    print (model.summary())
+
+from ROOT import TFile, TTree, vector, TCut
 from array import array
-def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_pred,w2):
+
+def ReadFile(fil,tr,ind):
+    data = TFile.Open(fil)
+    tree = data.Get(tr)
+
+    x,xspec,y,w=[],[],[],[]
+    for ev in tree:
+        if ev.split == ind:
+            x.append([e for e in ev.Vars])
+            xspec.append([e for e in ev.VarsSpec])
+            y.append([e for e in ev.classID])
+            w.append(ev.weight)
+    data.Close()
+
+    if len(y[0])==1 : y = [e[0] for e in y]
+    
+    return x,xspec,y,w
+
+def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2):
 
     noo=1
     if isinstance(y1[0],list):
@@ -120,7 +173,6 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
     variable_size = len(var)
     variableSpec_size = len(varSpec)
 
-    label = vector('string')()
     class_id = vector('int')()
     variables = variable_size*[0]
     variablesSpec = variableSpec_size*[0]
@@ -135,7 +187,6 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
     t1 = TTree('tr_train','Tree for Training Output')
     t2 = TTree('tr_test','Tree for Test Output')
 
-    t1.Branch('label',label)
     t1.Branch('class_id',class_id)
     for i in range(variable_size):
         t1.Branch(var[i],variables[i],var[i]+'/F')
@@ -144,7 +195,6 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
     t1.Branch('weight',weight,'weight/F')
     t1.Branch('score',score)
 
-    t2.Branch('label',label)
     t2.Branch('class_id',class_id)
     for i in range(variable_size):
         t2.Branch(var[i],variables[i],var[i]+'/F')
@@ -154,8 +204,6 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
     t2.Branch('score',score)
 
     for i in range(len(x1)):
-        label.clear()
-        label.push_back(l1[i])
         class_id.clear()
         if isinstance(y1[i],list):
             for y in y1[i]: class_id.push_back(int(y))
@@ -168,15 +216,13 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
         weight[0] = w1[i]
         score.clear()
         if isinstance(y1_pred[i],list):
-            for y in y1_pred[i]: score.push_back(int(y))
+            for y in y1_pred[i]: score.push_back(y)
         else:
-            score.push_back(int(y1_pred[i]))
+            score.push_back(y1_pred[i])
         t1.Fill()
     t1.Write()
 
     for i in range(len(x2)):
-        label.clear()
-        label.push_back(l2[i])
         class_id.clear()
         if isinstance(y2[i],list):
             for y in y2[i]: class_id.push_back(int(y))
@@ -189,9 +235,9 @@ def SaveToNtuple(fil,var,varSpec,x1,x1spec,l1,y1,y1_pred,w1,x2,x2spec,l2,y2,y2_p
         weight[0] = w2[i]
         score.clear()
         if isinstance(y2_pred[i],list):
-            for y in y2_pred[i]: score.push_back(int(y))
+            for y in y2_pred[i]: score.push_back(y)
         else:
-            score.push_back(int(y2_pred[i]))
+            score.push_back(y2_pred[i])
         t2.Fill()
     t2.Write()
 

@@ -1,4 +1,4 @@
-#include "TMVATool/Common.hpp"
+#include "MVAKit/Common.hpp"
 
 using namespace std;
 
@@ -27,6 +27,9 @@ Common::RemoveSpecialChars(const string str){
   replace( str_r.begin(), str_r.end(), '+', '_');
   replace( str_r.begin(), str_r.end(), '-', '_');
   replace( str_r.begin(), str_r.end(), '.', '_');
+  //replace( str_r.begin(), str_r.end(), ',', '_');
+  replace( str_r.begin(), str_r.end(), ';', '_');
+  replace( str_r.begin(), str_r.end(), ':', '_');
   replace( str_r.begin(), str_r.end(), '&', '_');
   replace( str_r.begin(), str_r.end(), '*', '_');
   replace( str_r.begin(), str_r.end(), '{', '_');
@@ -94,4 +97,15 @@ Common::FindDigit(const string ref,const string var){
   string str_tmp = ref.substr(strPos+var.length());
   double val = atoi(str_tmp.c_str());
   return val;
+}
+
+string
+Common::GetMappedStr(map<string,string> str_map, int index){
+  int count=0;
+  string str;
+  for (auto const& var : str_map){
+    if (count == index)
+      {str=var.second;}
+  }
+  return str;
 }
