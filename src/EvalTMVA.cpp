@@ -18,7 +18,24 @@ EvalTMVA::EvalTMVA(string xml,string cnf)
 }
 
 EvalTMVA::~EvalTMVA()
-{}
+{
+  Reset();
+}
+
+void EvalTMVA::Reset()
+{
+  for (auto x : m_tmva_reader)
+    {delete x;}
+  for (auto x : m_vec_variables)
+    {delete x;}
+  for (auto x : m_vec_variablesSpec)
+    {delete x;}
+  m_tmva_reader.clear();
+  m_vec_variables.clear();
+  m_vec_variablesSpec.clear();
+
+  cout << "EvalTMVA::Memory cleaned up !!" << endl;
+}
 
 void EvalTMVA::Init()
 {
@@ -37,14 +54,13 @@ void EvalTMVA::Init()
   vector<TString> variables = m_tool->GetTVariables();
   vector<TString> variablesSpec = m_tool->GetTVariablesOther();
   vector<TString> weight_file = m_tool->GetTXML();
-  const int variables_size = variables.size();
+  const int variables_size = variables.size(); 
   const int variablesSpec_size = variablesSpec.size();
   // Configuration part-----------------------------
   //Book TMVA---------------------------------------
   m_method = m_tool->GetClassifierOpt()+" method";
-  m_tmva_reader->reserve(weight_file.size());
   for (auto wf : weight_file){
-    auto rdr= make_unique<TMVA::Reader>( "!Color:!Silent" );
+    auto rdr = new TMVA::Reader( "!Color:!Silent" );
     Float_t *local_variables = new Float_t[variables_size];
     Float_t *local_variablesSpec = new Float_t[variablesSpec_size];
     for(int i=0;i<variables_size;i++)
@@ -54,7 +70,7 @@ void EvalTMVA::Init()
     m_vec_variables.push_back(local_variables);
     m_vec_variablesSpec.push_back(local_variablesSpec);
     rdr->BookMVA( m_method, wf );
-    m_tmva_reader->push_back(move(rdr));
+    m_tmva_reader.push_back(rdr);
   }
 }
 
@@ -80,19 +96,19 @@ Double_t EvalTMVA::GetScore(vector<Double_t> x, int en)
 {
   Double_t score = -999.;
 
-  for (unsigned rsize=0;rsize<m_tmva_reader->size();rsize++){
+  for (unsigned rsize=0;rsize<m_tmva_reader.size();rsize++){
     for (unsigned i=0;i<x.size();i++)
       {m_vec_variables[rsize][i]=x[i];}
   }
 
-  if (m_tmva_reader->size()>1){
-    for (unsigned rsize=0;rsize<m_tmva_reader->size();rsize++){
+  if (m_tmva_reader.size()>1){
+    for (unsigned rsize=0;rsize<m_tmva_reader.size();rsize++){
       if (en%m_reverse_cond[rsize].first==m_reverse_cond[rsize].second)
-	score=m_tmva_reader->at(rsize)->EvaluateMVA(m_method);
+	score=m_tmva_reader.at(rsize)->EvaluateMVA(m_method);
     }
   }
   else{
-    score=m_tmva_reader->at(0)->EvaluateMVA(m_method);
+    score=m_tmva_reader.at(0)->EvaluateMVA(m_method);
   }
 
   return score;
@@ -102,19 +118,19 @@ Double_t EvalTMVA::GetMultiClassScore(vector<Double_t> x, int en, int cl)
 {
   Double_t score = -999.;
 
-  for (unsigned rsize=0;rsize<m_tmva_reader->size();rsize++){
+  for (unsigned rsize=0;rsize<m_tmva_reader.size();rsize++){
     for (unsigned i=0;i<x.size();i++)
       {m_vec_variables[rsize][i]=x[i];}
   }
 
-  if (m_tmva_reader->size()>1){
-    for (unsigned rsize=0;rsize<m_tmva_reader->size();rsize++){
+  if (m_tmva_reader.size()>1){
+    for (unsigned rsize=0;rsize<m_tmva_reader.size();rsize++){
       if (en%m_reverse_cond[rsize].first==m_reverse_cond[rsize].second)
-	score=m_tmva_reader->at(rsize)->EvaluateMulticlass(m_method)[cl];
+	score=m_tmva_reader.at(rsize)->EvaluateMulticlass(m_method)[cl];
     }
   }
   else{
-    score=m_tmva_reader->at(0)->EvaluateMulticlass(m_method)[cl];
+    score=m_tmva_reader.at(0)->EvaluateMulticlass(m_method)[cl];
   }
 
   return score;
@@ -125,19 +141,19 @@ Double_t EvalTMVA::GetScoreRatio(vector<Double_t> x, int en, int cl1, int cl2)
   
   Double_t score = -999.;
 
-  for (unsigned rsize=0;rsize<m_tmva_reader->size();rsize++){
+  for (unsigned rsize=0;rsize<m_tmva_reader.size();rsize++){
     for (unsigned i=0;i<x.size();i++)
       {m_vec_variables[rsize][i]=x[i];}
   }
 
-  if (m_tmva_reader->size()>1){
-    for (unsigned rsize=0;rsize<m_tmva_reader->size();rsize++){
+  if (m_tmva_reader.size()>1){
+    for (unsigned rsize=0;rsize<m_tmva_reader.size();rsize++){
       if (en%m_reverse_cond[rsize].first==m_reverse_cond[rsize].second)
-	score=m_tmva_reader->at(rsize)->EvaluateMulticlass(m_method)[cl1]/m_tmva_reader->at(0)->EvaluateMulticlass(m_method)[cl2];
+	score=m_tmva_reader.at(rsize)->EvaluateMulticlass(m_method)[cl1]/m_tmva_reader.at(0)->EvaluateMulticlass(m_method)[cl2];
     }
   }
   else{
-    score=m_tmva_reader->at(0)->EvaluateMulticlass(m_method)[cl1]/m_tmva_reader->at(0)->EvaluateMulticlass(m_method)[cl2];
+    score=m_tmva_reader.at(0)->EvaluateMulticlass(m_method)[cl1]/m_tmva_reader.at(0)->EvaluateMulticlass(m_method)[cl2];
   }
   return score;
  

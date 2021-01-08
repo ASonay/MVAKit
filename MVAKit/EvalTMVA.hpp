@@ -14,6 +14,7 @@ public:
   ~EvalTMVA();
 
   void Init();
+  void Reset();
 
   Double_t GetScore(vector<Double_t> x={0}, int en=0);
   Double_t GetMultiClassScore(vector<Double_t> x={0}, int en=0, int cl=0);
@@ -23,7 +24,7 @@ private:
 
   vector<pair<int,int>> GetReverseCond(vector<string> cond);
     
-  vector<unique_ptr<TMVA::Reader>> *m_tmva_reader;
+  vector<TMVA::Reader*> m_tmva_reader;
   vector<Float_t*> m_vec_variables;
   vector<Float_t*> m_vec_variablesSpec;
   vector<pair<int,int>> m_reverse_cond;

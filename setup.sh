@@ -28,7 +28,7 @@ echo -e "\nMVAKit Home Dir : " ${MVAKIT_HOME}
 #setup root and LCG environment
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
-LCG_setup="views LCG_97a x86_64-centos7-gcc9-opt"
+LCG_setup="views LCG_97a x86_64-centos7-gcc8-opt"
 echo -e "LCG setup will be used, " ${LCG_setup}
 lsetup "${LCG_setup}"
 
