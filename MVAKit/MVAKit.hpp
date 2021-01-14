@@ -90,7 +90,6 @@ private:
   vector<Double_t> m_varsSpec;
   
   vector<TMVA::DataLoader*> m_loaders;
-  vector<TMVA::Reader*> m_readers;
 
   vector<vector<DataContainer>> m_dataTrain;
   vector<vector<DataContainer>> m_dataTest;

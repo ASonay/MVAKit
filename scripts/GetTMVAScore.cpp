@@ -34,16 +34,22 @@
 using namespace std;
 
 bool isInit = false;
+int map_index=-100;
 
-map<int,pair<string,string>> training = {
-					 //REWEIGHTING
+map<int,pair<string,string>> training = {//REWEIGHTING
 					 {0,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
 					 {1,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
 					 {2,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
 					 {3,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/os2l/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_kin.conf"}},
 					 {4,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/os2l/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_kin.conf"}},
 					 {5,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/os2l/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_kin.conf"}},
-					 //{6,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/ljets/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_hf.conf"}}
+					 {6,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/ljets/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_hf.conf"}},
+					 {7,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/ljets/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_hf.conf"}},
+					 {8,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/ljets/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_hf.conf"}},
+					 {9,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/ljets/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_kin0.conf"}},
+					 {10,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/ljets/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_kin.conf"}},
+					 {11,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/ljets/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_kin.conf"}},
+					 
 					 //BDT
 					 {4001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M400/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M400/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation.conf"}},
 					 {5001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M500/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M500/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation.conf"}},
@@ -61,9 +67,9 @@ map<int,pair<string,string>> training = {
 					 {10002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/os2l/M1000/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/os2l/M1000/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_2l.conf"}}
 };
 
-map<int,unique_ptr<EvalTMVA>> evaluater;
+map<int,shared_ptr<EvalTMVA>> evaluater;
 
-void GetTMVAScore()
+void GetTMVAScore(int ev=-100)
 {
   string mvakit_dir = getenv("MVAKIT_HOME");
   string lib = mvakit_dir + "/build/lib/libMVAKit.so";
@@ -77,13 +83,14 @@ void GetTMVAScore()
   }
 
   for (auto const &x : training)
-    {evaluater[x.first] = unique_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
+    {evaluater[x.first] = shared_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
 
   for (auto const &x : evaluater){
     x.second->Init();
     cout << x.second->GetScoreRatio({1}) << endl;;
   }
-  
+
+  map_index=ev;
   isInit=true;
 }
 
@@ -104,5 +111,7 @@ Double_t GetScore(int ev, int en, Args... args){
   
   vector<Double_t> x = { float{args}... };
 
-  return evaluater[ev]->GetScore(x,en);
+  int index = map_index==-100 ? ev : map_index*10+ev;
+
+  return evaluater[index]->GetScore(x,en);
 }

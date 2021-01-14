@@ -24,16 +24,21 @@ EvalTMVA::~EvalTMVA()
 
 void EvalTMVA::Reset()
 {
+  cout << "EvalTMVA::Memory cleaning for: " << endl;
+  
   for (auto x : m_tmva_reader)
     {delete x;}
   for (auto x : m_vec_variables)
-    {delete x;}
+    {delete[] x;}
   for (auto x : m_vec_variablesSpec)
-    {delete x;}
+    {delete[] x;}
   m_tmva_reader.clear();
   m_vec_variables.clear();
   m_vec_variablesSpec.clear();
+  m_reverse_cond.clear();
 
+  cout << "EvalTMVA::XML: " << m_xml_file << endl;
+  cout << "EvalTMVA::CONFIG " << m_cnf_file << endl;
   cout << "EvalTMVA::Memory cleaned up !!" << endl;
 }
 
