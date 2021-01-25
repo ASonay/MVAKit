@@ -24,9 +24,9 @@ private:
 
   vector<pair<int,int>> GetReverseCond(vector<string> cond);
     
-  vector<TMVA::Reader*> m_tmva_reader;
-  vector<Float_t*> m_vec_variables;
-  vector<Float_t*> m_vec_variablesSpec;
+  vector<unique_ptr<TMVA::Reader>> m_tmva_reader;
+  vector<unique_ptr<Float_t[]>> m_vec_variables;
+  vector<unique_ptr<Float_t[]>> m_vec_variablesSpec;
   vector<pair<int,int>> m_reverse_cond;
   TString m_method;
   string m_xml_file;

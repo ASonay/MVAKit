@@ -15,6 +15,7 @@ mutex mu;
 MVAKit::MVAKit(const char *name) : Configuration(name),
 				       is_second(false),
 				       m_fsave(false),
+				       m_fclone(false),
 				       m_maxth(10),
 				       m_total_param_weight(0)
 {
@@ -27,37 +28,119 @@ MVAKit::~MVAKit()
 void
 MVAKit::CloseFile()
 {
-  m_ttree_test->Write();
-  m_ttree_train->Write();
+  const int split_size = m_split.size();
+
+  for (int i=0;i<split_size;i++){
+    if (m_split_per!=100)
+      {m_ttree_test[i].Write();}
+    m_ttree_train[i].Write();
+  }
   m_tfile->Write();
 
-  m_ttree_test.reset();
-  m_ttree_train.reset();
   m_tfile->Close();
-  m_tfile.reset();
+
 }
 
 void
 MVAKit::SetFile(const char *name)
 {
+  int counter=0;
+
+  const string base_name_train = "TrainTree";
+  const string base_name_test = "TestTree";
+  const int nov = m_variables.size()+m_variables_other.size();
+  const int split_size = m_split.size();
+  
+  m_var_rec.reset(new double[nov]);
+
   m_fsave = true;
   m_tfile.reset(new TFile(name,"recreate"));
-  m_ttree_test.reset(new TTree("TestTree","PreData Test"));
-  m_ttree_train.reset(new TTree("TrainTree","PreData Train"));
+  m_ttree_test.reset(new TTree[split_size]);
+  m_ttree_train.reset(new TTree[split_size]);
 
-  m_ttree_test->Branch("classID",&m_classID);
-  m_ttree_test->Branch("label",&m_label_current);
-  m_ttree_test->Branch("split",&m_cond_index,"split/I");
-  m_ttree_test->Branch("Vars",&m_vars);
-  m_ttree_test->Branch("VarsSpec",&m_varsSpec);
-  m_ttree_test->Branch("weight",&m_w,"weight/D");
+  for (int i=0;i<split_size;i++){
+    m_ttree_test[i].SetName((base_name_test+to_string(i)).c_str());
+    m_ttree_test[i].Branch("classID",&m_classID);
+    m_ttree_test[i].Branch("label",&m_label_current);
+    for (auto const &var : m_variables){
+      m_ttree_test[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      counter++;
+    }
+    for (auto const &var : m_variables_other){
+      m_ttree_test[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      counter++;
+    }
+    counter=0;
+    m_ttree_test[i].Branch("weight",&m_w,"weight/D");
+  }
+  for (int i=0;i<split_size;i++){
+    m_ttree_train[i].SetName((base_name_train+to_string(i)).c_str());
+    m_ttree_train[i].Branch("classID",&m_classID);
+    m_ttree_train[i].Branch("label",&m_label_current);
+    for (auto const &var : m_variables){
+      m_ttree_train[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      counter++;
+    }
+    for (auto const &var : m_variables_other){
+      m_ttree_test[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      counter++;
+    }
+    m_ttree_train[i].Branch("weight",&m_w,"weight/D");
+  }
+}
 
-  m_ttree_train->Branch("classID",&m_classID);
-  m_ttree_train->Branch("label",&m_label_current);
-  m_ttree_train->Branch("split",&m_cond_index,"split/I");
-  m_ttree_train->Branch("Vars",&m_vars);
-  m_ttree_train->Branch("VarsSpec",&m_varsSpec);
-  m_ttree_train->Branch("weight",&m_w,"weight/D");
+void
+MVAKit::SetFiletoClone(string name)
+{
+  int counter=0;
+  string newname(name);
+  string substr = ".root";
+  newname.replace(newname.find(substr),substr.length(),"_clone.root");
+
+  const int nov = m_variables.size()+m_variables_other.size();
+  m_var_rec.reset(new double[nov]);
+
+  m_tchain.reset(new TChain(m_tree_current.c_str()));
+  m_tchain->Add(name.c_str());
+  m_tfile.reset(new TFile(newname.c_str(),"recreate"));
+  m_ttree = unique_ptr<TTree>(m_tchain->CloneTree());
+
+  m_ttree->Branch("classID",&m_classID);
+  m_ttree->Branch("label",&m_label_current);
+  for (auto const &var : m_variables){
+    m_ttree->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+    counter++;
+  }
+  for (auto const &var : m_variables_other){
+    m_ttree->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+    counter++;
+  }
+  m_ttree->Branch("weight",&m_w,"weight/D");
+}
+
+bool
+MVAKit::FillVarstoRecord()
+{
+  int counter=0;
+
+  for (auto x : m_vars){
+    m_var_rec[counter]=x;
+    counter++;
+  }
+  for (auto x : m_varsSpec){
+    m_var_rec[counter]=x;
+    counter++;
+  }
+
+  if (m_fclone) {
+    m_ttree->GetBranch("classID")->Fill();
+    m_ttree->GetBranch("label")->Fill();
+    for (auto const &var : m_variables) {m_ttree->GetBranch(var.first.c_str())->Fill();}
+    for (auto const &var : m_variables_other) {m_ttree->GetBranch(var.first.c_str())->Fill();}
+    m_ttree->GetBranch("weight")->Fill();
+    return true;
+  }
+  else {return false;}
 }
 
 void
@@ -238,6 +321,7 @@ MVAKit::AssignEvents(const string fname)
   cout << "File will be open: " << fname << endl;
   m_treader->SetInputs(fname,m_tree_current,m_cut_current,m_weight_current);
   int noe = (int)m_treader->GetEntries();
+  if (m_fclone) {SetFiletoClone(fname);}
 
   for (int i=0;i<noe;i++){
     m_w = m_treader->GetWeight(i);
@@ -254,28 +338,33 @@ MVAKit::AssignEvents(const string fname)
 	if (x.first=="single")
 	  {scale=x.second;}
       }
-      m_w*=scale;
+      m_w*=scale; 
       m_vars = m_treader->GetInputs("v",i);
       m_varsSpec = m_treader->GetInputs("vs",i);
       if (m_parameterized) {m_vars.push_back((Double_t)GetParam(fname,m_w));}
+      if (FillVarstoRecord()) {continue;}
       if (split_cond){
 	if (m_loaders.size()!=0){
 	  for (auto var : m_varsSpec) m_vars.push_back(var);
 	  m_loaders[m_cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,m_vars,m_w);
-	}else if (m_fsave){m_ttree_train->Fill();}
+	}else if (m_fsave){m_ttree_train[m_cond_index].Fill();}
 	else {cout << "Not find any SetFile or SetLoader" << endl;exit(0);}
       }
       else{
 	if (m_loaders.size()!=0){
 	  for (auto var : m_varsSpec) m_vars.push_back(var);
 	  m_loaders[m_cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,m_vars,m_w);
-	}else if (m_fsave){m_ttree_test->Fill();}
+	}else if (m_fsave){m_ttree_test[m_cond_index].Fill();}
 	else {cout << "Not find any SetFile or SetLoader" << endl;exit(0);}
       }
       m_cond_index++;
     }
   }
-
+  if (m_fclone) {
+    m_ttree->Write();
+    m_tfile->Write();
+    m_ttree.reset();
+  }
 }
 
 double

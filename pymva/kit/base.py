@@ -112,23 +112,3 @@ class MVAKit(object):
         val=s.value
         return val
 
-    def GetEvents(self,sample,index):
-        x,xspec,y,w=[],[],[],[]
-
-        l=create_string_buffer(b'\000' * 128)
-        var=(c_double*self.NVar)()
-        varSpec=(c_double*self.NVarSpec)()
-        weight=c_double()
-        while self.__lib.MVAKit_PassEvent(self.__obj,c_char_p(sample),c_int(index),l,byref(weight),byref(var),byref(varSpec)):
-            y.append(l.value)
-            w.append(weight.value)
-            xtmp=[]
-            for i in range(self.NVar):
-                xtmp.append(var[i])
-            xtmpSpec=[]
-            for i in range(self.NVarSpec):
-                xtmpSpec.append(varSpec[i])
-            x.append(xtmp)
-            xspec.append(xtmpSpec)
-            
-        return x,xspec,y,w

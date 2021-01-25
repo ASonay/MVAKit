@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 #include "TChain.h"
+#include "TTree.h"
 
 using namespace std;
 

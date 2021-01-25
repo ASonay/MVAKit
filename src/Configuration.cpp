@@ -33,7 +33,7 @@ Configuration::Parser(int argc,char **argv)
   if (m_confName=="Training")
     {command = app_name+" --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --ConfFile <ConfFile.txt>";}
   else if (m_confName=="Evaluate")
-    {command = app_name+" --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --xml <file1.xml>,..,<filen.xml> <cond1>,..,<condn> --ConfFile <ConfFile.txt>";}
+    {command = app_name+" --ntup <ntup1.root> label1 .. --ntup <ntupn.root> labeln --ConfFile <ConfFile.txt>";}
   else
     {
       cout << "Could not find any proper configuration name." << endl;
@@ -43,7 +43,6 @@ Configuration::Parser(int argc,char **argv)
   
   bool is_ntup=false;
   bool is_file=false;
-  bool is_xml=false;
 
   for (int i=1;i<argc;i++){
     string check = argv[i];
@@ -64,8 +63,6 @@ Configuration::Parser(int argc,char **argv)
 	    }
 	}
       }
-    else if (check=="--xml")
-      {m_xmlFile = Common::StringSep(argv[i+1]);m_cond = Common::StringSep(argv[i+2]);is_xml=true;i+=2;}
     else if (check=="--par")
       {m_param = argv[i+1];i++;}
     else if (check=="--var")
@@ -87,12 +84,6 @@ Configuration::Parser(int argc,char **argv)
   }
 
   if (!is_file){
-    cout << "Usage of the script :" << endl;
-    cout << command << endl;
-    exit(0);
-  }
-
-  if (!is_xml && m_confName=="Evaluate"){
     cout << "Usage of the script :" << endl;
     cout << command << endl;
     exit(0);

@@ -87,5 +87,6 @@ endmacro( MVAKit_add_executable )
 
 MVAKit_add_executable( tmva_train util/tmva_train.cxx )
 MVAKit_add_executable( create_ntuple util/create_ntuple.cxx )
+MVAKit_add_executable( clone_ntuple util/clone_ntuple.cxx )
 
 add_definitions( -DTMVATOOL_HOME=${CMAKE_CURRENT_SOURCE_DIR} )

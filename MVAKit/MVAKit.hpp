@@ -20,6 +20,7 @@
 
 #include "TTree.h"
 #include "TFile.h"
+#include "TChain.h"
 
 using namespace std;
 
@@ -48,6 +49,7 @@ public:
   void SetEvents();
   void SetLoaders(TMVA::DataLoader* loader);
   void SetLoaders(const vector<TMVA::DataLoader*> &loaders);
+  void CloneFiles(bool cond=true) {m_fclone=cond; m_fsave=cond;}
   void ExecuteModel();
   int GetNVar() {return m_nvar;}
   int GetNSpectatorVar() {return m_nvarSpec;}
@@ -59,13 +61,15 @@ private:
   double GetParam(string file,Double_t &weight);
   
   void ReadEvents(string label, vector<string> files);
-
   void AssignEvents(const string fname);
+  bool FillVarstoRecord();
+  void SetFiletoClone(string name);
 
 
   int m_cond_index;
   bool is_second;
   bool m_fsave;
+  bool m_fclone;
   unsigned m_maxth;
   
   vector<thread> m_th;
@@ -88,6 +92,7 @@ private:
   Double_t m_w;
   vector<Double_t> m_vars;
   vector<Double_t> m_varsSpec;
+  unique_ptr<Double_t[]> m_var_rec;
   
   vector<TMVA::DataLoader*> m_loaders;
 
@@ -95,9 +100,11 @@ private:
   vector<vector<DataContainer>> m_dataTest;
 
   unique_ptr<ReadTree> m_treader;
-  unique_ptr<TTree> m_ttree_test;
-  unique_ptr<TTree> m_ttree_train;
+  unique_ptr<TTree[]> m_ttree_test;
+  unique_ptr<TTree[]> m_ttree_train;
+  unique_ptr<TTree> m_ttree;
   unique_ptr<TFile> m_tfile;
+  unique_ptr<TChain> m_tchain;
 
   mt19937 m_gen;
   discrete_distribution<int> m_discDist;
