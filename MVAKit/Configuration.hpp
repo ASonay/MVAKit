@@ -51,8 +51,8 @@ public:
   void GetEngineOpt(char carr[]) {strcpy(carr,string(m_engOpt).c_str());}
   void GetLabelOpt(char carr[]) {strcpy(carr,string(m_labOpt).c_str());}
   void GetLabelName(int index, char carr[]) {strcpy(carr,m_labels[index].c_str());}
-  void GetVariableName(int index, char carr[]) {strcpy(carr,m_variables[index].second.c_str());}
-  void GetSpectatorVariableName(int index, char carr[]) {strcpy(carr,m_variables_other[index].second.c_str());}
+  void GetVariableName(int index, char carr[]) {strcpy(carr,m_variables[index].first.c_str());}
+  void GetSpectatorVariableName(int index, char carr[]) {strcpy(carr,m_variables_other[index].first.c_str());}
   void GetParamName(char carr[]) {strcpy(carr,m_paramvar.c_str());}
   vector<TString> GetTXML();
   vector<TString> GetTVariables();
@@ -109,7 +109,7 @@ protected:
  
 private:
   map<string,double> ScaleMap(const string str);
-
+  
   string m_confFile;
   string m_confName;
 

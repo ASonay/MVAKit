@@ -81,6 +81,9 @@ private:
   string m_tree_current;
   map<string,double> m_scale_current;
 
+  map<string,int> m_LabelEntries;
+  map<string,float> m_LabelWeight;
+
   vector<int> m_classID;
   vector<double> m_weights;
   vector<double> m_param_vec;
@@ -93,15 +96,15 @@ private:
   vector<Double_t> m_vars;
   vector<Double_t> m_varsSpec;
   unique_ptr<Double_t[]> m_var_rec;
-  
+ 
   vector<TMVA::DataLoader*> m_loaders;
 
   vector<vector<DataContainer>> m_dataTrain;
   vector<vector<DataContainer>> m_dataTest;
 
   unique_ptr<ReadTree> m_treader;
-  unique_ptr<TTree[]> m_ttree_test;
-  unique_ptr<TTree[]> m_ttree_train;
+  vector<unique_ptr<TTree>> m_ttree_test;
+  vector<unique_ptr<TTree>> m_ttree_train;
   unique_ptr<TTree> m_ttree;
   unique_ptr<TFile> m_tfile;
   unique_ptr<TChain> m_tchain;

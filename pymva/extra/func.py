@@ -1,3 +1,6 @@
+import numpy as np
+from ROOT import TFile, TTree, vector, TCut, std
+from array import array
 
 def GetDigitLabel(label,dic={'sig':1.0,'bkg':0.0}):
     y=[]
@@ -28,9 +31,9 @@ def Labeling(string):
 
     return label_tags_dic
 
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
 def GetKerasModel(input_dim,opt):
+    from keras.models import Sequential
+    from keras.layers import Dense, Dropout
     layers = opt.split(',')
     if len(layers) < 2:
         print ('You should have at least two layer for NN')
@@ -71,10 +74,9 @@ def GetKerasModel(input_dim,opt):
 
     return model
 
-import numpy as np
-from keras.optimizers import SGD,Adam,RMSprop
-from keras.models import Sequential
 def TrainKerasModel(model,opt,x,y,w):
+    from keras.optimizers import SGD,Adam,RMSprop
+    from keras.models import Sequential
     getopt = opt.split(',')
     optlist={}
     for o in getopt:
@@ -110,6 +112,8 @@ def TrainKerasModel(model,opt,x,y,w):
     model.fit(np.array(x), np.array(y), sample_weight = np.array(w), epochs=nepoch, batch_size=batch)
     
 def CompileKerasModel(model,opt):
+    from keras.optimizers import SGD,Adam,RMSprop
+    from keras.models import Sequential
     getopt = opt.split(',')
     optlist={}
     for o in getopt:
@@ -143,25 +147,57 @@ def CompileKerasModel(model,opt):
     model.compile(loss=loss, optimizer=optim, metrics=['accuracy'])
     print (model.summary())
 
-from ROOT import TFile, TTree, vector, TCut
-from array import array
-
-def ReadFile(fil,tr,ind):
+def ReadFile(fil,tr,variables):
     data = TFile.Open(fil)
     tree = data.Get(tr)
-
-    x,xspec,y,w=[],[],[],[]
-    for ev in tree:
-        if ev.split == ind:
-            x.append([e for e in ev.Vars])
-            xspec.append([e for e in ev.VarsSpec])
-            y.append([e for e in ev.classID])
-            w.append(ev.weight)
+    label = std.vector('int')(1)
+    tree.SetBranchAddress('classID', label)
+    
+    x,y,w=[],[],[]
+    for i in xrange(tree.GetEntries()):
+        tree.GetEntry(i)
+        x_tmp=[]
+        for var in variables:
+            x_tmp.append(getattr(tree,var))
+        x.append(x_tmp)
+        y_tmp=[]
+        for j in range(label.size()):
+            y_tmp.append(label[j])
+        y.append(y_tmp)
+        w.append(getattr(tree,'weight'))
     data.Close()
-
+    
     if len(y[0])==1 : y = [e[0] for e in y]
     
-    return x,xspec,y,w
+    return x,y,w
+
+def UpdateFile(fil,tree_train,tree_test,y_pred_train,y_pred_test):
+    tfile = TFile(fil,"update")
+    tr_train = tfile.Get(tree_train)
+    tr_test = tfile.Get(tree_test)
+    score = vector('float')()
+
+    tr_train.Branch('score',score)
+    tr_test.Branch('score',score)
+
+    for x in y_pred_train:
+        score.clear()
+        if isinstance(x,list):
+            for e in x: score.push_back(e)
+        else:
+            score.push_back(x)
+        tr_train.GetBranch('score').Fill()
+    tr_train.Write()
+    for x in y_pred_test:
+        score.clear()
+        if isinstance(x,list):
+            for e in x: score.push_back(e)
+        else:
+            score.push_back(x)
+        tr_test.GetBranch('score').Fill()
+    tr_test.Write()
+    tfile.Write()
+    tfile.Close()
 
 def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2):
 

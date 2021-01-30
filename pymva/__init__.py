@@ -1,4 +1,4 @@
 from . import kit
-#from . import extra
+from . import extra
 
 __version__ = '0.001'

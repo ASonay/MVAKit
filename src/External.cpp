@@ -13,7 +13,7 @@ extern "C" {
   int MVAKit_GetNVar(MVAKit* tool){ return tool->GetNVar(); }
   int MVAKit_GetNSpectatorVar(MVAKit* tool){ return tool->GetNSpectatorVar(); }
   int MVAKit_GetNSplit(MVAKit* tool){ return tool->GetNSplit(); }
-  int MVAKit_GetNLabel(MVAKit* tool){ return tool->GetNLabel(); }
+  int MVAKit_GetNLabel(MVAKit* tool){ return tool->GetNLabel(); } 
   
   void MVAKit_GetLabelName(MVAKit* tool,int index, char carr[]){ tool->GetLabelName(index,carr); }
   void MVAKit_GetArchitectureOpt(MVAKit* tool, char carr[]){ tool->GetArchitectureOpt(carr); }

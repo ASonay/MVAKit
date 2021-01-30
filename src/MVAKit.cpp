@@ -32,8 +32,8 @@ MVAKit::CloseFile()
 
   for (int i=0;i<split_size;i++){
     if (m_split_per!=100)
-      {m_ttree_test[i].Write();}
-    m_ttree_train[i].Write();
+      {m_ttree_test[i]->Write();}
+    m_ttree_train[i]->Write();
   }
   m_tfile->Write();
 
@@ -44,61 +44,64 @@ MVAKit::CloseFile()
 void
 MVAKit::SetFile(const char *name)
 {
-  int counter=0;
-
   const string base_name_train = "TrainTree";
   const string base_name_test = "TestTree";
   const int nov = m_variables.size()+m_variables_other.size();
   const int split_size = m_split.size();
   
-  m_var_rec.reset(new double[nov]);
-
   m_fsave = true;
   m_tfile.reset(new TFile(name,"recreate"));
-  m_ttree_test.reset(new TTree[split_size]);
-  m_ttree_train.reset(new TTree[split_size]);
+  m_var_rec.reset(new Double_t[nov]);
 
   for (int i=0;i<split_size;i++){
-    m_ttree_test[i].SetName((base_name_test+to_string(i)).c_str());
-    m_ttree_test[i].Branch("classID",&m_classID);
-    m_ttree_test[i].Branch("label",&m_label_current);
+    int counter=0;
+    m_ttree_test.emplace_back(new TTree((base_name_test+to_string(i)).c_str(),"Test Tree"));
+    m_ttree_test.back()->Branch("classID",&m_classID);
+    m_ttree_test.back()->Branch("label",&m_label_current);
     for (auto const &var : m_variables){
-      m_ttree_test[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      m_ttree_test.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      counter++;
+    }
+    if (m_parameterized){
+      m_ttree_test.back()->Branch(m_paramvar.c_str(),&m_var_rec[counter],(m_paramvar+"/D").c_str());
       counter++;
     }
     for (auto const &var : m_variables_other){
-      m_ttree_test[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      m_ttree_test.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
       counter++;
     }
-    counter=0;
-    m_ttree_test[i].Branch("weight",&m_w,"weight/D");
+    m_ttree_test.back()->Branch("weight",&m_w,"weight/D");
   }
   for (int i=0;i<split_size;i++){
-    m_ttree_train[i].SetName((base_name_train+to_string(i)).c_str());
-    m_ttree_train[i].Branch("classID",&m_classID);
-    m_ttree_train[i].Branch("label",&m_label_current);
+    int counter=0;
+    m_ttree_train.emplace_back(new TTree((base_name_train+to_string(i)).c_str(),"Train Tree"));
+    m_ttree_train.back()->Branch("classID",&m_classID);
+    m_ttree_train.back()->Branch("label",&m_label_current);
     for (auto const &var : m_variables){
-      m_ttree_train[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      m_ttree_train.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      counter++;
+    }
+    if (m_parameterized){
+      m_ttree_train.back()->Branch(m_paramvar.c_str(),&m_var_rec[counter],(m_paramvar+"/D").c_str());
       counter++;
     }
     for (auto const &var : m_variables_other){
-      m_ttree_test[i].Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+      m_ttree_train.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
       counter++;
     }
-    m_ttree_train[i].Branch("weight",&m_w,"weight/D");
+    m_ttree_train.back()->Branch("weight",&m_w,"weight/D");
   }
 }
 
 void
 MVAKit::SetFiletoClone(string name)
 {
-  int counter=0;
   string newname(name);
   string substr = ".root";
   newname.replace(newname.find(substr),substr.length(),"_clone.root");
 
   const int nov = m_variables.size()+m_variables_other.size();
-  m_var_rec.reset(new double[nov]);
+  m_var_rec.reset(new Double_t[nov]);
 
   m_tchain.reset(new TChain(m_tree_current.c_str()));
   m_tchain->Add(name.c_str());
@@ -107,8 +110,13 @@ MVAKit::SetFiletoClone(string name)
 
   m_ttree->Branch("classID",&m_classID);
   m_ttree->Branch("label",&m_label_current);
+  int counter=0;
   for (auto const &var : m_variables){
     m_ttree->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
+    counter++;
+  }
+  if (m_parameterized){
+    m_ttree->Branch(m_paramvar.c_str(),&m_var_rec[counter],(m_paramvar+"/D").c_str());
     counter++;
   }
   for (auto const &var : m_variables_other){
@@ -121,17 +129,19 @@ MVAKit::SetFiletoClone(string name)
 bool
 MVAKit::FillVarstoRecord()
 {
-  int counter=0;
 
-  for (auto x : m_vars){
-    m_var_rec[counter]=x;
-    counter++;
+  if (m_fsave){
+    int counter=0;
+    for (auto x : m_vars){
+      m_var_rec[counter]=x;
+      counter++;
+    }
+    for (auto x : m_varsSpec){
+      m_var_rec[counter]=x;
+      counter++;
+    }
   }
-  for (auto x : m_varsSpec){
-    m_var_rec[counter]=x;
-    counter++;
-  }
-
+  
   if (m_fclone) {
     m_ttree->GetBranch("classID")->Fill();
     m_ttree->GetBranch("label")->Fill();
@@ -289,6 +299,10 @@ MVAKit::ReadEvents(string label, vector<string> files){
   for (auto x : files){
     AssignEvents(x);
   }
+
+  cout << "\nTotal count and weight for label, " << m_label_current << ": "
+       << m_LabelEntries[m_label_current] << ", " << m_LabelWeight[m_label_current]
+       << "\n"<< endl; 
   
   if (m_parameterized && !is_second){
     cout << "\nParameterization:" << endl;
@@ -323,8 +337,10 @@ MVAKit::AssignEvents(const string fname)
   int noe = (int)m_treader->GetEntries();
   if (m_fclone) {SetFiletoClone(fname);}
 
+  m_LabelEntries[m_label_current]+=noe;
   for (int i=0;i<noe;i++){
     m_w = m_treader->GetWeight(i);
+    m_LabelWeight[m_label_current]+=m_w;
     vector<Double_t> cond = m_treader->GetInputs("z",i);
     m_cond_index=0;
     for (auto sp : m_split){
@@ -347,14 +363,14 @@ MVAKit::AssignEvents(const string fname)
 	if (m_loaders.size()!=0){
 	  for (auto var : m_varsSpec) m_vars.push_back(var);
 	  m_loaders[m_cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,m_vars,m_w);
-	}else if (m_fsave){m_ttree_train[m_cond_index].Fill();}
+	}else if (m_fsave){m_ttree_train[m_cond_index]->Fill();}
 	else {cout << "Not find any SetFile or SetLoader" << endl;exit(0);}
       }
       else{
 	if (m_loaders.size()!=0){
 	  for (auto var : m_varsSpec) m_vars.push_back(var);
 	  m_loaders[m_cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,m_vars,m_w);
-	}else if (m_fsave){m_ttree_test[m_cond_index].Fill();}
+	}else if (m_fsave){m_ttree_test[m_cond_index]->Fill();}
 	else {cout << "Not find any SetFile or SetLoader" << endl;exit(0);}
       }
       m_cond_index++;
