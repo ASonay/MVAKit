@@ -31,6 +31,7 @@ int main(int argc,char **argv)
     
   tool->Parser(argc,argv);
   tool->ReadConf();
+  
   if (Common::StringCompare(string(tool->GetClassifierOpt()),"py")){
     TMVA::Tools::Instance();
     TMVA::PyMethodBase::PyInitialize();
@@ -61,7 +62,7 @@ int main(int argc,char **argv)
     TFile *outputFile = TFile::Open( factory_name+".root", "RECREATE" );
     TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, tool->GetFactoryOpt() );
     TString title = "Score";
-    factory->BookMethod(loaders.at(i),TMVA::Types::kPyKeras,title,tool->GetTrainingOpt());
+    factory->BookMethod(loaders.at(i),tool->GetClassifierOpt(),title,tool->GetTrainingOpt());
     factory->TrainAllMethods();
     factory->TestAllMethods();
     factory->EvaluateAllMethods();

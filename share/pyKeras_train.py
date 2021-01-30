@@ -33,16 +33,16 @@ for i in range(tool.NSplit):
     print ('  Total train: %i, total test: %i'%(len(y_train),len(y_test)))
     
     #arrange datas
-    print ('  Shuffling data ..')
-    x_train,y_train,w_train = shuffle(x_train,y_train,w_train,random_state=0);
     print ('  Transforming data ..')
     x_train_scaled,x_test_scaled=PCAStdTransform(x_train,y_train,x_test,tool.Variables)
+    print ('  Shuffling data ..')
+    x_train_scaled_shuf,y_train,w_train = shuffle(x_train_scaled,y_train,w_train,random_state=0);
     print ('  Scaling weights ..')
     ScaleWeights(y_train,w_train)
     
     #train data
     model = GetKerasModel(tool.NVar,tool.GetArchitectureOpt())
-    TrainKerasModel(model,tool.GetEngineOpt(),x_train_scaled,y_train,w_train)
+    TrainKerasModel(model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
     ypred_train = model.predict(x_train_scaled)
     ypred_test = model.predict(x_test_scaled)
     #save everything
