@@ -196,7 +196,6 @@ def UpdateFile(fil,tree_train,tree_test,y_pred_train,y_pred_test):
             score.push_back(x)
         tr_test.GetBranch('score').Fill()
     tr_test.Write()
-    tfile.Write()
     tfile.Close()
 
 def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2):

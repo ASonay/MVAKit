@@ -35,6 +35,7 @@ using namespace std;
 
 bool isInit = false;
 int map_index=-100;
+bool check = false;
 
 map<int,pair<string,string>> training = {//REWEIGHTING
 					 {0,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
@@ -94,6 +95,12 @@ void GetTMVAScore(int ev=-100)
   isInit=true;
 }
 
+void MassPoint(int mp){
+  map_index = mp;
+  check = true;
+  cout << "Mapping changed by: " << map_index << endl;
+}
+
 template<typename... Args>
 Double_t GetVal(int ev, int en, int cl1, int cl2, Args... args){
   
@@ -113,5 +120,10 @@ Double_t GetScore(int ev, int en, Args... args){
 
   int index = map_index==-100 ? ev : map_index*10+ev;
 
+  if (check){
+    cout << index << endl;
+    check=false;
+  }
+  
   return evaluater[index]->GetScore(x,en);
 }

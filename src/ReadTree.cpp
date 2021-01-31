@@ -129,7 +129,7 @@ ReadTree::GetInputs(const string label, int index){
   vector<double> vec;
 
   for (auto i : m_label_index[label]){
-    vec.push_back(m_data[i][index]);
+    vec.push_back(m_data[i][index]); 
   }
   
   return vec;

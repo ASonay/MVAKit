@@ -52,7 +52,7 @@ private:
   map<string,vector<int>> m_label_index;
   map<string,vector<string>> m_vars;
   map<int,double*> m_data;
-  double *m_weight;
+  double* m_weight;
   
   unique_ptr<TChain> m_chain;
 };
