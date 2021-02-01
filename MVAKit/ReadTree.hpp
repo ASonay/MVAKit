@@ -5,13 +5,14 @@
 #include <iostream>
 #include <string>
 #include <random>
-
+#include <unordered_map>
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "TChain.h"
 #include "TTree.h"
+#include "TTreeFormula.h"
 
 using namespace std;
 
@@ -28,13 +29,18 @@ public:
   void SetVariables(const string title,const vector<string> vars);
   void SetVariables(const string title,const string var);
   void SetInputs(const string fname, const string tname, const string cut, const string weight);
+  void SetFormulas(const string fname, const string tname, const string cut, const string weight);
+
+  bool NextEvent();
   
   void ProcessVariables();
 
   void ResetVariables();
   
-  vector<double> GetInputs(const string label, int index=0);
-  double GetWeight(int index=0) {return m_weight[index];}
+  vector<double> GetInputs(const string label, int index);
+  vector<double> GetInputs(const string label);
+  double GetWeight(int index) {return m_weight[index];}
+  double GetWeight();
 
   long long GetEntries() {return m_entries;}
 
@@ -44,6 +50,7 @@ private:
   vector<string> CheckVars(const string cut, const string weight);
   
   long long m_entries;
+  long long m_entry;
 
   string m_var_exp;
 
@@ -55,6 +62,10 @@ private:
   double* m_weight;
   
   unique_ptr<TChain> m_chain;
+  unordered_map<string,unique_ptr<TTreeFormula>> m_formula;
+  unique_ptr<TTreeFormula> m_formula_weight;
+  unique_ptr<TTreeFormula> m_formula_cut;
+  
 };
 
 #endif

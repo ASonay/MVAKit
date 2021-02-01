@@ -31,14 +31,21 @@ MVAKit::CloseFile()
   const int split_size = m_split.size();
 
   for (int i=0;i<split_size;i++){
-    if (m_split_per!=100)
-      {m_ttree_test[i]->Write();}
+    if (m_split_per!=100){
+      m_ttree_test[i]->Write();
+    }
     m_ttree_train[i]->Write();
   }
+
   m_tfile->Write();
+  
+  m_ttree_test.clear();
+  m_ttree_train.clear();
 
-  m_tfile->Close();
+  cout << "Closing file.." << endl;
 
+  m_tfile->Close("R");
+  
 }
 
 void
@@ -46,7 +53,9 @@ MVAKit::SetFile(const char *name)
 {
   const string base_name_train = "TrainTree";
   const string base_name_test = "TestTree";
-  const int nov = m_variables.size()+m_variables_other.size();
+  int total_variables = m_variables.size()+m_variables_other.size();
+  if (m_parameterized) {total_variables++;}
+  const int nov = total_variables;
   const int split_size = m_split.size();
   
   m_fsave = true;
@@ -100,7 +109,9 @@ MVAKit::SetFiletoClone(string name)
   string substr = ".root";
   newname.replace(newname.find(substr),substr.length(),"_clone.root");
 
-  const int nov = m_variables.size()+m_variables_other.size();
+  int total_variables = m_variables.size()+m_variables_other.size();
+  if (m_parameterized) {total_variables++;}
+  const int nov = total_variables;
   m_var_rec.reset(new Double_t[nov]);
 
   m_tchain.reset(new TChain(m_tree_current.c_str()));
@@ -333,15 +344,14 @@ MVAKit::AssignEvents(const string fname)
 {
 
   cout << "File will be open: " << fname << endl;
-  m_treader->SetInputs(fname,m_tree_current,m_cut_current,m_weight_current);
-  int noe = (int)m_treader->GetEntries();
+  m_treader->SetFormulas(fname,m_tree_current,m_cut_current,m_weight_current);
   if (m_fclone) {SetFiletoClone(fname);}
 
-  m_LabelEntries[m_label_current]+=noe;
-  for (int i=0;i<noe;i++){
-    m_w = m_treader->GetWeight(i);
+  while (m_treader->NextEvent()){
+    m_w = m_treader->GetWeight();
     m_LabelWeight[m_label_current]+=m_w;
-    vector<Double_t> cond = m_treader->GetInputs("z",i);
+    m_LabelEntries[m_label_current]+=1;
+    vector<Double_t> cond = m_treader->GetInputs("z");
     m_cond_index=0;
     for (auto sp : m_split){
       int split_cond=0;
@@ -355,8 +365,8 @@ MVAKit::AssignEvents(const string fname)
 	  {scale=x.second;}
       }
       m_w*=scale; 
-      m_vars = m_treader->GetInputs("v",i);
-      m_varsSpec = m_treader->GetInputs("vs",i);
+      m_vars = m_treader->GetInputs("v");
+      m_varsSpec = m_treader->GetInputs("vs");
       if (m_parameterized) {m_vars.push_back((Double_t)GetParam(fname,m_w));}
       if (FillVarstoRecord()) {continue;}
       if (split_cond){

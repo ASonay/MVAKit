@@ -4,12 +4,15 @@
 
 using namespace std;
 
-ReadTree::ReadTree()
+ReadTree::ReadTree():
+  m_entry(0)
 {}
 
 
 ReadTree::~ReadTree()
-{}
+{
+  m_formula.clear();
+}
 
 void
 ReadTree::SetVariables(const string title,vector<pair<string,string>> vars)
@@ -63,14 +66,54 @@ ReadTree::ProcessVariables()
       m_alias.push_back(make_pair(vname,var));
       vars += ":"+vname;
       m_label_index[x.first].push_back(index);
-      cout << vname << " " << var << endl;
       index++;
     }
   }
   m_var_exp = "w0"+vars;
-  cout << m_var_exp << endl;
 }
 
+
+void
+ReadTree::SetFormulas(const string fname, const string tname, const string cut, const string weight)
+{
+  m_chain.reset(new TChain(tname.c_str()));
+
+  if (m_chain->Add(fname.c_str())==1){
+    cout << "Successfully added your file to the chain." << endl;
+  }
+  else {
+    cout << "Can not find " << fname << endl;
+    exit(0);
+  }
+
+  long long entries = m_chain->GetEntries();
+  m_chain->SetEstimate(entries);
+
+  vector<string> activeVars = CheckVars(cut,weight);
+  m_chain->SetBranchStatus("*",0);
+  for (auto av : activeVars) m_chain->SetBranchStatus(av.c_str(),1);
+  
+  for (auto x : m_alias){
+    m_chain->SetAlias(x.first.c_str(),x.second.c_str());
+    m_formula[x.first].reset(new TTreeFormula(("formula_"+x.first).c_str(),x.first.c_str(),m_chain.get()));
+    m_formula[x.first]->SetQuickLoad(kTRUE);
+  }
+  
+  string weight_new(weight);
+  if (weight_new == "1") {weight_new = "abs(1)";}
+  m_chain->SetAlias("w0",weight_new.c_str());
+  m_formula_weight.reset(new TTreeFormula("formula_w0","w0",m_chain.get()));
+  m_formula_weight->SetQuickLoad(kTRUE);
+  
+  string cut_new(cut);
+  if (cut_new == "1") {cut_new = "abs(1)";}
+  m_chain->SetAlias("c0",cut_new.c_str());
+  m_formula_cut.reset(new TTreeFormula("formula_c0","c0",m_chain.get()));
+  m_formula_weight->SetQuickLoad(kTRUE);
+
+  m_entry=0;
+  m_entries=m_chain->GetEntries();
+}
 
 void
 ReadTree::SetInputs(const string fname, const string tname, const string cut, const string weight)
@@ -123,6 +166,22 @@ ReadTree::SetInputs(const string fname, const string tname, const string cut, co
 
 }
 
+bool
+ReadTree::NextEvent(){
+
+  for (long long i=m_entry;i<m_entries;i++){
+    m_chain->GetEntry(i);
+    m_formula_cut->GetNdata();
+    if (!(int)m_formula_cut->EvalInstance(0)) {continue;}
+    else{
+      m_entry=i+1;
+      return true;
+    }
+  }
+  
+  m_entry=0;
+  return false;
+}
 
 vector<double>
 ReadTree::GetInputs(const string label, int index){
@@ -133,6 +192,25 @@ ReadTree::GetInputs(const string label, int index){
   }
   
   return vec;
+}
+
+vector<double>
+ReadTree::GetInputs(const string label){
+  vector<double> vec;
+
+  for (auto i : m_label_index[label]){
+    string key = label+to_string(i);
+    m_formula[key]->GetNdata();
+    vec.push_back(m_formula[key]->EvalInstance(0));
+  }
+  
+  return vec;
+}
+
+double
+ReadTree::GetWeight(){
+  m_formula_weight->GetNdata();
+  return m_formula_weight->EvalInstance(0);
 }
 
 vector<string>
