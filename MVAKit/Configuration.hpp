@@ -64,6 +64,8 @@ public:
   int GetNSplit() {return m_nsplit;}
   int GetNLabel() {return m_nlabel;}
 
+  bool EvalImportance() {return m_importance;}
+
 protected:
   
   vector<pair<string,vector<string>>> m_ntups;
@@ -104,6 +106,7 @@ protected:
   bool m_parameterized;
   bool m_classification;
   bool m_execution;
+  bool m_importance;
 
   map<string,string> m_labFromOpt;
  

@@ -15,6 +15,7 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/PyMethodBase.h"
+#include "TMVA/MethodBase.h"
 
 
 #include "TTreeReader.h"
@@ -62,11 +63,10 @@ int main(int argc,char **argv)
     TFile *outputFile = TFile::Open( factory_name+".root", "RECREATE" );
     TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, tool->GetFactoryOpt() );
     TString title = "Score";
-    factory->BookMethod(loaders.at(i),tool->GetClassifierOpt(),title,tool->GetTrainingOpt());
+    TMVA::Types::EMVA methodType = factory->BookMethod(loaders.at(i),tool->GetClassifierOpt(),title,tool->GetTrainingOpt())->GetMethodType();
     factory->TrainAllMethods();
     factory->TestAllMethods();
     factory->EvaluateAllMethods();
-    
     outputFile->Close();
   }
   // Training part----------------------------------

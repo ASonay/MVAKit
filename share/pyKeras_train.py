@@ -24,6 +24,8 @@ if not os.path.exists('./keras_output'):os.makedirs('./keras_output')
 if not os.path.exists('./keras_output/feature_weight'):os.makedirs('./keras_output/feature_weight')
 if not os.path.exists('./keras_output/model'):os.makedirs('./keras_output/model')
 
+split_size = tool.NSplit if tool.NSplit > 0 else 1 
+
 for i in range(tool.NSplit):
     print ('\nReading data from Py ...')
     x_train,y_train,w_train=ReadFile(ntupleName,'TrainTree'+str(i),tool.Variables)

@@ -172,6 +172,10 @@ def ReadFile(fil,tr,variables):
     return x,y,w
 
 def UpdateFile(fil,tree_train,tree_test,y_pred_train,y_pred_test):
+    print ('\nUpdating File --------------------------')
+    print (('FileName: %s')%fil)
+    print (('Train tree: %s')%tree_train)
+    print (('Test tree: %s')%tree_test)
     tfile = TFile(fil,"update")
     tr_train = tfile.Get(tree_train)
     tr_test = tfile.Get(tree_test)
@@ -182,7 +186,7 @@ def UpdateFile(fil,tree_train,tree_test,y_pred_train,y_pred_test):
 
     for x in y_pred_train:
         score.clear()
-        if isinstance(x,list):
+        if not np.isscalar(x):
             for e in x: score.push_back(e)
         else:
             score.push_back(x)
@@ -190,13 +194,14 @@ def UpdateFile(fil,tree_train,tree_test,y_pred_train,y_pred_test):
     tr_train.Write()
     for x in y_pred_test:
         score.clear()
-        if isinstance(x,list):
+        if not np.isscalar(x):
             for e in x: score.push_back(e)
         else:
             score.push_back(x)
         tr_test.GetBranch('score').Fill()
     tr_test.Write()
     tfile.Close()
+    print ('Closing File --------------------------\n')
 
 def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2):
 
@@ -306,7 +311,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import make_pipeline
-from sklearn.externals.joblib import dump
+from sklearn.externals.joblib import dump,load
 from sklearn import metrics
 def PCAStdTransform(x_train,y_train,x_test,varnames=[],save_loc='keras_output/feature_weight/'):
     ncomp = len(x_train[0])
@@ -349,8 +354,8 @@ def PCAStdTransform(x_train,y_train,x_test,varnames=[],save_loc='keras_output/fe
         print ('%-40s | %-6.2e | %-6.2e | %-6.2e | %-6.2e'%(varname,min_c,max_c,scaler.mean_[i],scaler.var_[i]))
     print ('==============================================================')
     #-------------------------------------------------------------------    
-    dump(scaler, save_loc+'std_scaler_'+str(i)+'.bin', compress=True)
-    dump(pca_std, save_loc+'pca_'+str(i)+'.bin', compress=True)
+    dump(scaler, save_loc+'std_scaler.bin', compress=True)
+    dump(pca_std, save_loc+'pca.bin', compress=True)
     return x_train_scaled,x_test_scaled
 
 def StdTransform(x_train,x_test,varnames=[],save_loc='keras_output/feature_weight/'):
@@ -372,9 +377,12 @@ def StdTransform(x_train,x_test,varnames=[],save_loc='keras_output/feature_weigh
         print ('%-40s | %-6.2e | %-6.2e | %-6.2e | %-6.2e'%(varname,min_c,max_c,scaler.mean_[i],scaler.var_[i]))
     print ('==============================================================')
     #-------------------------------------------------------------------    
-    dump(scaler, save_loc+'std_scaler_'+str(i)+'.bin', compress=True)
+    dump(scaler, save_loc+'std_scaler.bin', compress=True)
     return x_train_scaled,x_test_scaled
 
+def ReadAndStdTransform(x,save_loc='keras_output/feature_weight/'):
+    scaler = load(save_loc+'std_scaler.bin')
+    return scaler.transform(x)
 
 
 def CorrectNames(var):
@@ -395,3 +403,33 @@ def CorrectNames(var):
         var[i]=var[i].replace('=','_')
 
     return var
+
+def AddDropout(opt,Dropout=0.3):
+    new_string = ''
+    opt_split = opt.split(',')
+    for i in range(len(opt_split)-1):
+        new_string+=opt_split[i]+';'+str(Dropout)+','
+
+    new_string+=opt_split[-1]
+
+    print ('\nArchitecture expression with dropout: %s'%(new_string))
+    return new_string
+
+def predict_with_uncertainty(x, model, n_iter=10):
+    import keras.backend as K
+    
+    f = K.function([model.layers[0].input, K.learning_phase()],
+               [model.layers[-1].output])
+    
+    result = []
+
+    print ('%i iteration will be propagated for uncertainty calculation'%(n_iter))
+    
+    for i in range(n_iter):
+        result.append(f([x, 1]))
+
+    result = np.array(result)
+
+    prediction = result.mean(axis=0)
+    uncertainty = result.var(axis=0)
+    return prediction[0], uncertainty[0]

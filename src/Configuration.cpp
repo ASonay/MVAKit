@@ -11,7 +11,8 @@ Configuration::Configuration(const char *name):
   m_split_per(0),
   m_parameterized(false),
   m_classification(true),
-  m_execution(true)
+  m_execution(true),
+  m_importance(false)
 {
   m_confName = string(name);
   cout << "Configuration will be setup for " << m_confName << ".\n" << endl;
@@ -184,6 +185,12 @@ Configuration::ReadConf(){
       in >> str;
       m_pscale=str;
     }
+    else if (str.compare("EvalImportance:")==0){
+      in >> str;
+      if (Common::StringCompare(str,"true")){
+	m_importance=true;
+      }
+    }
     else if (str.compare("LoadFiles:")==0){
       in >> str;
       m_loadFile=Common::StringSep(str);
@@ -251,6 +258,10 @@ Configuration::ReadConf(){
   if (m_nlabel<2 && m_classification){
     cout << "You should at least have two different label for classification." << endl;
     exit(0);
+  }
+
+  if (m_importance){
+    cout << "\nIMPORTANCE will be calculated, hope this is TMVA..\n" << endl;
   }
 
   if (m_parameterized && m_xmlFile.empty()){
