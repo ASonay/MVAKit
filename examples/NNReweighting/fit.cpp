@@ -181,14 +181,14 @@ void fit()
   }
 
   auto gr_fit_unc = new TGraphErrors(n,&x_fit[0],&y_fit[0],0,&y_fit_err[0]);
-  gr_fit_unc->SetFillStyle(3001); gr_fit_unc->SetFillColor(kAzure-3); gr_fit_unc->SetLineColor(kAzure-3);
+  gr_fit_unc->SetFillStyle(3001); gr_fit_unc->SetFillColor(kOrange+1); gr_fit_unc->SetLineColor(kOrange+1);
   gr_fit_unc->Draw("e3 l same");
   hdiff->Draw("e1 same");
 
   TLatex latex_fit;
   latex_fit.SetTextSize(0.04);
   latex_fit.SetTextAlign(13);  //align at top
-  latex_fit.SetTextColor(kAzure-3);
+  latex_fit.SetTextColor(kOrange+1);
   latex_fit.DrawLatex(700,1.5,Form("%1.1f e^{%1.1e x}",fun->GetParameter(0),fun->GetParameter(1)));
   
   c_fit->SaveAs("plots/toy_fit.png");
@@ -214,14 +214,14 @@ void fit()
   }
 
   auto gr_nn_unc = new TGraphErrors(gr_nn->GetN(),&x_nn[0],&y_nn[0],0,&y_nn_err[0]);
-  gr_nn_unc->SetFillStyle(3001); gr_nn_unc->SetFillColor(kOrange+1); gr_nn_unc->SetLineColor(kOrange+1);
+  gr_nn_unc->SetFillStyle(3001); gr_nn_unc->SetFillColor(kAzure-3); gr_nn_unc->SetLineColor(kAzure-3);
   gr_nn_unc->Draw("e3 l same");
   hdiff->Draw("e1 same");
   
   TLatex latex_nn;
   latex_nn.SetTextSize(0.04);
   latex_nn.SetTextAlign(13);  //align at top
-  latex_nn.SetTextColor(kOrange+1);
+  latex_nn.SetTextColor(kAzure-3);
   latex_nn.DrawLatex(700,1.5,"NN(x)");
   
   c_nn->SaveAs("plots/toy_nn.png");
