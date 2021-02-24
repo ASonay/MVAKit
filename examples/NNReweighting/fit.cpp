@@ -15,8 +15,8 @@ void fit()
   h_mc->Add(getHist(tr_test,"hmc2","x","(!classID)*weight").get());
   unique_ptr<TH1F> h_mcx = getHist(tr_train,"hmcx","x","(!classID)*weight*((score[0])/(1.-score[0]))");
   h_mcx->Add(getHist(tr_test,"hmcx2","x","(!classID)*weight*((score[0])/(1.-score[0]))").get());
-  unique_ptr<TH1F> h_mcx_up = getHist(tr_train,"hmcx_up","x","(!classID)*weight*((score[0]+score[2])/(1.-score[0]-score[2]))");
-  h_mcx_up->Add(getHist(tr_test,"hmcx_up2","x","(!classID)*weight*((score[0]+score[2])/(1.-score[0]-score[2]))").get());
+  unique_ptr<TH1F> h_mcx_up = getHist(tr_train,"hmcx_up","x","(!classID)*weight*((score[0])/(1.-score[0])+((score[0])/(1.-score[0]))*sqrt(2.0)*score[2]/score[0])");
+  h_mcx_up->Add(getHist(tr_test,"hmcx_up2","x","(!classID)*weight*((score[0])/(1.-score[0])+((score[0])/(1.-score[0]))*sqrt(2.0)*score[2]/score[0])").get());
 
   TGraph *gr_nn = (TGraph*)f->Get("g");
   TGraph *gr_nn_up = (TGraph*)f->Get("gup");
@@ -33,18 +33,34 @@ void fit()
   
   TF1 *fun = new TF1("fun","[0]*exp([1]*x)",100,1000);
   TF1 *fun_err = new TF1("fun_err","[0]*exp([1]*x)",100,1000);
+  TF1 *fun_err_d = new TF1("fun_err_d","[0]*exp([1]*x)",100,1000);
   fun->SetParameters(1.0,0.001);
-  hdiff->Fit(fun,"0");
-  fun_err->SetParameters(fun->GetParameter(0)+fun->GetParError(0),
-			 fun->GetParameter(1)+fun->GetParError(1));
+  auto fit_result = hdiff->Fit(fun,"0S");
+  auto fit_cov = fit_result->GetCovarianceMatrix();
+  fit_cov.Print("V");
+  TVectorT<double> eigenval;
+  TMatrixT<double> eigenvec = fit_cov.EigenVectors(eigenval);
+  eigenval.Print("V");
+  eigenvec.Print("V");
+
+  double erra = sqrt(eigenval[0])*eigenvec[0][0]+sqrt(eigenval[1])*eigenvec[1][0];
+  double errb = sqrt(eigenval[0])*eigenvec[0][1]+sqrt(eigenval[1])*eigenvec[1][1];
+
+  cout << "Err A: " << erra << " Err B: " << errb << endl;
+  
+  fun_err->SetParameters(fun->GetParameter(0)+erra,
+			 fun->GetParameter(1)+errb);
+  
+  fun_err_d->SetParameters(fun->GetParameter(0)-erra,
+			 fun->GetParameter(1)-errb);
   
   auto h_mcxx = make_unique<TH1F>("h_mcxx","",binx,100,1000);
   for (int i=0;i<binx;i++){
     float x = fun->Eval(h_mc->GetBinCenter(i+1));
-    float x_up = fun_err->Eval(h_mc->GetBinCenter(i+1));
+    float x_err = 0.5*abs(fun_err->Eval(h_mc->GetBinCenter(i+1))-fun_err_d->Eval(h_mc->GetBinCenter(i+1)));
     float con = h_mc->GetBinContent(i+1);
     h_mcxx->SetBinContent(i+1,con*x);
-    h_mcxx->SetBinError(i+1,con*abs(x_up-x));
+    h_mcxx->SetBinError(i+1,con*x_err);
 
     float xnn = h_mcx->GetBinContent(i+1);
     float xnn_up = h_mcx_up->GetBinContent(i+1);
@@ -177,7 +193,7 @@ void fit()
   for (int i=0;i<n;i++){
     x_fit.push_back(100.+i*(1000.-100.)/n);
     y_fit.push_back(fun->Eval(x_fit.back()));
-    y_fit_err.push_back(fun_err->Eval(x_fit.back())-y_fit.back());
+    y_fit_err.push_back(abs(fun_err->Eval(x_fit.back())-fun_err_d->Eval(x_fit.back())));
   }
 
   auto gr_fit_unc = new TGraphErrors(n,&x_fit[0],&y_fit[0],0,&y_fit_err[0]);
