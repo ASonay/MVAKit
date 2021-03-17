@@ -37,7 +37,7 @@ bool isInit = false;
 int map_index=-100;
 bool check = false;
 
-map<int,pair<string,string>> training = {//REWEIGHTING
+map<int,pair<string,string>> training = {/*//REWEIGHTING
 					 {0,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
 					 {1,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
 					 {2,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/os2l/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_os2l_hf.conf"}},
@@ -49,7 +49,7 @@ map<int,pair<string,string>> training = {//REWEIGHTING
 					 {8,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/ljets/hf/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_hf.conf"}},
 					 {9,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhPy8/ljets/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_kin0.conf"}},
 					 {10,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_PhHerwig/ljets/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_kin.conf"}},
-					 {11,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/ljets/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_kin.conf"}},
+					 {11,{"/afs/cern.ch/work/a/asonay/public/PNN_reweighting/ttbar_aMcAtNloPy8/ljets/kin/loader_0/weights/factory_PyKeras_0_Score.weights.xml","/config/config_pnnrw_ljets_kin.conf"}},*/
 					 
 					 //BDT
 					 {4001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M400/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M400/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation.conf"}},
@@ -84,7 +84,7 @@ void GetTMVAScore(int ev=-100)
   }
 
   for (auto const &x : training)
-    {evaluater[x.first] = shared_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
+    {cout << mvakit_dir+x.second.second << endl;evaluater[x.first] = shared_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
 
   for (auto const &x : evaluater){
     x.second->Init();

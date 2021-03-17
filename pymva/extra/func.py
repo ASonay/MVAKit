@@ -171,37 +171,74 @@ def ReadFile(fil,tr,variables):
     
     return x,y,w
 
-def UpdateFile(fil,tree_train,tree_test,y_pred_train,y_pred_test):
-    print ('\nUpdating File --------------------------')
-    print (('FileName: %s')%fil)
-    print (('Train tree: %s')%tree_train)
-    print (('Test tree: %s')%tree_test)
-    tfile = TFile(fil,"update")
-    tr_train = tfile.Get(tree_train)
-    tr_test = tfile.Get(tree_test)
+def UpdateFile(fil,tree_names,y_pred,var_name='score'):
+    print (('FileName to be read: %s')%fil)
+    tfile = TFile(fil)
+    trees=[]
+    
+    if len(tree_names) != len(y_pred):
+        print('Number of trees and number of prediction must be equal')
+        exit()
+        
+    for t in tree_names:
+        print ('Tree will be cloned: %s'%t)
+        trees.append(tfile.Get(t))
+
     score = vector('float')()
-
-    tr_train.Branch('score',score)
-    tr_test.Branch('score',score)
-
-    for x in y_pred_train:
-        score.clear()
-        if not np.isscalar(x):
-            for e in x: score.push_back(e)
-        else:
-            score.push_back(x)
-        tr_train.GetBranch('score').Fill()
-    tr_train.Write()
-    for x in y_pred_test:
-        score.clear()
-        if not np.isscalar(x):
-            for e in x: score.push_back(e)
-        else:
-            score.push_back(x)
-        tr_test.GetBranch('score').Fill()
-    tr_test.Write()
+    print ('\nUpdating File --------------------------')
+    for t in trees:
+        trees.append(t.CloneTree())
+        trees[-1].Branch(var_name,score)
+    
+    for i in range(len(trees)):
+        for x in y_pred[i]:
+            score.clear()
+            if not np.isscalar(x):
+                for e in x: score.push_back(e)
+            else:
+                score.push_back(x)
+            trees[i].GetBranch(var_name).Fill()
+        trees[i].Write()
     tfile.Close()
     print ('Closing File --------------------------\n')
+
+def CloneFile(path,fil,tree_names,y_pred,var_name='score',ntup_opt='recreate',same_path=False):
+    print (('FileName to be read: %s')%fil)
+    tfile = TFile(fil)
+    trees=[]
+    
+    if len(tree_names) != len(y_pred):
+        print('Number of trees and number of prediction must be equal')
+        exit()
+        
+    for t in tree_names:
+        print ('Tree will be cloned: %s'%t)
+        trees.append(tfile.Get(t))
+
+    score = vector('float')()
+    print ('\nUpdating File --------------------------')
+    fil_new = fil.replace('.root','_clone.root')
+    if not same_path:
+        fil_new = path+fil[fil.rfind('/')+1:].replace('.root','_clone.root')
+    print (('FileName to be recorded: %s')%fil_new)
+    trees_new=[]
+    tfile_new = TFile(fil_new,ntup_opt)
+    for t in trees:
+        trees_new.append(t.CloneTree())
+        trees_new[-1].Branch(var_name,score)
+    
+    for i in range(len(trees_new)):
+        for x in y_pred[i]:
+            score.clear()
+            if not np.isscalar(x):
+                for e in x: score.push_back(e)
+            else:
+                score.push_back(x)
+            trees_new[i].GetBranch(var_name).Fill()
+        trees_new[i].Write()
+    tfile_new.Close()
+    print ('Closing File --------------------------\n')
+    return fil_new
 
 def SaveToNtuple(fil,var,varSpec,x1,x1spec,y1,y1_pred,w1,x2,x2spec,y2,y2_pred,w2):
 
@@ -433,3 +470,46 @@ def predict_with_uncertainty(x, model, n_iter=10):
     prediction = result.mean(axis=0)
     uncertainty = result.var(axis=0)
     return prediction[0], uncertainty[0]
+
+def RemoveSpecialChars(string):
+    chars = [':','.','(',')','"','=','/',';',' ','|',',']
+    for c in chars:
+        string = string.replace(c,'_')
+    return string
+
+def ParseConfig(argv):
+    dic = {}
+    argv_new = []
+    dic['ntup_prepared'] = False
+    dic['unc'] = False
+    dic['prefix'] = 'pref'
+    dic['tree'] = 'nominal_Loose'
+    i=0
+    while i<len(argv):
+        if argv[i] == '--prepared-ntup' or argv[i] == '--clone-ntup':
+            dic['ntup_prepared'] = True
+            dic['ntup'] = argv[i+1]
+            i+=2
+        elif argv[i] == '--uncertainty':
+            dic['unc'] = True
+            i+=1
+        elif argv[i] == '--path':
+            dic['path'] = argv[i+1]
+            i+=2
+        elif argv[i] == '--tree':
+            dic['tree'] = argv[i+1]
+            i+=2
+        elif argv[i] == '--prefix':
+            dic['prefix'] = argv[i+1]
+            i+=2
+        else:
+            argv_new.append(argv[i])
+            i+=1
+
+    if 'path' in dic:
+        if dic['path'][-1] == '/':
+            dic['path'] = dic['path'][:-1]
+        
+    argv_n = len(argv_new)
+
+    return argv_n,argv_new,dic

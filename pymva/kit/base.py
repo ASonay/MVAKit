@@ -16,6 +16,7 @@ class MVAKit(object):
         self.NVarSpec = 0
         self.LabelNames = []
         self.Variables = []
+        self.VariablesOriginal = []
         self.SpecVariables = []
         self.__obj = self.__lib.MVAKit_new(c_char_p(name))
 
@@ -27,6 +28,7 @@ class MVAKit(object):
         self.__nlabel = self.GetNLabel()
         for i in range(self.__nlabel):self.LabelNames.append(self.GetLabelName(i))
         for i in range(self.NVar):self.Variables.append(self.GetVariableName(i))
+        for i in range(self.NVar):self.VariablesOriginal.append(self.GetVariableName(i,1))
         for i in range(self.NVarSpec):self.SpecVariables.append(self.GetSpectatorVariableName(i))
         varParam = self.GetParamName()
         if varParam :
@@ -38,9 +40,15 @@ class MVAKit(object):
         
     def SetFile(self,name):
         self.__lib.MVAKit_SetFile(self.__obj,c_char_p(name))
+        
+    def SetConf(self,name):
+        self.__lib.MVAKit_SetConf(self.__obj,c_char_p(name))
 
     def isClassification(self,i):
         self.__lib.MVAKit_isClassification(self.__obj,c_int(i))
+        
+    def isExe(self,i):
+        self.__lib.MVAKit_isExe(self.__obj,c_int(i))
 
     def GetNVar(self):
         return self.__lib.MVAKit_GetNVar(self.__obj)
@@ -54,17 +62,14 @@ class MVAKit(object):
     def GetNSpectatorVar(self):
         return self.__lib.MVAKit_GetNSpectatorVar(self.__obj)
         
-    def Parser(self,argc,argv):
+    def Parser(self,argc,argv,reqntup=1):
         arg_p = (c_char_p * argc)()
         arg_p[:] = argv
         arg_pp = POINTER(c_char_p)(arg_p)
-        self.__lib.MVAKit_Parser(self.__obj,c_int(argc),arg_pp)
+        self.__lib.MVAKit_Parser(self.__obj,c_int(argc),arg_pp,c_int(reqntup))
 
     def SetEvents(self):
         self.__lib.MVAKit_SetEvents(self.__obj)
-
-    def NextEvent(self,sample,index,minimum=0,maximum=-1):
-        return self.__lib.MVAKit_NextEvent(self.__obj,c_char_p(sample),index,minimum,maximum)
 
     def GetArchitectureOpt(self):
         s=create_string_buffer(b'\000' * 1024)
@@ -94,15 +99,15 @@ class MVAKit(object):
         print ('Label %i:: %s'%(index,val))
         return val
         
-    def GetVariableName(self,index):
+    def GetVariableName(self,index,pair=0):
         s=create_string_buffer(b'\000' * 1024)
-        self.__lib.MVAKit_GetVariableName(self.__obj,c_int(index),s)
+        self.__lib.MVAKit_GetVariableName(self.__obj,c_int(index),s,c_int(pair))
         val=s.value
         return val
         
-    def GetSpectatorVariableName(self,index):
+    def GetSpectatorVariableName(self,index,pair=0):
         s=create_string_buffer(b'\000' * 1024)
-        self.__lib.MVAKit_GetSpectatorVariableName(self.__obj,c_int(index),s)
+        self.__lib.MVAKit_GetSpectatorVariableName(self.__obj,c_int(index),s,c_int(pair))
         val=s.value
         return val
         

@@ -5,24 +5,42 @@ from pymva.extra import *
 import sys,os
 from sklearn.utils import shuffle
 
-argv = sys.argv
-argc = len(sys.argv)
+argc,argv,argp = ParseConfig(sys.argv)
+
+print (argc)
+print (argv)
+print (argp)
 
 #Configuration
 tool = MVAKit('Training')
-tool.Parser(argc,argv)
+if argp['ntup_prepared']:
+    tool.Parser(argc,argv,0)
+    tool.isClassification(0)
+else:
+    tool.Parser(argc,argv)
 tool.ReadConf()
 
+if 'path' in argp:
+    path = argp['path']
+else:
+    path = '.'
+    
+path += '/pyKeras'+RemoveSpecialChars(tool.GetEngineOpt())+'/'
+if not os.path.exists(path):os.makedirs(path)
+
 #Preparing data into new root file
-ntupleName='pyMVAKit.root'
-tool.SetFile(ntupleName)
-tool.SetEvents()
-tool.CloseFile()
+ntupleName=path+'pyMVAKit.root'
+if argp['ntup_prepared']:
+    ntupleName=argp['ntup']
+else:
+    tool.SetFile(ntupleName)
+    tool.SetEvents()
+    tool.CloseFile()
 
 #directory to store 
-if not os.path.exists('./keras_output'):os.makedirs('./keras_output')
-if not os.path.exists('./keras_output/feature_weight'):os.makedirs('./keras_output/feature_weight')
-if not os.path.exists('./keras_output/model'):os.makedirs('./keras_output/model')
+if not os.path.exists(path+'keras_output'):os.makedirs(path+'keras_output')
+if not os.path.exists(path+'keras_output/feature_weight'):os.makedirs(path+'keras_output/feature_weight')
+if not os.path.exists(path+'keras_output/model'):os.makedirs(path+'keras_output/model')
 
 split_size = tool.NSplit if tool.NSplit > 0 else 1 
 
@@ -36,7 +54,7 @@ for i in range(tool.NSplit):
     
     #arrange datas
     print ('  Transforming data ..')
-    x_train_scaled,x_test_scaled=PCAStdTransform(x_train,y_train,x_test,tool.Variables)
+    x_train_scaled,x_test_scaled=PCAStdTransform(x_train,y_train,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
     print ('  Shuffling data ..')
     x_train_scaled_shuf,y_train,w_train = shuffle(x_train_scaled,y_train,w_train,random_state=0);
     print ('  Scaling weights ..')
@@ -48,5 +66,6 @@ for i in range(tool.NSplit):
     ypred_train = model.predict(x_train_scaled)
     ypred_test = model.predict(x_test_scaled)
     #save everything
-    model.save('keras_output/model/model_'+str(i)+'.h5')
-    UpdateFile(ntupleName,'TrainTree'+str(i),'TestTree'+str(i),ypred_train,ypred_test)
+    model.save(path+'keras_output/model/model_'+str(i)+'.h5')
+    ntup_opt = 'recreate' if i == 0 else 'update'
+    CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],ntup_opt)

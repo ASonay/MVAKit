@@ -20,26 +20,15 @@ Common::StringSep(const string str,char c){
 string
 Common::RemoveSpecialChars(const string str){
   string str_r(str);
-  replace( str_r.begin(), str_r.end(), '<', 's');
-  replace( str_r.begin(), str_r.end(), '>', 'g');
-  replace( str_r.begin(), str_r.end(), '*', '_');
-  replace( str_r.begin(), str_r.end(), '=', 'e');
-  replace( str_r.begin(), str_r.end(), '+', '_');
-  replace( str_r.begin(), str_r.end(), '-', '_');
-  replace( str_r.begin(), str_r.end(), '.', '_');
-  //replace( str_r.begin(), str_r.end(), ',', '_');
-  replace( str_r.begin(), str_r.end(), ';', '_');
-  replace( str_r.begin(), str_r.end(), ':', '_');
-  replace( str_r.begin(), str_r.end(), '&', '_');
-  replace( str_r.begin(), str_r.end(), '*', '_');
-  replace( str_r.begin(), str_r.end(), '{', '_');
-  replace( str_r.begin(), str_r.end(), '}', '_');
-  replace( str_r.begin(), str_r.end(), '(', '_');
-  replace( str_r.begin(), str_r.end(), ')', '_');
-  replace( str_r.begin(), str_r.end(), '[', '_');
-  replace( str_r.begin(), str_r.end(), ']', '_');
-  replace( str_r.begin(), str_r.end(), '$', '_');
-  replace( str_r.begin(), str_r.end(), '/', '_');
+  map<char,char> c_rep= {
+		    {'<', 's'},{'>', 'g'},{'*', '_'},{'=', 'e'},{'+', '_'},{'-', '_'},
+		    {'.', '_'},{',', '_'},{';', '_'},{':', '_'},{'&', '_'},{'*', '_'},
+		    {'{', '_'},{'}', '_'},{'(', '_'},{')', '_'},{'[', '_'},{']', '_'},
+		    {'$', '_'},{'/', '_'}
+  };
+  for (auto &c : c_rep) {
+    replace( str_r.begin(), str_r.end(), c.first, c.second);
+  }
   return str_r;
 }
 

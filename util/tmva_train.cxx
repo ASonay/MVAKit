@@ -63,7 +63,7 @@ int main(int argc,char **argv)
     TFile *outputFile = TFile::Open( factory_name+".root", "RECREATE" );
     TMVA::Factory *factory = new TMVA::Factory(factory_name , outputFile, tool->GetFactoryOpt() );
     TString title = "Score";
-    TMVA::Types::EMVA methodType = factory->BookMethod(loaders.at(i),tool->GetClassifierOpt(),title,tool->GetTrainingOpt())->GetMethodType();
+    factory->BookMethod(loaders.at(i),tool->GetClassifierOpt(),title,tool->GetTrainingOpt());
     factory->TrainAllMethods();
     factory->TestAllMethods();
     factory->EvaluateAllMethods();

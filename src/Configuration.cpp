@@ -12,7 +12,8 @@ Configuration::Configuration(const char *name):
   m_parameterized(false),
   m_classification(true),
   m_execution(true),
-  m_importance(false)
+  m_importance(false),
+  m_ntuplefilled(false)
 {
   m_confName = string(name);
   cout << "Configuration will be setup for " << m_confName << ".\n" << endl;
@@ -26,8 +27,9 @@ Configuration::~Configuration()
 {}
 
 void
-Configuration::Parser(int argc,char **argv)
+Configuration::Parser(int argc,char **argv,int reqntup)
 {
+  if (!reqntup) {m_ntuplefilled=true;}
 
   string app_name = argv[0];
   string command;
@@ -78,7 +80,7 @@ Configuration::Parser(int argc,char **argv)
     }
   }
 
-  if (!is_ntup){
+  if (!is_ntup && reqntup){
     cout << "Usage of the script :" << endl;
     cout << command << endl;
     exit(0);
@@ -264,7 +266,7 @@ Configuration::ReadConf(){
     cout << "\nIMPORTANCE will be calculated, hope this is TMVA..\n" << endl;
   }
 
-  if (m_parameterized && m_xmlFile.empty()){
+  if (m_parameterized && m_xmlFile.empty() && !m_ntuplefilled){
     const int columnId = 0;
     const string paramFind = m_paramvar;
     sort(m_ntups.begin(), m_ntups.end(),
