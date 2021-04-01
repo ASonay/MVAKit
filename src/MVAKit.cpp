@@ -16,6 +16,7 @@ MVAKit::MVAKit(const char *name) : Configuration(name),
 				       is_second(false),
 				       m_fsave(false),
 				       m_fclone(false),
+				       m_fcsv(false),
 				       m_maxth(10),
 				       m_total_param_weight(0)
 {
@@ -46,6 +47,23 @@ MVAKit::CloseFile()
 
   m_tfile->Close("R");
   
+}
+
+void
+MVAKit::SetCSV(const char *name)
+{
+  const string fileName(name);
+  m_csvfile.open(fileName);
+  m_csvfile << "Class,Train/Test,Split";
+  for (auto const &var : m_variables)
+    {m_csvfile << "," << var.first;}
+  if (m_parameterized)
+    {m_csvfile << "," << m_paramvar;}
+  for (auto const &var : m_variables_other)
+    {m_csvfile << "," << var.first;}
+  m_csvfile << "\n";
+
+  m_fcsv = true;
 }
 
 void
@@ -137,6 +155,15 @@ MVAKit::SetFiletoClone(string name)
   m_ttree->Branch("weight",&m_w,"weight/D");
 }
 
+void
+MVAKit::WritetoCSV(string type, int split)
+{
+  m_csvfile << m_label_current << "," << type << "," << split;
+  for (auto var : m_vars) {m_csvfile << "," << var;}
+  for (auto var : m_varsSpec) {m_csvfile << "," << var;}
+  m_csvfile << "\n";
+}
+
 bool
 MVAKit::FillVarstoRecord()
 {
@@ -179,8 +206,12 @@ MVAKit::SetLoaders(TMVA::DataLoader* loader){
 }
 
 void
-MVAKit::SetEvents(){
+MVAKit::SetEvents(const char *file,const char *label,int doCut){
 
+  const string fileName(file);
+  const string labelName(label);
+  if (!doCut) m_cut.clear();
+  
   const int split_size = m_split.size(); 
 
   m_dataTrain.resize(split_size);
@@ -213,9 +244,10 @@ MVAKit::SetEvents(){
     m_treader->SetVariables("z",m_split);
   m_treader->ProcessVariables();
 
-  for (auto x : m_ntups)
-    {ReadEvents(x.first,x.second);}
-
+  if (fileName.empty()){
+    for (auto x : m_ntups)
+      {ReadEvents(x.first,x.second);}
+  }else {ReadEvents(labelName,{fileName});}
 }
 
 void
@@ -352,11 +384,11 @@ MVAKit::AssignEvents(const string fname)
     m_LabelWeight[m_label_current]+=m_w;
     m_LabelEntries[m_label_current]+=1;
     vector<Double_t> cond = m_treader->GetInputs("z");
-    m_cond_index=0;
+    int cond_index=0;
     for (auto sp : m_split){
       int split_cond=0;
       if (m_split_per==0) {
-	split_cond=int(cond[m_cond_index]);
+	split_cond=int(cond[cond_index]);
       }
       else {split_cond = int(rand()%100 < m_split_per);}
       Double_t scale = 1.0;
@@ -372,18 +404,20 @@ MVAKit::AssignEvents(const string fname)
       if (split_cond){
 	if (m_loaders.size()!=0){
 	  for (auto var : m_varsSpec) m_vars.push_back(var);
-	  m_loaders[m_cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,m_vars,m_w);
-	}else if (m_fsave){m_ttree_train[m_cond_index]->Fill();}
+	  m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTraining,m_vars,m_w);
+	}else if (m_fsave){m_ttree_train[cond_index]->Fill();}
+	else if (m_fcsv){WritetoCSV("train",cond_index);}
 	else {cout << "Not find any SetFile or SetLoader" << endl;exit(0);}
       }
       else{
 	if (m_loaders.size()!=0){
 	  for (auto var : m_varsSpec) m_vars.push_back(var);
-	  m_loaders[m_cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,m_vars,m_w);
-	}else if (m_fsave){m_ttree_test[m_cond_index]->Fill();}
+	  m_loaders[cond_index]->AddEvent(m_label_current,TMVA::Types::kTesting,m_vars,m_w);
+	}else if (m_fsave){m_ttree_test[cond_index]->Fill();}
+	else if (m_fcsv){WritetoCSV("test",cond_index);}
 	else {cout << "Not find any SetFile or SetLoader" << endl;exit(0);}
       }
-      m_cond_index++;
+      cond_index++;
     }
   }
   if (m_fclone) {

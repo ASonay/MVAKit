@@ -8,7 +8,7 @@ extern "C" {
   MVAKit* MVAKit_new(const char* name){ return new MVAKit(name); }
   void MVAKit_ReadConf(MVAKit* tool){ tool->ReadConf(); }
   void MVAKit_Parser(MVAKit* tool,int argc,char **argv,int reqntup){ tool->Parser(argc,argv,reqntup); }
-  void MVAKit_SetEvents(MVAKit* tool){ tool->SetEvents(); }
+  void MVAKit_SetEvents(MVAKit* tool,const char *file,const char *label,int doCut){ tool->SetEvents(file,label,doCut); }
   
   int MVAKit_GetNVar(MVAKit* tool){ return tool->GetNVar(); }
   int MVAKit_GetNSpectatorVar(MVAKit* tool){ return tool->GetNSpectatorVar(); }
@@ -28,6 +28,8 @@ extern "C" {
   void MVAKit_SetFile(MVAKit* tool,const char *name){ tool->SetFile(name); }
   void MVAKit_SetConf(MVAKit* tool,const char *name){ tool->SetConf(name); }
   void MVAKit_CloseFile(MVAKit* tool){ tool->CloseFile(); }
+  void MVAKit_SetCSV(MVAKit* tool,const char *name){ tool->SetCSV(name); }
+  void MVAKit_CloseCSV(MVAKit* tool){ tool->CloseCSV(); }
   void MVAKit_isClassification(MVAKit* tool, int i){ tool->isClassification(i); }
   
 }

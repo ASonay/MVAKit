@@ -3,7 +3,6 @@
 # load and evaluate a saved model
 from pymva.kit import MVAKit
 from pymva.extra import *
-from keras.models import load_model
 import ROOT as root
 import argparse
 
@@ -94,6 +93,7 @@ if __name__ == "__main__":
     tool.SetConf(config)
     tool.ReadConf()
     
+    from keras.models import load_model
     model_file=path+'keras_output/model/model_0.h5'
     print ('MODEL : ',model_file)
     model=load_model(model_file,

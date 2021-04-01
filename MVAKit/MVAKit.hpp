@@ -45,8 +45,10 @@ public:
   ~MVAKit();
 
   void CloseFile();
+  void CloseCSV() {m_csvfile.close();}
+  void SetCSV(const char *name);
   void SetFile(const char *name);
-  void SetEvents();
+  void SetEvents(const char *file="",const char *label="",int doCut=1);
   void SetLoaders(TMVA::DataLoader* loader);
   void SetLoaders(const vector<TMVA::DataLoader*> &loaders);
   void CloneFiles(bool cond=true) {m_fclone=cond; m_fsave=cond;}
@@ -64,12 +66,12 @@ private:
   void AssignEvents(const string fname);
   bool FillVarstoRecord();
   void SetFiletoClone(string name);
+  void WritetoCSV(string type, int split);
 
-
-  int m_cond_index;
   bool is_second;
   bool m_fsave;
   bool m_fclone;
+  bool m_fcsv;
   unsigned m_maxth;
   
   vector<thread> m_th;
@@ -111,5 +113,7 @@ private:
 
   mt19937 m_gen;
   discrete_distribution<int> m_discDist;
+
+  ofstream m_csvfile;
 };
 #endif

@@ -40,6 +40,12 @@ class MVAKit(object):
         
     def SetFile(self,name):
         self.__lib.MVAKit_SetFile(self.__obj,c_char_p(name))
+
+    def CloseCSV(self):
+        self.__lib.MVAKit_CloseCSV(self.__obj)
+        
+    def SetCSV(self,name):
+        self.__lib.MVAKit_SetCSV(self.__obj,c_char_p(name))
         
     def SetConf(self,name):
         self.__lib.MVAKit_SetConf(self.__obj,c_char_p(name))
@@ -68,8 +74,8 @@ class MVAKit(object):
         arg_pp = POINTER(c_char_p)(arg_p)
         self.__lib.MVAKit_Parser(self.__obj,c_int(argc),arg_pp,c_int(reqntup))
 
-    def SetEvents(self):
-        self.__lib.MVAKit_SetEvents(self.__obj)
+    def SetEvents(self,fileName="",labelName="",doCut=1):
+        self.__lib.MVAKit_SetEvents(self.__obj,c_char_p(fileName),c_char_p(labelName),c_int(doCut))
 
     def GetArchitectureOpt(self):
         s=create_string_buffer(b'\000' * 1024)

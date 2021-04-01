@@ -236,6 +236,7 @@ def CloneFile(path,fil,tree_names,y_pred,var_name='score',ntup_opt='recreate',sa
                 score.push_back(x)
             trees_new[i].GetBranch(var_name).Fill()
         trees_new[i].Write()
+    tfile_new.Write()
     tfile_new.Close()
     print ('Closing File --------------------------\n')
     return fil_new
