@@ -71,15 +71,16 @@ class Job:
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser("Submit jobs to HTCondor", formatter_class=RawTextHelpFormatter)
-    parser.add_argument("-c","--command",nargs='*',action="store", dest="command", help="Command to run", required=True)
+    parser.add_argument("-c","--command",action="store", dest="command", help="Command to run", required=True)
     parser.add_argument("-i","--inputs",nargs='*',action="store", dest="inputs", help="Inputs will be used in commands", required=False)
     parser.add_argument("-e","--environment",action="store", dest="environment", help="LCG Environment.", default="views LCG_97a x86_64-centos7-gcc8-opt", required=False)
     parser.add_argument("-pf","--prefix",action="store", dest="prefix", help="Prefix to be added variable name (score+prefix)",default="prefx", required=False)
 
     args = parser.parse_args()
+    commands = args.command.split(';')
 
-    for ci,c in enumerate(args.command):
-        if len(args.inputs)>0:
+    for ci,c in enumerate(commands):
+        if args.inputs:
             for ii,i in enumerate(args.inputs):
                 if c.find('IN:') != -1:
                     new_command = c.replace('IN:',i)

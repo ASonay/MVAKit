@@ -68,4 +68,4 @@ for i in range(tool.NSplit):
     #save everything
     model.save(path+'keras_output/model/model_'+str(i)+'.h5')
     ntup_opt = 'recreate' if i == 0 else 'update'
-    CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],ntup_opt)
+    CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],ntup_opt=ntup_opt)
