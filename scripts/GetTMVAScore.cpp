@@ -132,7 +132,7 @@ void MassPoint(int mp){
 }
 
 template<typename... Args>
-Double_t GetVal(int ev, int en, int cl1, int cl2, Args... args){
+Double_t GetVal(int ev, long long en, int cl1, int cl2, Args... args){
   
   if (!isInit) GetTMVAScore();
   
@@ -142,7 +142,7 @@ Double_t GetVal(int ev, int en, int cl1, int cl2, Args... args){
 }
 
 template<typename... Args>
-Double_t GetScore(int ev, int en, Args... args){
+Double_t GetScore(int ev, long long en, Args... args){
 
   if (!isInit) GetTMVAScore();
   
@@ -159,7 +159,7 @@ Double_t GetScore(int ev, int en, Args... args){
 }
 
 template<typename... Args>
-Double_t GetScorePFlow(int ev, int en, Args... args){
+Double_t GetScorePFlow(int ev, long long en, Args... args){
 
   if (!isInit) GetTMVAScorePFlow();
   

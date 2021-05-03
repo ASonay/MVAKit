@@ -16,9 +16,9 @@ public:
   void Init();
   void Reset();
 
-  Double_t GetScore(vector<Double_t> x={0}, int en=0);
-  Double_t GetMultiClassScore(vector<Double_t> x={0}, int en=0, int cl=0);
-  Double_t GetScoreRatio(vector<Double_t> x={0}, int en=0, int cl1=0, int cl2=1);
+  Double_t GetScore(vector<Double_t> x={0}, long long en=0);
+  Double_t GetMultiClassScore(vector<Double_t> x={0}, long long en=0, int cl=0);
+  Double_t GetScoreRatio(vector<Double_t> x={0}, long long en=0, int cl1=0, int cl2=1);
 
 private:
 

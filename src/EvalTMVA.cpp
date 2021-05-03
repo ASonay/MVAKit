@@ -82,7 +82,7 @@ vector<pair<int,int>> EvalTMVA::GetReverseCond(vector<string> cond)
   return x;
 }
 
-Double_t EvalTMVA::GetScore(vector<Double_t> x, int en)
+Double_t EvalTMVA::GetScore(vector<Double_t> x, long long en)
 {
   Double_t score = -999.;
 
@@ -104,7 +104,7 @@ Double_t EvalTMVA::GetScore(vector<Double_t> x, int en)
   return score;
 }
 
-Double_t EvalTMVA::GetMultiClassScore(vector<Double_t> x, int en, int cl)
+Double_t EvalTMVA::GetMultiClassScore(vector<Double_t> x, long long en, int cl)
 {
   Double_t score = -999.;
 
@@ -126,7 +126,7 @@ Double_t EvalTMVA::GetMultiClassScore(vector<Double_t> x, int en, int cl)
   return score;
 }
 
-Double_t EvalTMVA::GetScoreRatio(vector<Double_t> x, int en, int cl1, int cl2)
+Double_t EvalTMVA::GetScoreRatio(vector<Double_t> x, long long en, int cl1, int cl2)
 {
   
   Double_t score = -999.;

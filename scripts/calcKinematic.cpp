@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 #include <tuple>
 #include "TLorentzVector.h"
 
@@ -13,6 +14,10 @@ struct kin
 
 static vector<kin> jets;
 static int instance = 0;
+
+
+static std::map<long long,long long> eventNumber;
+static long long events = 0;
 
 Double_t calc_Mjjj_dRs3Avg() {
 
@@ -97,5 +102,29 @@ bool cumulate_jets(Double_t pt, Double_t eta, Double_t phi, Double_t e, int n) {
     {instance=0;return true;}
   else
     {return false;}
+
+}
+
+bool excludeDup(long long event, long long run, long long eof) {
+
+  if (events==0) {
+    eventNumber.clear();
+  }
+  events++;
+  if (events==eof) {
+    //std::cout << "Total events: " << events << std::endl;
+    //std::cout << "======EOF======" << std::endl;
+    events=0;
+  }
+  
+  if (eventNumber[event]==run){
+    //std::cout << "Duplication found for event number" << event
+    //      << " for the run: " << run << std::endl;
+    return false;
+  }
+  else {
+    eventNumber[event]=run;
+    return true;
+  }
 
 }
