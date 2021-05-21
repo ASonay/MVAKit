@@ -25,9 +25,11 @@ tool.ReadConf()
 if 'path' in argp:
     path = argp['path']
 else:
-    path = '.'
+    path = './'
+
+if path[-1] != '/': path += '/'
     
-path += '/pnnrew'+RemoveSpecialChars(tool.GetEngineOpt())+'/'
+path += 'pnnrew'+RemoveSpecialChars(tool.GetEngineOpt())+'/'
 if not os.path.exists(path):os.makedirs(path)
 
 #Preparing data into new root file
@@ -72,7 +74,7 @@ for i in range(split_size):
     
     #train data with dropout
     if argp['unc']:
-        arch_with_dropout = AddDropout(tool.GetArchitectureOpt(),Dropout=0.2)
+        arch_with_dropout = AddDropout(tool.GetArchitectureOpt(),Dropout=0.1)
         model_dropout = GetKerasModel(tool.NVar,arch_with_dropout)
         TrainKerasModel(model_dropout,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
         model_dropout.save(path+'keras_output/model/model_dropout'+str(i)+'.h5')
@@ -84,29 +86,7 @@ for i in range(split_size):
         ypred_train = numpy.append(ypred_train,yunc_train,axis=1)
         ypred_test = numpy.append(ypred_test,ypred_avg_test,axis=1)
         ypred_test = numpy.append(ypred_test,yunc_test,axis=1)
-
-        y_fun_m,y_fun_unc = predict_with_uncertainty(x_train_scaled, model_dropout, n_iter=500)
-
-        n = int(100)
-        x, y, yup = array( 'd' ), array( 'd' ), array( 'd' )
-
-        for j in range(n):
-            x.append(x_fun[j])
-            y.append(y_fun[j]/(1-y_fun[j]))
-            err = (y_fun[j]/(1-y_fun[j]))*math.sqrt(2.0)*(y_fun_unc[j]/y_fun[j])
-            yup.append((y_fun[j])/(1-y_fun[j])+err)
-            print (('%i %f %f %f')%(j,x[j],y[j],yup[j]))
-
-        g = TGraph(100,x,y)
-        gup = TGraph(100,x,yup)
     
     #Create new ntuple
     ntup_opt = 'recreate' if i == 0 else 'update'
     ntupleName_new = CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],ntup_opt=ntup_opt)
-
-    if argp['unc']:
-        tfile = TFile(ntupleName_new,"update")
-        g.Write('g')
-        gup.Write('gup')
-        tfile.Write()
-        tfile.Close()

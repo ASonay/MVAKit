@@ -42,7 +42,7 @@ class Job:
             f.write("output\t\t = job.out\n")
             f.write("error\t\t = job.err\n")
             f.write("log\t\t = job.log\n")
-            f.write('RequestCpus = 8\n')
+            f.write('RequestCpus = 16\n')
             f.write('GetEnv          = True\n')
             f.write('GetEnv          = True\n')
             f.write('+JobFlavour\t\t = "%s"\n'%queue)

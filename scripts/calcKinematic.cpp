@@ -105,26 +105,26 @@ bool cumulate_jets(Double_t pt, Double_t eta, Double_t phi, Double_t e, int n) {
 
 }
 
-bool excludeDup(long long event, long long run, long long eof) {
+bool excludeDup(long long event, long long run, long long eof, long long locentry) {
 
-  if (events==0) {
+  if (locentry+1==eof) {
+    std::cout << "Dup found: " << events << std::endl;
     eventNumber.clear();
-  }
-  events++;
-  if (events==eof) {
-    //std::cout << "Total events: " << events << std::endl;
-    //std::cout << "======EOF======" << std::endl;
     events=0;
+    std::cout << "Total events: " << eof << " Local Entry: " << locentry << std::endl;
+    std::cout << "======EOF======" << std::endl;
   }
-  
+
   if (eventNumber[event]==run){
-    //std::cout << "Duplication found for event number" << event
-    //      << " for the run: " << run << std::endl;
+    //std::cout << locentry << " Duplication found for event number" << event
+    //	      << " for the run: " << run
+    //	      << " EOF: " << eof<< std::endl;
+    events++;
     return false;
   }
   else {
     eventNumber[event]=run;
     return true;
   }
-
+  
 }

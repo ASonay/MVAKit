@@ -55,25 +55,31 @@ map<int,pair<string,string>> training = {
 					 {10002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/os2l/M1000/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/os2l/M1000/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_2l.conf"}}
 };
 
-map<int,pair<string,string>> training_pflow = {					 
+map<int,pair<string,string>> training_pflow_9j3b = {					 
 					 //BD/T
-					 {4001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M400/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M400/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
-					 {5001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M500/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M500/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
-					 {6001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M600/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M600/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
-					 {7001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M700/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M700/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
-					 {8001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M800/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M800/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
-					 {9001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M900/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M900/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
-					 {10001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M1000/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/1L/M1000/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
-					 {4002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M400/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M400/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow_2l.conf"}},
-					 {5002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M500/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M500/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow_2l.conf"}},
-					 {6002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M600/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M600/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow_2l.conf"}},
-					 {7002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M700/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M700/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow_2l.conf"}},
-					 {8002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M800/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M800/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow_2l.conf"}},
-					 {9002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M900/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M900/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow_2l.conf"}},
-					 {10002,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M1000/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120/2LOS/M1000/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow_2l.conf"}}
+					 {4001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M400/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M400/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {5001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M500/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M500/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {6001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M600/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M600/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {7001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M700/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M700/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {8001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M800/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M800/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {9001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M900/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M900/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {10001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M1000/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M1000/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}}
+};
+
+map<int,pair<string,string>> training_pflow_10j3b = {					 
+					 //BD/T
+					 {4001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M400/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M400/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {5001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M500/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M500/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {6001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M600/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M600/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {7001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M700/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M700/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {8001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M800/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M800/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {9001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M900/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M900/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}},
+					 {10001,{"/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M1000/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M1000/loader_1/weights/factory_BDT_1_Score.weights.xml","/config/config_bdt_crossvalidation_pflow.conf"}}
 };
 
 map<int,shared_ptr<EvalTMVA>> evaluater;
+map<int,shared_ptr<EvalTMVA>> evaluater_pflow_9j3b;
+map<int,shared_ptr<EvalTMVA>> evaluater_pflow_10j3b;
 
 void GetTMVAScore(int ev=-100)
 {
@@ -113,10 +119,17 @@ void GetTMVAScorePFlow(int ev=-100)
     exit(0);
   }
 
-  for (auto const &x : training_pflow)
-    {cout << mvakit_dir+x.second.second << endl;evaluater[x.first] = shared_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
+  for (auto const &x : training_pflow_9j3b)
+    {cout << mvakit_dir+x.second.second << endl;evaluater_pflow_9j3b[x.first] = shared_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
 
-  for (auto const &x : evaluater){
+  for (auto const &x : training_pflow_10j3b)
+    {cout << mvakit_dir+x.second.second << endl;evaluater_pflow_10j3b[x.first] = shared_ptr<EvalTMVA>(new EvalTMVA(x.second.first,mvakit_dir+x.second.second));}
+
+  for (auto const &x : evaluater_pflow_9j3b){
+    x.second->Init();
+    cout << x.second->GetScoreRatio({1}) << endl;;
+  }
+  for (auto const &x : evaluater_pflow_10j3b){
     x.second->Init();
     cout << x.second->GetScoreRatio({1}) << endl;;
   }
@@ -171,6 +184,9 @@ Double_t GetScorePFlow(int ev, long long en, Args... args){
     cout << index << endl;
     check=false;
   }
-  
-  return evaluater[index]->GetScore(x,en);
+
+  if (x[2]==9)
+    {return evaluater_pflow_9j3b[index]->GetScore(x,en);}
+  else
+    {return evaluater_pflow_10j3b[index]->GetScore(x,en);}
 }
