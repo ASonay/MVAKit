@@ -487,7 +487,7 @@ def ParseConfig(argv):
     dic['tree'] = 'nominal_Loose'
     i=0
     while i<len(argv):
-        if argv[i] == '--prepared-ntup' or argv[i] == '--clone-ntup':
+        if argv[i] == '--prepared-ntup' or argv[i] == '--ntup-prepared' or argv[i] == '--clone-ntup':
             dic['ntup_prepared'] = True
             dic['ntup'] = argv[i+1]
             i+=2
