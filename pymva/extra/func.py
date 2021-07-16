@@ -217,9 +217,9 @@ def CloneFile(path,fil,tree_names,y_pred,var_name='score',ntup_opt='recreate',sa
 
     score = vector('float')()
     print ('\nUpdating File --------------------------')
-    fil_new = fil.replace('.root','_clone.root')
+    fil_new = fil
     if not same_path:
-        fil_new = path+fil[fil.rfind('/')+1:].replace('.root','_clone.root')
+        fil_new = path+fil[fil.rfind('/')+1:]
     print (('FileName to be recorded: %s')%fil_new)
     trees_new=[]
     tfile_new = TFile(fil_new,ntup_opt)

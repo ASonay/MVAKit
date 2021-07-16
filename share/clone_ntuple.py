@@ -78,6 +78,8 @@ if __name__ == "__main__":
     parser.add_argument("-p","--path",action="store", dest="path", help="path where the keras model file (h5) saved", required=True)
     parser.add_argument("-c","--conf",action="store", dest="conf", help="Configuration", required=True)
     parser.add_argument("-pf","--prefix",action="store", dest="prefix", help="Prefix to be added variable name (score+prefix)",default="prefx", required=False)
+    parser.add_argument("-pf_ntup","--prefix_ntup",action="store", dest="prefix_ntup", help="Prefix to be added end of ntuple",default="_clone", required=False)
+    parser.add_argument("-u","--update",action="store_true", dest="update", help="Only update the desired ntuple", required=False)
    
     args = parser.parse_args()
 
@@ -107,6 +109,10 @@ if __name__ == "__main__":
             x_scaled = ReadAndStdTransform(x,save_loc=path+'keras_output/feature_weight/fold0_')
             y = model.predict(x_scaled)
             ntup_opt = 'recreate' if i == 0 else 'update'
-            print (ntup_opt)
             score_name = 'score'+prefix
-            CloneFile(path,ntuple_name,[tree_name],[y],score_name,ntup_opt,True)
+            ntuple_name_new = ntuple_name.replace('.root',args.prefix_ntup+'.root')
+            if args.update:
+                ntuple_name_new = ntuple_name
+                ntup_opt = 'update'
+            print ('OPT: '+ntup_opt)
+            CloneFile(path,ntuple_name_new,[tree_name],[y],score_name,ntup_opt,True)
