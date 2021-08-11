@@ -73,6 +73,12 @@ void GetTMVAScore(int mH=400,int mva_index=0)
     file_loc[91].second = "/afs/cern.ch/work/a/asonay/public/config_bdt_crossvalidation_pflow.conf";
     file_loc[101].second = "/afs/cern.ch/work/a/asonay/public/config_bdt_crossvalidation_pflow.conf";
   }
+  else if (mva_index==5) {
+    file_loc[1].first = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/ljets/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
+    file_loc[1].second = "/afs/cern.ch/work/a/asonay/public/config_bdt_crossvalidation.conf";
+    file_loc[2].first = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/os2l/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights/non_parameterized/os2l/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
+    file_loc[2].second = "/afs/cern.ch/work/a/asonay/public/config_bdt_crossvalidation_2l.conf";
+  }
   else {
     cout << "NO Valid option defined!"
 	 << "\n0 = SM4top"
