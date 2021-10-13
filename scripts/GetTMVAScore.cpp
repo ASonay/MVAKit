@@ -67,6 +67,12 @@ void GetTMVAScore(int mH=400,int mva_index=0)
     file_loc[1].first = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/VarSet6_QGTagging_eta/ge9jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/VarSet6_QGTagging_eta/ge9jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
     file_loc[1].second = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/VarSet6_QGTagging_eta/config_bdt_crossvalidation.conf";
   }
+  else if (mva_index==21) {
+    file_loc[91].first = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/BSM4tVar/9jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/BSM4tVar/9jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
+    file_loc[101].first = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/BSM4tVar/ge10jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/BSM4tVar/ge10jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
+    file_loc[91].second = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/BSM4tVar/9jge3b/config_bdt_BSM4t_crossvalidation.conf";
+    file_loc[101].second = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/BSM4tVar/config_bdt_BSM4t_crossvalidation.conf";
+  }
   else if (mva_index==4) {
     file_loc[91].first = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_9jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
     file_loc[101].first = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/BDT_weights_212120_v2/ljets_ge10jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
