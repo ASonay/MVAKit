@@ -46,14 +46,22 @@ set( lib_headers
   MVAKit/ReadTree.hpp
   MVAKit/Configuration.hpp
   MVAKit/MVAKit.hpp
-  MVAKit/EvalTMVA.hpp )
+  MVAKit/EvalTMVA.hpp
+  MVAKit/Layer.hpp
+  MVAKit/Activation.hpp
+  MVAKit/NeuralNetwork.hpp
+  MVAKit/Transformers.hpp )
 set( lib_sources
   src/External.cpp
   src/Common.cpp
   src/ReadTree.cpp
   src/Configuration.cpp
   src/MVAKit.cpp
-  src/EvalTMVA.cpp )
+  src/EvalTMVA.cpp
+  src/Layer.cpp
+  src/Activation.cpp
+  src/NeuralNetwork.cpp
+  src/Transformers.cpp )
 
 add_library( MVAKit SHARED ${lib_headers} ${lib_sources} )
 target_include_directories( MVAKit

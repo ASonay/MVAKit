@@ -28,9 +28,18 @@ echo -e "\nMVAKit Home Dir : " ${MVAKIT_HOME}
 #setup root and LCG environment
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
-LCG_setup="views LCG_97a x86_64-centos7-gcc8-opt"
-echo -e "LCG setup will be used, " ${LCG_setup}
-lsetup "${LCG_setup}"
+if [ "${ROOTSYS}" = "" ]; then
+    if [ "${1}" = "slc6" ]; then
+	lsetup "views LCG_96 x86_64-slc6-gcc8-opt" --quiet
+    else
+	lsetup "views LCG_99 x86_64-centos7-gcc8-opt" --quiet
+    fi
+else
+    root_version=`root-config --version`
+    if version_gt 6.20 $root_version; then
+	echo "ERROR root already loaded, but root version too old: $root_version"
+    fi
+fi
 
 alias mvakit-make='cd ${MVAKIT_HOME}/build/; make -j4; cd ../'
 alias mvakit-clean='rm -rf ${MVAKIT_HOME}/build/'

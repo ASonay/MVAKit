@@ -31,10 +31,15 @@
 #include "TTreeReaderValue.h"
 
 #include "MVAKit/EvalTMVA.hpp"
+#include "MVAKit/NeuralNetwork.hpp"
+#include "MVAKit/Transformers.hpp"
 
 using namespace std;
 
-map<int,shared_ptr<EvalTMVA>> evaluater;
+vector<unique_ptr<NeuralNetwork>> nn;
+vector<unique_ptr<Transformers>> tr;
+
+map<int,unique_ptr<EvalTMVA>> evaluater;
 
 void GetTMVAScore(int mH=400,int mva_index=0)
 {
@@ -97,12 +102,40 @@ void GetTMVAScore(int mH=400,int mva_index=0)
   }
 
   for (auto const &x : file_loc)
-    {evaluater[x.first] = shared_ptr<EvalTMVA>(new EvalTMVA(x.second.first,x.second.second));}
+    {evaluater[x.first] = unique_ptr<EvalTMVA>(new EvalTMVA(x.second.first,x.second.second));}
   
   for (auto const &x : evaluater){
     x.second->Init();
     cout << x.second->GetScoreRatio({1}) << endl;;
   }
+
+  nn.emplace_back(new NeuralNetwork("/afs/cern.ch/work/a/asonay/reweighting/ljets_nominal/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/keras_output/model/model_0.txt", "/afs/cern.ch/work/a/asonay/TMVA_tool/config/config_nnrew_ljets_kin.conf"));
+  tr.emplace_back(new Transformers("std", "/afs/cern.ch/work/a/asonay/reweighting/ljets_nominal/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/keras_output/feature_weight/fold0_std_scaler.txt"));
+}
+
+template<typename... Args>
+Double_t GetNNScore(int index, Args... args){
+  vector<float> x = { float{args}... };
+
+  tr[index]->StdTransform(x);
+  nn[index]->SetInputs(x);
+  nn[index]->FeedForward();
+  
+  return nn[index]->GetOutput();
+}
+
+template<typename... Args>
+Double_t GetNNRew(int index, int lep, Args... args){
+  vector<float> x = { float{args}... };
+
+  tr[index]->StdTransform(x);
+  nn[index]->SetInputs(x);
+  nn[index]->FeedForward();
+
+  float score = nn[index]->GetOutput();
+
+  if (lep==1) {return score/(1.0-score);}
+  else {return exp(score);}
 }
 
 template<typename... Args>

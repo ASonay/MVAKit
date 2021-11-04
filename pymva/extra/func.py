@@ -31,9 +31,19 @@ def Labeling(string):
 
     return label_tags_dic
 
+def ExponentialLoss():
+    from tensorflow.keras import backend as K
+    def loss(y_true, y_pred):
+        return K.mean((y_true * K.exp(-0.5*y_pred)) + ((1.0-y_true) * K.exp(0.5*y_pred)),axis=-1)
+    return loss
+
+def ExponentialLoss_Metric(y_true, y_pred):
+    from tensorflow.keras import backend as K
+    return K.mean((-0.5 * y_true * K.exp(-0.5*y_pred)) + (0.5 * (1.0-y_true) * K.exp(0.5*y_pred)),axis=-1)
+
 def GetKerasModel(input_dim,opt):
-    from keras.models import Sequential
-    from keras.layers import Dense, Dropout
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Dense, Dropout
     layers = opt.split(',')
     if len(layers) < 2:
         print ('You should have at least two layer for NN')
@@ -74,9 +84,10 @@ def GetKerasModel(input_dim,opt):
 
     return model
 
-def TrainKerasModel(model,opt,x,y,w):
-    from keras.optimizers import SGD,Adam,RMSprop
-    from keras.models import Sequential
+def TrainKerasModel(path,model,opt,x,y,w,custom_callbacks=None):
+    from tensorflow.keras.optimizers import SGD,Adam,RMSprop,schedules
+    from tensorflow.keras.models import Sequential
+
     getopt = opt.split(',')
     optlist={}
     for o in getopt:
@@ -95,6 +106,28 @@ def TrainKerasModel(model,opt,x,y,w):
     optimizer=optlist['OPTIMIZER']
     loss=optlist['LOSS']
 
+    lrate_dec=0
+    lrate_step=0
+    if 'LRATE_DEC' in optlist: lrate_dec=float(optlist['LRATE_DEC'])
+    if 'LRATE_STEP' in optlist: lrate_step=int(optlist['LRATE_STEP'])
+
+    #Metrics
+    mets=['accuracy','AUC']
+    if loss == 'Exp': mets.append(ExponentialLoss_Metric)
+
+    #Callbacks
+    cbacks=[]
+    if custom_callbacks != None: cbacks.append(custom_callbacks) 
+
+    if loss == 'Exp':
+        loss = ExponentialLoss()
+
+    if lrate_dec>0 and lrate_step>0:
+        lrate = schedules.ExponentialDecay(initial_learning_rate=float(optlist['LRATE']),
+                                 decay_steps=lrate_step,
+                                 decay_rate=lrate_dec)
+        print("Learning rate sceduled with initial rate "+str(float(optlist['LRATE']))+" by "+str(lrate_dec)+" decay and for each "+str(lrate_step)+" step.")
+
     optim=None
     if optimizer.upper() == 'SGD':
         optim=SGD(lr=lrate, momentum=momentum)
@@ -106,10 +139,11 @@ def TrainKerasModel(model,opt,x,y,w):
         print ('Available optimizers: SGD,ADAM,RMSPROP')
         print ('You choose none, SGD will be run..')
         optim=SGD(lr=lrate, momentum=momentum)
-        
-    model.compile(loss=loss, optimizer=optim, metrics=['accuracy'])
+    
+    model.compile(loss=loss, optimizer=optim, metrics=mets)
     print (model.summary())
-    model.fit(np.array(x), np.array(y), sample_weight = np.array(w), epochs=nepoch, batch_size=batch)
+    model.fit(np.array(x), np.array(y), sample_weight = np.array(w), epochs=nepoch, batch_size=batch, callbacks=cbacks)
+
     
 def CompileKerasModel(model,opt):
     from keras.optimizers import SGD,Adam,RMSprop
@@ -238,6 +272,11 @@ def CloneFile(path,fil,tree_names,y_pred,var_name='score',ntup_opt='recreate',sa
         trees_new[i].Write()
     tfile_new.Write()
     tfile_new.Close()
+    tfile.Close()
+    del trees[:]
+    del trees_new[:]
+    del tfile
+    del tfile_new
     print ('Closing File --------------------------\n')
     return fil_new
 

@@ -6,7 +6,45 @@ import sys,os
 from sklearn.utils import shuffle
 import numpy,math
 from ROOT import TGraph, TFile, TTree
+import csv
 
+from tensorflow.keras import backend as K
+from tensorflow.python.keras.callbacks import Callback
+class Differential_Loss(Callback):
+    def __init__(self, x, y, w):
+        self.x = x
+        self.w = w
+        self.y = y
+        self.lrate = []
+        self.dL = []
+        self.dL_av = 0.0
+        
+    def on_epoch_end(self, epoch, logs={}):
+        optimizer = self.model.optimizer
+        lr = K.get_value( optimizer.lr(optimizer.iterations) )
+        y_hat = np.asarray(self.model.predict(self.x))
+        len_y = len(self.y)
+        dL = 0.0
+        for i in range(len_y):
+            if (self.y[i] == 1):
+                dL += -0.5*math.exp(-0.5*y_hat[i])*self.w[i]
+            else:
+                dL += 0.5*math.exp(0.5*y_hat[i])*self.w[i]
+
+        self.lrate.append(lr)
+        self.dL.append(dL)
+        self.dL_av += dL/10.
+
+        print("")
+        print("Learning Rate: " + str(lr))
+        print("Differential loss: " + str(dL))
+        print("Avarage for 10 row: " + str(self.dL_av))
+
+        if (epoch+1)%10==0:
+            if abs(self.dL_av) < 0.1 : self.model.stop_training = True
+            self.dL_av = 0.0
+
+        
 argc,argv,argp = ParseConfig(sys.argv)
 
 print (argc)
@@ -61,14 +99,23 @@ for i in range(split_size):
     x_train_scaled,x_test_scaled=StdTransform(x_train,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
     print ('  Shuffling data ..')
     x_train_scaled_shuf,y_train,w_train = shuffle(x_train_scaled,y_train,w_train,random_state=0);
-    print ('  Scaling weights ..')
+    #print ('  Scaling weights ..')
     #ScaleWeights(y_train,w_train)
+
     
     #train data
     model = GetKerasModel(tool.NVar,tool.GetArchitectureOpt())
-    TrainKerasModel(model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
+    #Custom callback
+    dL = Differential_Loss(x_train_scaled_shuf,y_train,w_train)
+    TrainKerasModel(path,model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train,dL)
     model.save(path+'keras_output/model/model_'+str(i)+'.h5')
 
+    #Write learning rate and diff loss
+    dL_rate = zip(dL.lrate,dL.dL)
+    with open(path+'keras_output/dL_rate.csv', 'w') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerows(dL_rate)
+        
     ypred_train = model.predict(x_train_scaled)
     ypred_test = model.predict(x_test_scaled)
     

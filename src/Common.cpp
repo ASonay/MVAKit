@@ -17,6 +17,21 @@ Common::StringSep(const string str,char c){
   return result;
 }
 
+vector<float>
+Common::StringSepFloat(const string str,char c){
+  stringstream ss( str );
+  vector<float> result;
+
+  while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, c );
+      result.push_back( atof(substr.c_str()) );
+    }
+
+  return result;
+}
+
 string
 Common::RemoveSpecialChars(const string str){
   string str_r(str);
@@ -59,6 +74,18 @@ Common::StringFind(const string str1, const string str2)
 		 [](unsigned char c){ return tolower(c); });
   
   return a==b;
+}
+
+string
+Common::LowerCase(const string str)
+{
+
+  string x = str;
+  
+  transform(x.begin(), x.end(), x.begin(),
+		 [](unsigned char c){ return tolower(c); });
+  
+  return x;
 }
 
 bool

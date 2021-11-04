@@ -211,7 +211,7 @@ Configuration::ReadConf(){
       exit(0);
     }
   }
-  
+  in.close();
   cout << "\nFinished to read configuration..\n" << endl;
 
   m_nlabel = m_labels.size();

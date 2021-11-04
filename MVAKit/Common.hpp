@@ -27,6 +27,10 @@ namespace Common {
   vector<string> StringSep(const string str,char c=',');
   //
   //
+  // String separation by char and vectorize
+  vector<float> StringSepFloat(const string str,char c=',');
+  //
+  //
   // String compare regardless case
   bool StringCompare(const string str1, const string str2);
   //
@@ -45,6 +49,10 @@ namespace Common {
   //
   // Find digit in string
   string GetMappedStr(map<string,string> str_map, int index);
+  //
+  //
+  // LowerCase
+  string LowerCase(string str);
 
 }
 #endif
