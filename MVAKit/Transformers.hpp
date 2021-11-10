@@ -24,12 +24,16 @@ public:
   void Load(string name, string file);
   void StdTransform(op::vec &input);
 
+  op::vec *TransformedData() {return m_result.get();}
+
 private:
 
   string m_name;
   unsigned m_input_size;
   op::vec m_std_mean;
   op::vec m_std_scale;
+
+  unique_ptr<op::vec> m_result;
   
 };
 

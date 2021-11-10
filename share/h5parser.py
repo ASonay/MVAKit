@@ -27,16 +27,16 @@ if __name__ == "__main__":
     tool.SetConf(config)
     tool.ReadConf()
 
-    from keras.models import load_model
+    import tensorflow as tf
     model_file=path+'keras_output/model/model_0.h5'
     print ('MODEL : ',model_file)
-    model=load_model(model_file,
-                     custom_objects=None,
-                     compile=False)
-
+    model=tf.keras.models.load_model(model_file,
+                                     custom_objects=None,
+                                     compile=False)
+    """
     scaler = load(path+'keras_output/feature_weight/fold0_std_scaler.bin')
     
-    x = [[0,7,132797.15,66186.695,45201.695,37540.648,30212.027,29805.652,25537.996,0,0,0,73784.015,51631.25]]
+    x = [[0,7,132797.15,66186.695,45201.695,37540.648,30212.027,29805.652,25537.996,0,0,0,73784.015,51631.25,1.2]]
     x_s = scaler.transform(x)
 
     print (x)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         for i,var in enumerate(tool.Variables):
             fout.write(var + ' ' + str(scaler.mean_[i]) + ' ' + str(scaler.scale_[i]) + '\n')
             print ('%-40s | %-6.2e | %-6.2e'%(var,scaler.mean_[i],scaler.scale_[i]))
-
+    """
     with open(path+'keras_output/model/model_0.txt', 'w') as fout:
         for ind,layer in enumerate(model.layers):
             fout.write('Start for layer ' + str(ind) + '\n')

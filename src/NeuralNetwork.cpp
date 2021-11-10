@@ -8,8 +8,7 @@ NeuralNetwork::NeuralNetwork():
   m_inputs_size(0)
 {}
 
-NeuralNetwork::NeuralNetwork(string weight,string cnf):
-  m_inputs_size(0)
+void NeuralNetwork::CreateNetwork(string weight,string cnf)
 {  
 
   // Prepare MVA tool for config
@@ -97,8 +96,6 @@ void NeuralNetwork::CreateNetwork(string opt)
     cout << "Parser found " << pars.size() << " layers but from the weights " << m_layers_size << " layers read." << endl;
     exit(0);
   }
-  
-  m_inputs.reset(new op::vec(m_inputs_size,1.0));
 
   int count=0;
   cout << "Creating the network..." << endl;
@@ -106,7 +103,7 @@ void NeuralNetwork::CreateNetwork(string opt)
     cout << "Layer" << count << "(" << par.first << ")" << "[" << par.second << "]" << endl;
     auto layer = make_unique<Layer>(par.first+to_string(count),par.second);
     layer->SetActivation(Activation::Function[Common::LowerCase(par.first)]);
-    if (count==0) {layer->SetInputs(m_inputs.get());}
+    if (count==0) {layer->SetInputs(m_inputs);}
     else {layer->SetInputs(m_layers.back()->GetNodes());}
     layer->SetBias(m_bias[count].get());
     layer->SetWeights(m_weights[count].get());
@@ -150,13 +147,6 @@ vector<pair<string,unsigned>> NeuralNetwork::ParseOpt(string opt)
   }
 
   return parsed;
-}
-
-void NeuralNetwork::SetInputs(op::vec inputs)
-{
-  for (unsigned i=0;i<m_inputs_size;i++) {
-    m_inputs->at(i) = inputs[i];
-  }
 }
 
 void NeuralNetwork::FeedForward()

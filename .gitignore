@@ -2,3 +2,4 @@ build/
 scripts/*_cpp*
 */*.pyc
 */*/*.pyc
+*/*/__pycache__/

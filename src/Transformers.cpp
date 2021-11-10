@@ -39,11 +39,14 @@ void Transformers::Load(string name, string file)
   cout << "Closing file..\n" << endl;
 
   m_input_size = m_std_mean.size();
+
+  m_result.reset(new op::vec(m_input_size,1.0));
+  
 }
 
 void Transformers::StdTransform(op::vec &input)
 {
   for (unsigned i=0;i<m_input_size;i++){
-    input[i]=(input[i]-m_std_mean[i])/m_std_scale[i];
+    m_result->at(i)=(input[i]-m_std_mean[i])/m_std_scale[i];
   }
 }

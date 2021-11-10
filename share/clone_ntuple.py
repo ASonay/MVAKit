@@ -78,7 +78,7 @@ if __name__ == "__main__":
     parser.add_argument("-p","--path",action="store", dest="path", help="path where the keras model file (h5) saved", required=True)
     parser.add_argument("-c","--conf",action="store", dest="conf", help="Configuration", required=True)
     parser.add_argument("-pf","--prefix",action="store", dest="prefix", help="Prefix to be added variable name (score+prefix)",default="prefx", required=False)
-    parser.add_argument("-pf_ntup","--prefix_ntup",action="store", dest="prefix_ntup", help="Prefix to be added end of ntuple",default="_clone", required=False)
+    parser.add_argument("-pf_ntup","--prefix_ntup",action="store", dest="prefix_ntup", help="Prefix to be added end of ntuple",default="", required=False)
     parser.add_argument("-u","--update",action="store_true", dest="update", help="Only update the desired ntuple", required=False)
    
     args = parser.parse_args()
@@ -95,10 +95,10 @@ if __name__ == "__main__":
     tool.SetConf(config)
     tool.ReadConf()
     
-    from keras.models import load_model
+    import tensorflow as tf 
     model_file=path+'keras_output/model/model_0.h5'
     print ('MODEL : ',model_file)
-    model=load_model(model_file,
+    model=tf.keras.models.load_model(model_file,
                      custom_objects=None,
                      compile=False)
 
@@ -110,9 +110,9 @@ if __name__ == "__main__":
             y = model.predict(x_scaled)
             ntup_opt = 'recreate' if i == 0 else 'update'
             score_name = 'score'+prefix
-            ntuple_name_new = ntuple_name.replace('.root',args.prefix_ntup+'.root')
             if args.update:
-                ntuple_name_new = ntuple_name
-                ntup_opt = 'update'
-            print ('OPT: '+ntup_opt)
-            CloneFile(path,ntuple_name_new,[tree_name],[y],score_name,ntup_opt,True)
+                print ('Updating file...')
+                UpdateFile(ntuple_name,[tree_name],[y],score_name)
+            else:
+                print('Cloning file...')
+                CloneFile(path,ntuple_name,[tree_name],[y],args.prefix_ntup,score_name,ntup_opt,True)

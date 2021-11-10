@@ -30,9 +30,9 @@ export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
 if [ "${ROOTSYS}" = "" ]; then
     if [ "${1}" = "slc6" ]; then
-	lsetup "views LCG_96 x86_64-slc6-gcc8-opt" --quiet
+	lsetup "views LCG_96 x86_64-slc6-gcc8-opt"
     else
-	lsetup "views LCG_99 x86_64-centos7-gcc8-opt" --quiet
+	lsetup "views LCG_99 x86_64-centos7-gcc8-opt"
     fi
 else
     root_version=`root-config --version`

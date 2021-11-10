@@ -20,16 +20,16 @@ class NeuralNetwork {
 public:
 
   NeuralNetwork();
-  NeuralNetwork(string weight,string cnf);
   ~NeuralNetwork();
 
   void SetInputsSize(unsigned size) {m_inputs_size=size;}
-  void SetInputs(op::vec inputs);
+  void SetInputs(op::vec *inputs) {m_inputs=inputs;}
 
   float GetOutput(unsigned index=0);
   
   void ReadWeights(string file);
   
+  void CreateNetwork(string weight,string cnf);
   void CreateNetwork(string opt);
   void FeedForward();
 
@@ -38,7 +38,8 @@ private:
   vector<pair<string,unsigned>> ParseOpt(string opt);
 
   //Network vars
-  unique_ptr<op::vec> m_inputs;
+  op::vec *m_inputs;
+  
   vector<unique_ptr<op::vec>> m_bias;
   vector<unique_ptr<op::mat>> m_weights;
   vector<unique_ptr<Layer>> m_layers;

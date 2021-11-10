@@ -20,36 +20,34 @@ class Differential_Loss(Callback):
         self.dL_av = 0.0
         
     def on_epoch_end(self, epoch, logs={}):
-        optimizer = self.model.optimizer
-        lr = K.get_value( optimizer.lr(optimizer.iterations) )
-        y_hat = np.asarray(self.model.predict(self.x))
-        len_y = len(self.y)
-        dL = 0.0
-        for i in range(len_y):
-            if (self.y[i] == 1):
-                dL += -0.5*math.exp(-0.5*y_hat[i])*self.w[i]
-            else:
-                dL += 0.5*math.exp(0.5*y_hat[i])*self.w[i]
+        if epoch>250:
+            optimizer = self.model.optimizer
+            lr = K.get_value( optimizer.lr(optimizer.iterations) )
+            y_hat = np.asarray(self.model.predict(self.x))
+            len_y = len(self.y)
+            dL = 0.0
+            for i in range(len_y):
+                if (self.y[i] == 1):
+                    dL += -0.5*math.exp(-0.5*y_hat[i])*self.w[i]
+                else:
+                    dL += 0.5*math.exp(0.5*y_hat[i])*self.w[i]
 
-        self.lrate.append(lr)
-        self.dL.append(dL)
-        self.dL_av += dL/10.
+            self.lrate.append(lr)
+            self.dL.append(dL)
+            self.dL_av += dL/10.
 
-        print("")
-        print("Learning Rate: " + str(lr))
-        print("Differential loss: " + str(dL))
-        print("Avarage for 10 row: " + str(self.dL_av))
+            print("")
+            print("Learning Rate: " + str(lr))
+            print("Differential loss: " + str(dL))
+            print("Avarage for 10 row: " + str(self.dL_av))
 
-        if (epoch+1)%10==0:
-            if abs(self.dL_av) < 0.1 : self.model.stop_training = True
-            self.dL_av = 0.0
+            if (epoch+1)%10==0:
+                if abs(self.dL_av) < 0.1 : self.model.stop_training = True
+                self.dL_av = 0.0
 
         
 argc,argv,argp = ParseConfig(sys.argv)
 
-print (argc)
-print (argv)
-print (argp)
 
 #Configuration
 tool = MVAKit('Training')
@@ -136,4 +134,4 @@ for i in range(split_size):
     
     #Create new ntuple
     ntup_opt = 'recreate' if i == 0 else 'update'
-    ntupleName_new = CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],ntup_opt=ntup_opt)
+    CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],'_clone',ntup_opt=ntup_opt)

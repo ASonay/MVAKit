@@ -112,8 +112,8 @@ def TrainKerasModel(path,model,opt,x,y,w,custom_callbacks=None):
     if 'LRATE_STEP' in optlist: lrate_step=int(optlist['LRATE_STEP'])
 
     #Metrics
-    mets=['accuracy','AUC']
-    if loss == 'Exp': mets.append(ExponentialLoss_Metric)
+    mets=[]
+    #if loss == 'Exp': mets.append(ExponentialLoss_Metric)
 
     #Callbacks
     cbacks=[]
@@ -126,23 +126,23 @@ def TrainKerasModel(path,model,opt,x,y,w,custom_callbacks=None):
         lrate = schedules.ExponentialDecay(initial_learning_rate=float(optlist['LRATE']),
                                  decay_steps=lrate_step,
                                  decay_rate=lrate_dec)
-        print("Learning rate sceduled with initial rate "+str(float(optlist['LRATE']))+" by "+str(lrate_dec)+" decay and for each "+str(lrate_step)+" step.")
+    print("Learning rate sceduled with initial rate "+str(float(optlist['LRATE']))+" by "+str(lrate_dec)+" decay and for each "+str(lrate_step)+" step.")
 
     optim=None
     if optimizer.upper() == 'SGD':
-        optim=SGD(lr=lrate, momentum=momentum)
+        optim=SGD(learning_rate=lrate, momentum=momentum)
     elif optimizer.upper() == 'ADAM':
-        optim=Adam(lr=lrate)
+        optim=Adam(learning_rate=lrate)
     elif optimizer.upper() == 'RMSPROP':
-        optim=RMSprop(lr=lrate, momentum=momentum)
+        optim=RMSprop(learning_rate=lrate, momentum=momentum)
     else:
         print ('Available optimizers: SGD,ADAM,RMSPROP')
         print ('You choose none, SGD will be run..')
-        optim=SGD(lr=lrate, momentum=momentum)
+        optim=SGD(learning_rate=lrate, momentum=momentum)
     
     model.compile(loss=loss, optimizer=optim, metrics=mets)
     print (model.summary())
-    model.fit(np.array(x), np.array(y), sample_weight = np.array(w), epochs=nepoch, batch_size=batch, callbacks=cbacks)
+    model.fit(np.array(x).astype(np.float32), np.array(y).astype(np.float32), sample_weight = np.array(w).astype(np.float32), epochs=nepoch, batch_size=batch, callbacks=cbacks)
 
     
 def CompileKerasModel(model,opt):
@@ -188,7 +188,7 @@ def ReadFile(fil,tr,variables):
     tree.SetBranchAddress('classID', label)
     
     x,y,w=[],[],[]
-    for i in xrange(tree.GetEntries()):
+    for i in range(tree.GetEntries()):
         tree.GetEntry(i)
         x_tmp=[]
         for var in variables:
@@ -207,7 +207,7 @@ def ReadFile(fil,tr,variables):
 
 def UpdateFile(fil,tree_names,y_pred,var_name='score'):
     print (('FileName to be read: %s')%fil)
-    tfile = TFile(fil)
+    tfile = TFile(fil,'update')
     trees=[]
     
     if len(tree_names) != len(y_pred):
@@ -215,14 +215,13 @@ def UpdateFile(fil,tree_names,y_pred,var_name='score'):
         exit()
         
     for t in tree_names:
-        print ('Tree will be cloned: %s'%t)
+        print ('Tree will be updated: %s'%t)
         trees.append(tfile.Get(t))
 
     score = vector('float')()
     print ('\nUpdating File --------------------------')
     for t in trees:
-        trees.append(t.CloneTree())
-        trees[-1].Branch(var_name,score)
+        t.Branch(var_name,score)
     
     for i in range(len(trees)):
         for x in y_pred[i]:
@@ -234,9 +233,11 @@ def UpdateFile(fil,tree_names,y_pred,var_name='score'):
             trees[i].GetBranch(var_name).Fill()
         trees[i].Write()
     tfile.Close()
+    del trees[:]
+    del tfile
     print ('Closing File --------------------------\n')
 
-def CloneFile(path,fil,tree_names,y_pred,var_name='score',ntup_opt='recreate',same_path=False):
+def CloneFile(path,fil,tree_names,y_pred,pref='',var_name='score',ntup_opt='recreate',same_path=False):
     print (('FileName to be read: %s')%fil)
     tfile = TFile(fil)
     trees=[]
@@ -251,7 +252,11 @@ def CloneFile(path,fil,tree_names,y_pred,var_name='score',ntup_opt='recreate',sa
 
     score = vector('float')()
     print ('\nUpdating File --------------------------')
-    fil_new = fil
+    if (ntup_opt=='recreate' and pref==''):
+        print('Attention :: you are trying to create a new ntuple with same file name.')
+        print('Please specify a prefix.')
+        exit()
+    fil_new = fil.replace('.root',pref+'.root')
     if not same_path:
         fil_new = path+fil[fil.rfind('/')+1:]
     print (('FileName to be recorded: %s')%fil_new)
@@ -389,6 +394,7 @@ from sklearn.decomposition import PCA
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import make_pipeline
 from sklearn.externals.joblib import dump,load
+
 from sklearn import metrics
 def PCAStdTransform(x_train,y_train,x_test,varnames=[],save_loc='keras_output/feature_weight/'):
     ncomp = len(x_train[0])
@@ -445,13 +451,15 @@ def StdTransform(x_train,x_test,varnames=[],save_loc='keras_output/feature_weigh
     #-------------------------------------------------------------------
     print ('\n======STD Transformation=====================================')
     print ('%-40s | %-8s | %-8s | %-8s | %-8s'%('Variables','min','max','mean','variance'))
-    for i in range(ncomp):
-        column=[x[i] for x in x_train]
-        min_c=min(column) 
-        max_c=max(column)
-        varname = 'Var_'+str(i)
-        if varnames[i]: varname = varnames[i]
-        print ('%-40s | %-6.2e | %-6.2e | %-6.2e | %-6.2e'%(varname,min_c,max_c,scaler.mean_[i],scaler.var_[i]))
+    with open(save_loc+'std_scaler.txt', 'w') as fout:
+        for i in range(ncomp):
+            column=[x[i] for x in x_train]
+            min_c=min(column) 
+            max_c=max(column)
+            varname = 'Var_'+str(i)
+            if varnames[i]: varname = varnames[i]
+            fout.write(varname + ' ' + str(scaler.mean_[i]) + ' ' + str(scaler.scale_[i]) + '\n')
+            print ('%-40s | %-6.2e | %-6.2e | %-6.2e | %-6.2e'%(varname,min_c,max_c,scaler.mean_[i],scaler.var_[i]))
     print ('==============================================================')
     #-------------------------------------------------------------------    
     dump(scaler, save_loc+'std_scaler.bin', compress=True)
@@ -513,8 +521,10 @@ def predict_with_uncertainty(x, model, n_iter=10):
 
 def RemoveSpecialChars(string):
     chars = [':','.','(',')','"','=','/',';',' ','|',',']
+    replacewith = '_'
+    print (string)
     for c in chars:
-        string = string.replace(c,'_')
+        string = string.replace(c,replacewith)
     return string
 
 def ParseConfig(argv):
