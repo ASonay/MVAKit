@@ -109,7 +109,7 @@ void GetTMVAScore(int mH=400,int mva_index=0)
   
   for (auto const &x : evaluater){
     x.second->Init();
-    cout << x.second->GetScoreRatio({1}) << endl;;
+    cout << x.second->GetScore({1}) << endl;;
   }
   //BDT-------------------------------------
 
@@ -145,11 +145,13 @@ Double_t GetNNRew(int mc, int lep, Args... args){
   else {cout << "Your DSID: " << mc << " does not match any of ttbar sample." << endl; exit(0);}
   
   int index = lep==1?sample:sample+5;
-
+  
   tr[index]->StdTransform(x);
   nn[index]->FeedForward();
 
   float score = nn[index]->GetOutput();
+  
+  //cout << "Running " << mc << " sample " << sample << " index " << index << " lep number " << lep << " score " << score << endl;
 
   if (lep==1) {return score/(1.0-score);}
   else {return exp(score);}

@@ -54,8 +54,8 @@ class Job:
     def createBatchScript(self,dest,cmd):
         with open(dest+"/"+dest+".sh","w") as f:
             f.write("#!/bin/bash"+"\n")
-            f.write('source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/user/atlasLocalSetup.sh\n')
-            f.write('lsetup "%s"\n'%self.env)
+            #f.write('source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/user/atlasLocalSetup.sh\n')
+            #f.write('lsetup "%s"\n'%self.env)
             f.write(cmd+"\n")
             f.close()
 
@@ -63,7 +63,7 @@ class Job:
         for d in self.dirs:
             os.chdir(self.path+"/"+d)
             os.chmod(d+".sh", 0o777)
-            print "\t > Submission of %s on the HTCondor" % (d+".sh")
+            print ("\t > Submission of %s on the HTCondor" % (d+".sh"))
             os.system("condor_submit job.sub")
         os.chdir(self.path)
             

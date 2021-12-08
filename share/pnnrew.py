@@ -107,7 +107,8 @@ for i in range(split_size):
     dL = Differential_Loss(x_train_scaled_shuf,y_train,w_train)
     TrainKerasModel(path,model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train,dL)
     model.save(path+'keras_output/model/model_'+str(i)+'.h5')
-
+    SaveKerasModel(model,path+'keras_output/model/model_0.txt')
+    
     #Write learning rate and diff loss
     dL_rate = zip(dL.lrate,dL.dL)
     with open(path+'keras_output/dL_rate.csv', 'w') as f:

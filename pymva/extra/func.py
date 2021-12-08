@@ -146,8 +146,8 @@ def TrainKerasModel(path,model,opt,x,y,w,custom_callbacks=None):
 
     
 def CompileKerasModel(model,opt):
-    from keras.optimizers import SGD,Adam,RMSprop
-    from keras.models import Sequential
+    from tensorflow.keras.optimizers import SGD,Adam,RMSprop,schedules
+    from tensorflow.keras.models import Sequential
     getopt = opt.split(',')
     optlist={}
     for o in getopt:
@@ -180,6 +180,26 @@ def CompileKerasModel(model,opt):
         
     model.compile(loss=loss, optimizer=optim, metrics=['accuracy'])
     print (model.summary())
+
+def SaveKerasModel(model,fil):
+    from tensorflow.keras.optimizers import SGD,Adam,RMSprop,schedules
+    from tensorflow.keras.models import Sequential
+    with open(fil, 'w') as fout:
+        for ind,layer in enumerate(model.layers):
+            fout.write('Start for layer ' + str(ind) + '\n')
+            W = layer.get_weights()[0]
+            for i in range(W.shape[0]):
+                fout.write('\n')
+                for j in range(W.shape[1]):
+                    fout.write(str(W[i,j]) + ' ')
+            fout.write('\n')
+            fout.write('Bias\n')
+            bias = layer.get_weights()[1]
+            for i in range(bias.shape[0]):
+                fout.write(str(bias[i]) + ' ')
+            fout.write('\n\n')
+            fout.write('End of layer ' + str(ind) + '\n')
+            fout.write('\n\n')
 
 def ReadFile(fil,tr,variables):
     data = TFile.Open(fil)
