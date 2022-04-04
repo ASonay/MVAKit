@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from pymva.kit import MVAKit
-from pymva.extra import *
+import pymva
 import sys,os
 from sklearn.utils import shuffle
 import numpy,math
 from ROOT import TGraph, TFile, TTree
 import csv
+
+import numpy as np
 
 from tensorflow.keras import backend as K
 from tensorflow.python.keras.callbacks import Callback
@@ -20,9 +21,10 @@ class Differential_Loss(Callback):
         self.dL_av = 0.0
         
     def on_epoch_end(self, epoch, logs={}):
+        optimizer = self.model.optimizer
+        lr = K.get_value( optimizer.lr(optimizer.iterations) )
+        print("\nLearning Rate: " + str(lr))
         if epoch>250:
-            optimizer = self.model.optimizer
-            lr = K.get_value( optimizer.lr(optimizer.iterations) )
             y_hat = np.asarray(self.model.predict(self.x))
             len_y = len(self.y)
             dL = 0.0
@@ -36,21 +38,20 @@ class Differential_Loss(Callback):
             self.dL.append(dL)
             self.dL_av += dL/10.
 
-            print("")
-            print("Learning Rate: " + str(lr))
             print("Differential loss: " + str(dL))
             print("Avarage for 10 row: " + str(self.dL_av))
 
             if (epoch+1)%10==0:
                 if abs(self.dL_av) < 0.1 : self.model.stop_training = True
                 self.dL_av = 0.0
+            
 
         
-argc,argv,argp = ParseConfig(sys.argv)
+argc,argv,argp = pymva.tools.ParseConfig(sys.argv)
 
 
 #Configuration
-tool = MVAKit('Training')
+tool = pymva.kit.MVAKit('Training')
 if argp['ntup_prepared']:
     tool.Parser(argc,argv,0)
     tool.isClassification(0)
@@ -65,7 +66,7 @@ else:
 
 if path[-1] != '/': path += '/'
     
-path += 'pnnrew'+RemoveSpecialChars(tool.GetEngineOpt())+'/'
+path += 'pnnrew'+pymva.tools.RemoveSpecialChars(tool.GetEngineOpt())+'/'
 if not os.path.exists(path):os.makedirs(path)
 
 #Preparing data into new root file
@@ -86,15 +87,15 @@ split_size = tool.NSplit if tool.NSplit > 0 else 1
 
 for i in range(split_size):
     print ('\nReading data from Py ...')
-    x_train,y_train,w_train=ReadFile(ntupleName,'TrainTree'+str(i),tool.Variables)
-    x_test,y_test,w_test=ReadFile(ntupleName,'TestTree'+str(i),tool.Variables)
+    x_train,y_train,w_train=pymva.tools.ReadFile(ntupleName,'TrainTree'+str(i),tool.Variables)
+    x_test,y_test,w_test=pymva.tools.ReadFile(ntupleName,'TestTree'+str(i),tool.Variables)
 
     print ('  Finish to obtain data ..')
     print ('  Total train: %i, total test: %i'%(len(y_train),len(y_test)))
     
     #arrange datas
     print ('  Transforming data ..')
-    x_train_scaled,x_test_scaled=StdTransform(x_train,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
+    x_train_scaled,x_test_scaled=pymva.tools.StdTransform(x_train,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
     print ('  Shuffling data ..')
     x_train_scaled_shuf,y_train,w_train = shuffle(x_train_scaled,y_train,w_train,random_state=0);
     #print ('  Scaling weights ..')
@@ -102,12 +103,12 @@ for i in range(split_size):
 
     
     #train data
-    model = GetKerasModel(tool.NVar,tool.GetArchitectureOpt())
+    model = pymva.ml.GetKerasModel(tool.NVar,tool.GetArchitectureOpt())
     #Custom callback
     dL = Differential_Loss(x_train_scaled_shuf,y_train,w_train)
-    TrainKerasModel(path,model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train,dL)
+    pymva.ml.TrainKerasModel(path,model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train,dL)
     model.save(path+'keras_output/model/model_'+str(i)+'.h5')
-    SaveKerasModel(model,path+'keras_output/model/model_0.txt')
+    pymva.ml.SaveKerasModel(model,path+'keras_output/model/model_0.txt')
     
     #Write learning rate and diff loss
     dL_rate = zip(dL.lrate,dL.dL)
@@ -120,13 +121,13 @@ for i in range(split_size):
     
     #train data with dropout
     if argp['unc']:
-        arch_with_dropout = AddDropout(tool.GetArchitectureOpt(),Dropout=0.1)
-        model_dropout = GetKerasModel(tool.NVar,arch_with_dropout)
-        TrainKerasModel(model_dropout,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
+        arch_with_dropout = pymva.ml.AddDropout(tool.GetArchitectureOpt(),Dropout=0.1)
+        model_dropout = pymva.ml.GetKerasModel(tool.NVar,arch_with_dropout)
+        pymva.ml.TrainKerasModel(model_dropout,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
         model_dropout.save(path+'keras_output/model/model_dropout'+str(i)+'.h5')
         model_dropout.save_weights(path+'keras_output/model/model_dropout_weights'+str(i)+'.h5')
-        ypred_avg_train,yunc_train = predict_with_uncertainty(x_train_scaled, model_dropout, n_iter=1000)
-        ypred_avg_test,yunc_test = predict_with_uncertainty(x_test_scaled, model_dropout, n_iter=1000)
+        ypred_avg_train,yunc_train = pymva.ml.predict_with_uncertainty(x_train_scaled, model_dropout, n_iter=1000)
+        ypred_avg_test,yunc_test = pymva.ml.predict_with_uncertainty(x_test_scaled, model_dropout, n_iter=1000)
 
         ypred_train = numpy.append(ypred_train,ypred_avg_train,axis=1)
         ypred_train = numpy.append(ypred_train,yunc_train,axis=1)
@@ -135,4 +136,4 @@ for i in range(split_size):
     
     #Create new ntuple
     ntup_opt = 'recreate' if i == 0 else 'update'
-    CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],'_clone',ntup_opt=ntup_opt)
+    pymva.tools.CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],'_clone',ntup_opt=ntup_opt)

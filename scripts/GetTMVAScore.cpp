@@ -39,33 +39,12 @@ using namespace std;
 //REWEIGHTING-----------------------------
 vector<unique_ptr<NeuralNetwork>> nn;
 vector<unique_ptr<Transformers>> tr;
-vector<pair<string,string>> nn_config = {
-  //0 ttbar 1L nominal
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_nominal/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/","/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_nominal/config_nnrew_ljets_kin.conf"},
-  //1 ttbar 1L nominal up 50% unc. to reweighted ttbar
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_nominal/up_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/","/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_nominal/up_var/config_nnrew_ljets_kin.conf"},
-  //2 ttbar 1L nominal down 50% unc. to reweighted ttbar
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_nominal/down_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/","/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_nominal/down_var/config_nnrew_ljets_kin.conf"},
-  //3 ttbar 1L PhHw
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_PhHw/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/","/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_PhHw/config_nnrew_alt_ljets_kin.conf"},
-  //4 ttbar 1L Mg5Py8
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_Mg5Py8/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/","/eos/user/b/bsm4tops/bsm4teos/reweighting/ljets_Mg5Py8/config_nnrew_alt_ljets_kin.conf"},
-  //5 ttbar 2LOS nominal
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_nominal/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/","/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_nominal/config_nnrew_os2l_kin.conf"},
-  //6 ttbar 2LOS nominal up 50% unc. to reweighted ttbar
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_nominal/up_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/","/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_nominal/up_var/config_nnrew_os2l_kin.conf"},
-  //7 ttbar 2LOS nominal down 50% unc. to reweighted ttbar
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_nominal/down_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/","/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_nominal/down_var/config_nnrew_os2l_kin.conf"},
-  //8 ttbar 2LOS PhHw
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_PhHw/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/","/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_PhHw/config_nnrew_alt_os2l_kin.conf"},
-  //9 ttbar 2LOS Mg5Py8
-  {"/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_Mg5Py8/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/","/eos/user/b/bsm4tops/bsm4teos/reweighting/os2l_Mg5Py8/config_nnrew_alt_os2l_kin.conf"},
-};
+vector<pair<string,string>> nn_config;
 
 //BDT-------------------------------------
 map<int,unique_ptr<EvalTMVA>> evaluater;
 
-void GetTMVAScore(int mH=400,int mva_index=0)
+void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
 {
   string mvakit_dir = getenv("MVAKIT_HOME");
   string lib = mvakit_dir + "/build/lib/libMVAKit.so";
@@ -77,12 +56,46 @@ void GetTMVAScore(int mH=400,int mva_index=0)
     cout << "Your library, " << lib << " cannot be loaded." << endl;
     exit(0);
   }
-  //BDT-------------------------------------
+
+  //REWEIGHTING-----------------------------
+  string input_dir_reweighting="/eos/user/b/bsm4tops/bsm4teos/reweighting/";
+  if (input_dir_index==1) input_dir_reweighting="/local_scratch/sched3am/BSM4t/reweighting/";
+  nn_config = {
+  //0 ttbar 1L nominal
+  {input_dir_reweighting+"ljets_nominal/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_nominal/config_nnrew_ljets_kin.conf"},
+  //1 ttbar 1L nominal up 50% unc. to reweighted ttbar
+  {input_dir_reweighting+"ljets_nominal/up_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_nominal/up_var/config_nnrew_ljets_kin.conf"},
+  //2 ttbar 1L nominal down 50% unc. to reweighted ttbar
+  {input_dir_reweighting+"ljets_nominal/down_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_nominal/down_var/config_nnrew_ljets_kin.conf"},
+  //3 ttbar 1L PhHw
+  {input_dir_reweighting+"ljets_PhHw/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_PhHw/config_nnrew_alt_ljets_kin.conf"},
+  //4 ttbar 1L Mg5Py8
+  {input_dir_reweighting+"ljets_Mg5Py8/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_Mg5Py8/config_nnrew_alt_ljets_kin.conf"},
+  //5 ttbar 2LOS nominal
+  {input_dir_reweighting+"os2l_nominal/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_nominal/config_nnrew_os2l_kin.conf"},
+  //6 ttbar 2LOS nominal up 50% unc. to reweighted ttbar
+  {input_dir_reweighting+"os2l_nominal/up_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_nominal/up_var/config_nnrew_os2l_kin.conf"},
+  //7 ttbar 2LOS nominal down 50% unc. to reweighted ttbar
+  {input_dir_reweighting+"os2l_nominal/down_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_nominal/down_var/config_nnrew_os2l_kin.conf"},
+  //8 ttbar 2LOS PhHw
+  {input_dir_reweighting+"os2l_PhHw/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_PhHw/config_nnrew_alt_os2l_kin.conf"},
+  //9 ttbar 2LOS Mg5Py8
+  {input_dir_reweighting+"os2l_Mg5Py8/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_Mg5Py8/config_nnrew_alt_os2l_kin.conf"},
+};
+
+
+
+  //BDT-------------------------------------  
+  string input_dir_1L = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/";
+  string input_dir_2LOS = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/2LOS/";
+  if (input_dir_index==1){
+    input_dir_1L = "/local_scratch/sched3am/BDT_terry/1L/";
+    input_dir_2LOS = "/local_scratch/sched3am/BDT_terry/2LOS/";
+  }
   map<int,pair<string,string>> file_loc;
   if (mva_index==0) {
     file_loc[1].first = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/ljets/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/ljets/loader_1/weights/factory_BDT_1_Score.weights.xml";
     file_loc[1].second = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/ljets/config_SM4top_bdt.conf";
-
     file_loc[2].first = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/os2l/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/os2l/loader_1/weights/factory_BDT_1_Score.weights.xml";
     file_loc[2].second = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/os2l/config_SM4top_bdt.conf";
   }
@@ -93,8 +106,18 @@ void GetTMVAScore(int mH=400,int mva_index=0)
     file_loc[101].second = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/ljets/exclusive/ge10jge3b/config_SM4top_bdt.conf";
   }
   else if (mva_index==2) {
-    file_loc[1].first = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/VarSet1/ge9jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/VarSet1/ge9jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
-    file_loc[1].second = "/eos/user/k/ktam/public/Htt/BDT/PFlow_Setup/training/1L/VarSet1/config_bdt_crossvalidation.conf";
+    file_loc[1].first = input_dir_1L+"BSM4tVar/ge9jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,"+input_dir_1L+"BSM4tVar/ge9jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
+    file_loc[1].second = input_dir_1L+"BSM4tVar/config_bdt_BSM4t_crossvalidation.conf";
+
+    file_loc[2].first = input_dir_2LOS+"BSM4tVar/ge7jge3b/M"+to_string(mH)+"/loader_0/weights/factory_BDT_0_Score.weights.xml,"+input_dir_2LOS+"BSM4tVar/ge7jge3b/M"+to_string(mH)+"/loader_1/weights/factory_BDT_1_Score.weights.xml";
+    file_loc[2].second = input_dir_2LOS+"BSM4tVar/config_bdt_BSM4t_crossvalidation_2l.conf";
+  }
+  else if (mva_index==3) {
+  	file_loc[1].first = input_dir_1L+"SM4tVar/ge9jge3b/SM4t/loader_0/weights/factory_BDT_0_Score.weights.xml,"+input_dir_1L+"SM4tVar/ge9jge3b/SM4t/loader_1/weights/factory_BDT_1_Score.weights.xml";
+  	file_loc[1].second = input_dir_1L+"SM4tVar/config_bdt_SM4t_crossvalidation.conf";
+
+    file_loc[2].first = input_dir_2LOS+"SM4tVar/ge7jge3b/SM4t/loader_0/weights/factory_BDT_0_Score.weights.xml,"+input_dir_2LOS+"SM4tVar/ge7jge3b/SM4t/loader_1/weights/factory_BDT_1_Score.weights.xml";
+    file_loc[2].second = input_dir_2LOS+"SM4tVar/config_bdt_SM4t_crossvalidation_2l.conf";
   }
   else {
     cout << "NO Valid option defined!"
@@ -174,7 +197,7 @@ Double_t GetNNRewUp(int lep, Args... args){
   float score2 = nn[index2]->GetOutput();
   float rew2 = lep==1?score2/(1.0-score2):exp(score2);
 
-  return (score1+abs(score1-1.5*score2));
+  return (rew1+abs(rew1-1.5*rew2));
 }
 
 template<typename... Args>
@@ -194,7 +217,7 @@ Double_t GetNNRewDown(int lep, Args... args){
   float score2 = nn[index2]->GetOutput();
   float rew2 = lep==1?score2/(1.0-score2):exp(score2);
 
-  return (score1+abs(score1-0.5*score2));
+  return (rew1-abs(rew1-0.5*rew2));
 }
 
 template<typename... Args>

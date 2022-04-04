@@ -54,8 +54,8 @@ class Job:
     def createBatchScript(self,dest,cmd):
         with open(dest+"/"+dest+".sh","w") as f:
             f.write("#!/bin/bash"+"\n")
-            #f.write('source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/user/atlasLocalSetup.sh\n')
-            #f.write('lsetup "%s"\n'%self.env)
+            f.write('source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/user/atlasLocalSetup.sh\n')
+            f.write('lsetup "%s"\n'%self.env)
             f.write(cmd+"\n")
             f.close()
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("Submit jobs to HTCondor", formatter_class=RawTextHelpFormatter)
     parser.add_argument("-c","--command",action="store", dest="command", help="Command to run", required=True)
     parser.add_argument("-i","--inputs",nargs='*',action="store", dest="inputs", help="Inputs will be used in commands", required=False)
-    parser.add_argument("-e","--environment",action="store", dest="environment", help="LCG Environment.", default="views LCG_97a x86_64-centos7-gcc8-opt", required=False)
+    parser.add_argument("-e","--environment",action="store", dest="environment", help="LCG Environment.", default="views LCG_99 x86_64-centos7-gcc8-opt", required=False)
     parser.add_argument("-pf","--prefix",action="store", dest="prefix", help="Prefix to be added variable name (score+prefix)",default="prefx", required=False)
 
     args = parser.parse_args()

@@ -1,6 +1,8 @@
 import numpy as np
+import pandas as pd
 from ROOT import TFile, TTree, vector, TCut, std
 from array import array
+import uproot
 
 def GetDigitLabel(label,dic={'sig':1.0,'bkg':0.0}):
     y=[]
@@ -202,28 +204,16 @@ def SaveKerasModel(model,fil):
             fout.write('\n\n')
 
 def ReadFile(fil,tr,variables):
-    data = TFile.Open(fil)
-    tree = data.Get(tr)
-    label = std.vector('int')(1)
-    tree.SetBranchAddress('classID', label)
+    flat_tree = uproot.open(fil)[tr]
+    df = flat_tree.pandas.df()
+
+    x=pd.concat([df.pop(x) for x in variables], axis=1)
+    y=df.pop('classID').astype(np.int8)
+    w=df.pop('weight').astype(np.float16)
+
+    del(df,flat_tree)
     
-    x,y,w=[],[],[]
-    for i in range(tree.GetEntries()):
-        tree.GetEntry(i)
-        x_tmp=[]
-        for var in variables:
-            x_tmp.append(getattr(tree,var))
-        x.append(x_tmp)
-        y_tmp=[]
-        for j in range(label.size()):
-            y_tmp.append(label[j])
-        y.append(y_tmp)
-        w.append(getattr(tree,'weight'))
-    data.Close()
-    
-    if len(y[0])==1 : y = [e[0] for e in y]
-    
-    return x,y,w
+    return x.values,y.values,w.values
 
 def UpdateFile(fil,tree_names,y_pred,var_name='score'):
     print (('FileName to be read: %s')%fil)
@@ -253,6 +243,7 @@ def UpdateFile(fil,tree_names,y_pred,var_name='score'):
             trees[i].GetBranch(var_name).Fill()
         trees[i].Write()
     tfile.Close()
+    del score
     del trees[:]
     del tfile
     print ('Closing File --------------------------\n')
@@ -298,6 +289,7 @@ def CloneFile(path,fil,tree_names,y_pred,pref='',var_name='score',ntup_opt='recr
     tfile_new.Write()
     tfile_new.Close()
     tfile.Close()
+    del score
     del trees[:]
     del trees_new[:]
     del tfile
