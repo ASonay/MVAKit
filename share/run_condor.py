@@ -53,9 +53,9 @@ class Job:
         
     def createBatchScript(self,dest,cmd):
         with open(dest+"/"+dest+".sh","w") as f:
-            f.write("#!/bin/bash"+"\n")
-            f.write('source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/user/atlasLocalSetup.sh\n')
-            f.write('lsetup "%s"\n'%self.env)
+            #f.write("#!/bin/bash"+"\n")
+            #f.write('source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/user/atlasLocalSetup.sh\n')
+            #f.write('lsetup "%s"\n'%self.env)
             f.write(cmd+"\n")
             f.close()
 

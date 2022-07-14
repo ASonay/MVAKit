@@ -24,12 +24,12 @@ public:
   ReadTree();
   ~ReadTree();
 
-  void SetVariables(const string title,vector<pair<string,string>> vars);
-  void SetVariables(const string title,map<string,string> vars);
-  void SetVariables(const string title,const vector<string> vars);
-  void SetVariables(const string title,const string var);
-  void SetInputs(const string fname, const string tname, const string cut, const string weight);
-  void SetFormulas(const string fname, const string tname, const string cut, const string weight);
+  void SetVariables(const string &title,vector<pair<string,string>> &vars);
+  void SetVariables(const string &title,map<string,string> &vars);
+  void SetVariables(const string &title,const vector<string> &vars);
+  void SetVariables(const string &title,const string &var);
+  void SetInputs(const string &fname, const string &tname, const string &cut, const string &weight);
+  void SetFormulas(const string &fname, const string &tname, const string &cut, const string &weight);
 
   bool NextEvent();
   
@@ -37,8 +37,8 @@ public:
 
   void ResetVariables();
   
-  vector<double> GetInputs(const string label, int index);
-  vector<double> GetInputs(const string label);
+  vector<double> GetInputs(const string &label, const int &index);
+  vector<double> GetInputs(const string &label);
   double GetWeight(int index) {return m_weight[index];}
   double GetWeight();
 
@@ -46,8 +46,8 @@ public:
 
 private:
   
-  bool isVariableExist(const string var, const vector<string> trVars, vector<string> &activeVars);
-  vector<string> CheckVars(const string cut, const string weight);
+  bool isVariableExist(const string &var, const vector<string> &trVars, vector<string> &activeVars);
+  vector<string> CheckVars(const string &cut, const string &weight);
   
   long long m_entries;
   long long m_entry;

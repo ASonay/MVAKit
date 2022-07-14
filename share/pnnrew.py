@@ -105,16 +105,16 @@ for i in range(split_size):
     #train data
     model = pymva.ml.GetKerasModel(tool.NVar,tool.GetArchitectureOpt())
     #Custom callback
-    dL = Differential_Loss(x_train_scaled_shuf,y_train,w_train)
-    pymva.ml.TrainKerasModel(path,model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train,dL)
+    #dL = Differential_Loss(x_train_scaled_shuf,y_train,w_train)
+    pymva.ml.TrainKerasModel(path,model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
     model.save(path+'keras_output/model/model_'+str(i)+'.h5')
     pymva.ml.SaveKerasModel(model,path+'keras_output/model/model_0.txt')
     
     #Write learning rate and diff loss
-    dL_rate = zip(dL.lrate,dL.dL)
-    with open(path+'keras_output/dL_rate.csv', 'w') as f:
-        writer = csv.writer(f, delimiter='\t')
-        writer.writerows(dL_rate)
+    #dL_rate = zip(dL.lrate,dL.dL)
+    #with open(path+'keras_output/dL_rate.csv', 'w') as f:
+    #    writer = csv.writer(f, delimiter='\t')
+    #    writer.writerows(dL_rate)
         
     ypred_train = model.predict(x_train_scaled)
     ypred_test = model.predict(x_test_scaled)

@@ -15,7 +15,7 @@ ReadTree::~ReadTree()
 }
 
 void
-ReadTree::SetVariables(const string title,vector<pair<string,string>> vars)
+ReadTree::SetVariables(const string &title,vector<pair<string,string>> &vars)
 {
   for (auto const &var : vars){
     m_vars[title].push_back(var.second);
@@ -23,7 +23,7 @@ ReadTree::SetVariables(const string title,vector<pair<string,string>> vars)
 }
 
 void
-ReadTree::SetVariables(const string title,map<string,string> vars)
+ReadTree::SetVariables(const string &title,map<string,string> &vars)
 {
   for (auto const &var : vars){
     m_vars[title].push_back(var.second);
@@ -31,7 +31,7 @@ ReadTree::SetVariables(const string title,map<string,string> vars)
 }
 
 void
-ReadTree::SetVariables(const string title,const vector<string> vars)
+ReadTree::SetVariables(const string &title,const vector<string> &vars)
 {
   if (m_vars[title].size()==0){
     m_vars[title] = vars;
@@ -43,7 +43,7 @@ ReadTree::SetVariables(const string title,const vector<string> vars)
 }
 
 void
-ReadTree::SetVariables(const string title,const string var)
+ReadTree::SetVariables(const string &title,const string &var)
 {
   m_vars[title].push_back(var);
 }
@@ -74,7 +74,7 @@ ReadTree::ProcessVariables()
 
 
 void
-ReadTree::SetFormulas(const string fname, const string tname, const string cut, const string weight)
+ReadTree::SetFormulas(const string &fname, const string &tname, const string &cut, const string &weight)
 {
   m_chain.reset(new TChain(tname.c_str()));
 
@@ -116,7 +116,7 @@ ReadTree::SetFormulas(const string fname, const string tname, const string cut, 
 }
 
 void
-ReadTree::SetInputs(const string fname, const string tname, const string cut, const string weight)
+ReadTree::SetInputs(const string &fname, const string &tname, const string &cut, const string &weight)
 {
   m_chain.reset(new TChain(tname.c_str()));
 
@@ -184,7 +184,7 @@ ReadTree::NextEvent(){
 }
 
 vector<double>
-ReadTree::GetInputs(const string label, int index){
+ReadTree::GetInputs(const string &label, const int &index){
   vector<double> vec;
 
   for (auto i : m_label_index[label]){
@@ -195,7 +195,7 @@ ReadTree::GetInputs(const string label, int index){
 }
 
 vector<double>
-ReadTree::GetInputs(const string label){
+ReadTree::GetInputs(const string &label){
   vector<double> vec;
 
   for (auto i : m_label_index[label]){
@@ -207,6 +207,23 @@ ReadTree::GetInputs(const string label){
   return vec;
 }
 
+vector<vector<double>>
+ReadTree::GetVectors(const string &label){
+  vector<vector<double>> vec2d;
+
+  for (auto i : m_label_index[label]){
+    string key = label+to_string(i);
+    unsigned n_f = m_formula[key]->GetNdata();
+    vector<double> vec;
+    for (unsigned j=0;j<n_f;j++){
+      vec.push_back(m_formula[key]->EvalInstance(j));
+    }
+    vec2d.push_back(vec);
+  }
+  
+  return vec2d;
+}
+
 double
 ReadTree::GetWeight(){
   m_formula_weight->GetNdata();
@@ -214,7 +231,7 @@ ReadTree::GetWeight(){
 }
 
 vector<string>
-ReadTree::CheckVars(const string cut, const string weight)
+ReadTree::CheckVars(const string &cut, const string &weight)
 {
   vector<string> trVars;
   vector<string> activeVars;
@@ -241,7 +258,7 @@ ReadTree::CheckVars(const string cut, const string weight)
 }
 
 bool
-ReadTree::isVariableExist(const string var, const vector<string> trVars, vector<string> &activeVars)
+ReadTree::isVariableExist(const string &var, const vector<string> &trVars, vector<string> &activeVars)
 {
   bool check=false;
   if (var == "1") return true;
