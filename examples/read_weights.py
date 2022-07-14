@@ -8,10 +8,8 @@ ROOT.gSystem.Load("${MVAKIT_HOME}/build/lib/libMVAKit.so")
 ROOT.gROOT.LoadMacro("${MVAKIT_HOME}/scripts/GetTMVAScore.cpp")
 ROOT.gROOT.LoadMacro("${MVAKIT_HOME}/scripts/preReweighting.cpp")
 
-#v1:nRCJetsM100;v2:nJets;v3:jet_pt[0];v4:jet_pt[1];v5:jet_pt[2];v6:jet_pt[3];v7:jet_pt[4];v8:Alt$(jet_pt[5],0);v9:Alt$(jet_pt[6],0);v10:nMuons+nElectrons==2?Sum$(jet_pt*(Iteration$>=7)):Alt$(jet_pt[7],0);v11:nMuons+nElectrons==2?Alt$(el_pt[0],0)+Alt$(mu_pt[0],0):Alt$(jet_pt[8],0);v12:nMuons+nElectrons==2?met_met:Sum$(jet_pt*(Iteration$>=9));v13:nMuons+nElectrons==2?dRjj_Avg:Alt$(el_pt[0],0)+Alt$(mu_pt[0],0);v14:met_met;v15:dRjj_Avg
-#rew:GetNNRew(mcChannelNumber,nMuons+nElectrons,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15)
 
-# Use this in case ROOT package used
+# SetAlias don't work as it is in C++, need to look at this.
 def SetAlias(tree):
     aliases = [
         ("v1","nRCJetsM100"),
@@ -61,13 +59,25 @@ if __name__ == "__main__":
                     help='Input ntuple.')
     parser.add_argument("-t", "--tree", dest='input_tree', default='',
                     help='Input ttree.')
+    parser.add_argument("-n", "--nevents", dest='nevents', default=10,
+                    help='Input ttree.')
 
     args = parser.parse_args()
 
     tfile = ROOT.TFile(args.input_file)
     ttree = tfile.Get(args.input_tree)
     nEntries = ttree.GetEntries()
+
+    rewBranch = False
+    for branch in ttree.GetListOfBranches():
+        if branch.GetName() == "score_hfinckin":
+            rewBranch = True
     
-    for i in range(0, 2):#nEntries):
+    for i in range(0, args.nevents):
+        if i >= nEntries: break
         ttree.GetEntry(i)
-        print( CalculateFromTree(ttree) )
+        comp = 0
+        if rewBranch:
+            comp = ttree.score_hfinckin[0]
+            comp = comp/(1.-comp)
+        print( CalculateFromTree(ttree),  comp)
