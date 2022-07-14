@@ -39,6 +39,7 @@ public:
   
   vector<double> GetInputs(const string &label, const int &index);
   vector<double> GetInputs(const string &label);
+  vector<vector<double>> GetVectors(const string &label);
   double GetWeight(int index) {return m_weight[index];}
   double GetWeight();
 
