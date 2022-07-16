@@ -41,12 +41,18 @@ def CalculateFromTree(tr):
     jets8 = jets[7] if len(jets) > 7 else 0
     jets9 = jets[8] if len(jets) > 8 else 0
     jets10 = sum(jets[9:]) if len(jets) > 9 else 0
+
+    el,mu = tr.el_pt,tr.mu_pt
+    el_pt = el[0] if len(el) == 1 else 0
+    mu_pt = mu[0] if len(mu) == 1 else 0
+
+    lep_pt = el_pt+mu_pt
     
     return ROOT.GetNNRew(channel,lep,
                          nrc,nj,
                          jets[0],jets[1],jets[2],jets[3],jets[4],jets[5],jets[6],
                          jets8,jets9,jets10,
-                         tr.met_met,tr.dRjj_Avg
+                         lep_pt,tr.met_met,tr.dRjj_Avg
                          )
 
 
