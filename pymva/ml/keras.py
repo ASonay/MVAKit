@@ -183,9 +183,10 @@ def AddDropout(opt,Dropout=0.3):
     return new_string
 
 def predict_with_uncertainty(x, model, n_iter=10):
-    import keras.backend as K
-    
-    f = K.function([model.layers[0].input, K.learning_phase()],
+    from tensorflow.python.keras import backend as K
+    from tensorflow.python.keras.backend import eager_learning_phase_scope
+
+    f = K.function([model.input],
                [model.layers[-1].output])
     
     result = []
@@ -193,7 +194,9 @@ def predict_with_uncertainty(x, model, n_iter=10):
     print ('%i iteration will be propagated for uncertainty calculation'%(n_iter))
     
     for i in range(n_iter):
-        result.append(f([x, 1]))
+        #Run in training mode for dropout
+        with eager_learning_phase_scope(value=1):
+            result.append(f([x]))
 
     result = np.array(result)
 
