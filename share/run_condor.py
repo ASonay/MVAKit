@@ -42,7 +42,7 @@ class Job:
             f.write("output\t\t = job.out\n")
             f.write("error\t\t = job.err\n")
             f.write("log\t\t = job.log\n")
-            f.write('RequestCpus = 16\n')
+            f.write('RequestCpus = 4\n')
             f.write('GetEnv          = True\n')
             f.write('GetEnv          = True\n')
             f.write('+JobFlavour\t\t = "%s"\n'%queue)
@@ -53,9 +53,13 @@ class Job:
         
     def createBatchScript(self,dest,cmd):
         with open(dest+"/"+dest+".sh","w") as f:
-            #f.write("#!/bin/bash"+"\n")
-            #f.write('source /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase/user/atlasLocalSetup.sh\n')
-            #f.write('lsetup "%s"\n'%self.env)
+            f.write("#!/bin/bash"+"\n")
+            f.write('export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase\n')
+            f.write('source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh\n')
+            f.write('lsetup "%s"\n'%self.env)
+            f.write('echo "Testing"\n')
+            f.write('python -c "import sys; print(\'\\n\'.join(sys.path))"\n')
+            f.write('echo "Finishing Testing"\n')
             f.write(cmd+"\n")
             f.close()
 
@@ -73,7 +77,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("Submit jobs to HTCondor", formatter_class=RawTextHelpFormatter)
     parser.add_argument("-c","--command",action="store", dest="command", help="Command to run", required=True)
     parser.add_argument("-i","--inputs",nargs='*',action="store", dest="inputs", help="Inputs will be used in commands", required=False)
-    parser.add_argument("-e","--environment",action="store", dest="environment", help="LCG Environment.", default="views LCG_99 x86_64-centos7-gcc8-opt", required=False)
+    parser.add_argument("-e","--environment",action="store", dest="environment", help="LCG Environment.", default="views LCG_101 x86_64-centos7-gcc8-opt", required=False)
     parser.add_argument("-pf","--prefix",action="store", dest="prefix", help="Prefix to be added variable name (score+prefix)",default="prefx", required=False)
 
     args = parser.parse_args()

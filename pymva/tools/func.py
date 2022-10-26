@@ -153,7 +153,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import make_pipeline
-from sklearn.externals.joblib import dump,load
+from joblib import dump,load
 
 from sklearn import metrics
 def PCAStdTransform(x_train,y_train,x_test,varnames=[],save_loc='keras_output/feature_weight/'):

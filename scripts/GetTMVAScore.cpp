@@ -58,11 +58,12 @@ void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
   }
 
   //REWEIGHTING-----------------------------
-  string input_dir_reweighting="/eos/user/b/bsm4tops/bsm4teos/reweighting/";
+  //string input_dir_reweighting="/eos/user/b/bsm4tops/bsm4teos/reweighting/";
+  string input_dir_reweighting="/eos/user/b/bsm4tops/bsm4teos/reweighting/v212169/";
   if (input_dir_index==1) input_dir_reweighting="/local_scratch/sched3am/BSM4t/reweighting/";
   nn_config = {
   //0 ttbar 1L nominal
-  {input_dir_reweighting+"ljets_nominal/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_nominal/config_nnrew_ljets_kin.conf"},
+  {input_dir_reweighting+"ljets_nominal/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"ljets_nominal/config_nnrew_ljets_kin.conf"},
   //1 ttbar 1L nominal up 50% unc. to reweighted ttbar
   {input_dir_reweighting+"ljets_nominal/up_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_nominal/up_var/config_nnrew_ljets_kin.conf"},
   //2 ttbar 1L nominal down 50% unc. to reweighted ttbar
