@@ -177,8 +177,7 @@ Double_t GetNNRew(int mc, int lep, Args... args){
   
   //cout << "Running " << mc << " sample " << sample << " index " << index << " lep number " << lep << " score " << score << endl;
 
-  if (lep==1) {return score/(1.0-score);}
-  else {return exp(score);}
+  return exp(score);
 }
 
 template<typename... Args>
