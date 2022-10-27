@@ -65,23 +65,23 @@ void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
   //0 ttbar 1L nominal
   {input_dir_reweighting+"ljets_nominal/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"ljets_nominal/config_nnrew_ljets_kin.conf"},
   //1 ttbar 1L nominal up 50% unc. to reweighted ttbar
-  {input_dir_reweighting+"ljets_nominal/up_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_nominal/up_var/config_nnrew_ljets_kin.conf"},
+  {input_dir_reweighting+"../ljets_nominal/up_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"../ljets_nominal/up_var/config_nnrew_ljets_kin.conf"},
   //2 ttbar 1L nominal down 50% unc. to reweighted ttbar
-  {input_dir_reweighting+"ljets_nominal/down_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_nominal/down_var/config_nnrew_ljets_kin.conf"},
+  {input_dir_reweighting+"../ljets_nominal/down_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"../ljets_nominal/down_var/config_nnrew_ljets_kin.conf"},
   //3 ttbar 1L PhHw
-  {input_dir_reweighting+"ljets_PhHw/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_PhHw/config_nnrew_alt_ljets_kin.conf"},
+  {input_dir_reweighting+"../ljets_PhHw/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"../ljets_PhHw/config_nnrew_alt_ljets_kin.conf"},
   //4 ttbar 1L Mg5Py8
-  {input_dir_reweighting+"ljets_Mg5Py8/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"ljets_Mg5Py8/config_nnrew_alt_ljets_kin.conf"},
+  {input_dir_reweighting+"../ljets_Mg5Py8/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"../ljets_Mg5Py8/config_nnrew_alt_ljets_kin.conf"},
   //5 ttbar 2LOS nominal
   {input_dir_reweighting+"os2l_nominal/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_nominal/config_nnrew_os2l_kin.conf"},
   //6 ttbar 2LOS nominal up 50% unc. to reweighted ttbar
-  {input_dir_reweighting+"os2l_nominal/up_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_nominal/up_var/config_nnrew_os2l_kin.conf"},
+  {input_dir_reweighting+"../os2l_nominal/up_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"../os2l_nominal/up_var/config_nnrew_os2l_kin.conf"},
   //7 ttbar 2LOS nominal down 50% unc. to reweighted ttbar
-  {input_dir_reweighting+"os2l_nominal/down_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_nominal/down_var/config_nnrew_os2l_kin.conf"},
+  {input_dir_reweighting+"../os2l_nominal/down_var/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"../os2l_nominal/down_var/config_nnrew_os2l_kin.conf"},
   //8 ttbar 2LOS PhHw
-  {input_dir_reweighting+"os2l_PhHw/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_PhHw/config_nnrew_alt_os2l_kin.conf"},
+  {input_dir_reweighting+"../os2l_PhHw/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"../os2l_PhHw/config_nnrew_alt_os2l_kin.conf"},
   //9 ttbar 2LOS Mg5Py8
-  {input_dir_reweighting+"os2l_Mg5Py8/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_Mg5Py8/config_nnrew_alt_os2l_kin.conf"},
+  {input_dir_reweighting+"../os2l_Mg5Py8/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"../os2l_Mg5Py8/config_nnrew_alt_os2l_kin.conf"},
 };
 
 
