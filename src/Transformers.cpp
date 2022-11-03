@@ -44,9 +44,16 @@ void Transformers::Load(string name, string file)
   
 }
 
-void Transformers::StdTransform(op::vec &input)
+void Transformers::StdTransform(const op::vec &input)
 {
   for (unsigned i=0;i<m_input_size;i++){
     m_result->at(i)=(input[i]-m_std_mean[i])/m_std_scale[i];
+  }
+}
+
+void Transformers::TransformedData(const op::vec &input)
+{
+  for (unsigned i=0;i<m_input_size;i++){
+    m_result->at(i)=input[i];
   }
 }

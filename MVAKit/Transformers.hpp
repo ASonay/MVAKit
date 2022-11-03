@@ -22,7 +22,8 @@ public:
   ~Transformers();
 
   void Load(string name, string file);
-  void StdTransform(op::vec &input);
+  void StdTransform(const op::vec &input);
+  void TransformedData(const op::vec &input);
 
   op::vec *TransformedData() {return m_result.get();}
 
