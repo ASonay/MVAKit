@@ -15,7 +15,13 @@ ReadTree::~ReadTree()
 }
 
 void
-ReadTree::SetVariables(const string &title,vector<pair<string,string>> &vars)
+ReadTree::SetAlias(const vector<pair<string,string>> &alias)
+{
+  m_alias_by_request = alias;
+}
+
+void
+ReadTree::SetVariables(const string &title, const vector<pair<string,string>> &vars)
 {
   for (auto const &var : vars){
     m_vars[title].push_back(var.second);
@@ -23,7 +29,7 @@ ReadTree::SetVariables(const string &title,vector<pair<string,string>> &vars)
 }
 
 void
-ReadTree::SetVariables(const string &title,map<string,string> &vars)
+ReadTree::SetVariables(const string &title,const map<string,string> &vars)
 {
   for (auto const &var : vars){
     m_vars[title].push_back(var.second);
@@ -31,7 +37,7 @@ ReadTree::SetVariables(const string &title,map<string,string> &vars)
 }
 
 void
-ReadTree::SetVariables(const string &title,const vector<string> &vars)
+ReadTree::SetVariables(const string &title, const vector<string> &vars)
 {
   if (m_vars[title].size()==0){
     m_vars[title] = vars;
@@ -43,7 +49,7 @@ ReadTree::SetVariables(const string &title,const vector<string> &vars)
 }
 
 void
-ReadTree::SetVariables(const string &title,const string &var)
+ReadTree::SetVariables(const string &title, const string &var)
 {
   m_vars[title].push_back(var);
 }
@@ -93,6 +99,10 @@ ReadTree::SetFormulas(const string &fname, const string &tname, const string &cu
   m_chain->SetBranchStatus("*",0);
   for (auto av : activeVars) m_chain->SetBranchStatus(av.c_str(),1);
   
+  for (auto x : m_alias_by_request){
+    m_chain->SetAlias(x.first.c_str(),x.second.c_str());
+  }
+  
   for (auto x : m_alias){
     m_chain->SetAlias(x.first.c_str(),x.second.c_str());
     m_formula[x.first].reset(new TTreeFormula(("formula_"+x.first).c_str(),x.first.c_str(),m_chain.get()));
@@ -134,6 +144,10 @@ ReadTree::SetInputs(const string &fname, const string &tname, const string &cut,
   vector<string> activeVars = CheckVars(cut,weight);
   m_chain->SetBranchStatus("*",0);
   for (auto av : activeVars) m_chain->SetBranchStatus(av.c_str(),1);
+  
+  for (auto x : m_alias_by_request){
+    m_chain->SetAlias(x.first.c_str(),x.second.c_str());
+  }
   
   for (auto x : m_alias){
     m_chain->SetAlias(x.first.c_str(),x.second.c_str());
@@ -240,17 +254,23 @@ ReadTree::CheckVars(const string &cut, const string &weight)
   for (auto const& vars : m_vars){
     for (auto x : vars.second){
       if (!isVariableExist(x,trVars,activeVars)){
-	cout << x << " is not include any of the leaf in the tree." << endl;
+	cout << x << " cannot find in the tree." << endl;
 	exit(0);
       }
     }
   }
+  for (auto const & vars : m_alias_by_request){
+      if (!isVariableExist(vars.second,trVars,activeVars)){
+	cout << vars.second << " cannot find in the tree." << endl;
+	exit(0);
+      }    
+  }
   if (!isVariableExist(cut,trVars,activeVars)){
-    cout << cut << " is not include any of the leaf in the tree." << endl;
+    cout << cut << " cannot find in the tree." << endl;
     exit(0);
   }
   if (!isVariableExist(weight,trVars,activeVars)){
-    cout << weight << " is not include any of the leaf in the tree." << endl;
+    cout << weight << " cannot find in the tree." << endl;
     exit(0);
   }
 
@@ -261,6 +281,8 @@ bool
 ReadTree::isVariableExist(const string &var, const vector<string> &trVars, vector<string> &activeVars)
 {
   bool check=false;
+  for (auto const & vars : m_alias_by_request)
+    {if (var.find(vars.first) != string::npos) {check=true;}}
   if (var == "1") return true;
   for (auto y : trVars){
     if (var.find(y) != string::npos){

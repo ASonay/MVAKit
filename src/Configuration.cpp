@@ -7,6 +7,7 @@
 using namespace std;
 
 Configuration::Configuration(const char *name):
+  m_paramFile(""),
   m_psplit("Cross-section"),
   m_split_per(0),
   m_parameterized(false),
@@ -136,7 +137,7 @@ Configuration::ReadConf(){
       m_weight.push_back(make_pair(label,str));
     }
     else if (str.find("Cut:")!=string::npos){
-     auto strPos = str.find("Cut:");
+      auto strPos = str.find("Cut:");
       string label = str.substr(0,strPos);
       in >> str;
       m_cut.push_back(make_pair(label,str));
@@ -146,6 +147,18 @@ Configuration::ReadConf(){
       string label = str.substr(0,strPos);
       in >> str;
       m_tree.push_back(make_pair(label,str));
+    }
+    else if (str.find("AddAlias:")!=string::npos){
+      in >> str;
+      auto alias = Common::StringSep(str,';');
+      if (alias.size()==2) {
+	m_alias.push_back(make_pair(alias[0],alias[1]));
+      }
+      else {
+	cout << "AddAlias method require following method, alias;formula" << endl;
+	cout << "Yours has been failed for " << str << endl;
+	exit(0);
+      }
     }
     else if (str.compare("TrainingOpt:")==0){
       in >> str;
@@ -186,6 +199,10 @@ Configuration::ReadConf(){
     else if (str.compare("ParamScale:")==0){
       in >> str;
       m_pscale=str;
+    }
+    else if (str.compare("ParamFiles:")==0){
+      in >> str;
+      m_paramFile=str;
     }
     else if (str.compare("EvalImportance:")==0){
       in >> str;
@@ -266,7 +283,7 @@ Configuration::ReadConf(){
     cout << "\nIMPORTANCE will be calculated, hope this is TMVA..\n" << endl;
   }
 
-  if (m_parameterized && m_xmlFile.empty() && !m_ntuplefilled){
+  if (m_parameterized && m_xmlFile.empty() && !m_ntuplefilled && m_paramFile.empty()){
     const int columnId = 0;
     const string paramFind = m_paramvar;
     sort(m_ntups.begin(), m_ntups.end(),
@@ -278,6 +295,19 @@ Configuration::ReadConf(){
       cout << "Your parameter : " << m_paramvar << " does not match with any file." << endl;
       exit(0);
     }
+  }
+
+  if (!m_paramFile.empty() && m_xmlFile.empty() && !m_ntuplefilled){
+    cout << "\nParameterization detected for file selection " << m_paramFile << endl;
+    m_parameterized = true;
+    if (m_paramvar.empty()) {m_paramvar="Param";}
+    const int columnId = 0;
+    const vector<string> paramFind = Common::StringSep(m_paramFile,',');
+    sort(m_ntups.begin(), m_ntups.end(),
+	 [&columnId,&paramFind](const pair<string,vector<string>> &a, const pair<string,vector<string>> &b) 
+	 {
+	   return Common::IsIn(a.second[columnId],paramFind) && !Common::IsIn(b.second[columnId],paramFind);
+	 });
   }
 }
 

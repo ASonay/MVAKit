@@ -7,6 +7,7 @@ import ROOT as root
 import argparse
 from sklearn.preprocessing import StandardScaler
 from sklearn.externals.joblib import dump,load
+import tensorflow as tf
 
 import sys
 
@@ -52,8 +53,10 @@ if __name__ == "__main__":
                 fout.write(var + ' ' + str(scaler.mean_[i]) + ' ' + str(scaler.scale_[i]) + '\n')
                 print ('%-40s | %-6.2e | %-6.2e'%(var,scaler.mean_[i],scaler.scale_[i]))
 
+    ind=0
     with open(model_output, 'w') as fout:
-        for ind,layer in enumerate(model.layers):
+        for layer in model.layers:
+            if not isinstance(layer,tf.keras.layers.Dense): continue
             fout.write('Start for layer ' + str(ind) + '\n')
             W = layer.get_weights()[0]
             for i in range(W.shape[0]):
@@ -68,5 +71,6 @@ if __name__ == "__main__":
             fout.write('\n\n')
             fout.write('End of layer ' + str(ind) + '\n')
             fout.write('\n\n')
+            ind+=1
 
     

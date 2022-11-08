@@ -3,7 +3,7 @@
 using namespace std;
 
 vector<string>
-Common::StringSep(const string str,char c){
+Common::StringSep(const string &str,char c){
   stringstream ss( str );
   vector<string> result;
 
@@ -18,7 +18,7 @@ Common::StringSep(const string str,char c){
 }
 
 vector<float>
-Common::StringSepFloat(const string str,char c){
+Common::StringSepFloat(const string &str,char c){
   stringstream ss( str );
   vector<float> result;
 
@@ -33,7 +33,7 @@ Common::StringSepFloat(const string str,char c){
 }
 
 string
-Common::RemoveSpecialChars(const string str){
+Common::RemoveSpecialChars(const string &str){
   string str_r(str);
   map<char,char> c_rep= {
 		    {'<', 's'},{'>', 'g'},{'*', '_'},{'=', 'e'},{'+', '_'},{'-', '_'},
@@ -48,7 +48,7 @@ Common::RemoveSpecialChars(const string str){
 }
 
 bool
-Common::StringCompare(const string str1, const string str2)
+Common::StringCompare(const string &str1, const string &str2)
 {
 
   string a = str1; string b = str2;
@@ -63,7 +63,7 @@ Common::StringCompare(const string str1, const string str2)
 }
 
 bool
-Common::StringFind(const string str1, const string str2)
+Common::StringFind(const string &str1, const string &str2)
 {
 
   string a = str1; string b = str2;
@@ -77,7 +77,7 @@ Common::StringFind(const string str1, const string str2)
 }
 
 string
-Common::LowerCase(const string str)
+Common::LowerCase(const string &str)
 {
 
   string x = str;
@@ -89,7 +89,7 @@ Common::LowerCase(const string str)
 }
 
 bool
-Common::CheckDigit(const string str)
+Common::CheckDigit(const string &str)
 {
   unsigned char negsign = '-';
   bool isDigit=find_if(str.begin(), str.end(),
@@ -108,15 +108,49 @@ Common::CheckDigit(const string str)
 }
 
 double
-Common::FindDigit(const string ref,const string var){
+Common::FindDigit(const string &ref,const string &var){
   auto strPos = ref.find(var);
   string str_tmp = ref.substr(strPos+var.length());
   double val = atoi(str_tmp.c_str());
   return val;
 }
 
+double
+Common::FindDigit(const string &ref,const vector<string> &var){
+  double val = 0;
+  for (auto x : var) {
+    vector<string> file_val = Common::StringSep(x,';');
+    if (file_val.size()!=2) {
+      cout << "Your ParamFile option wrongly formatted " << endl;
+      exit(0);
+    }
+    string file = file_val[0];
+    if (ref.find(file) != string::npos){
+      val = atoi(file_val[1].c_str());
+      return val;
+    }
+  }
+  return val;
+}
+
+bool
+Common::IsIn(const string &ref,const vector<string> &var){
+  for (auto x : var) {
+    vector<string> file_val = Common::StringSep(x,';');
+    if (file_val.size()!=2) {
+      cout << "Your ParamFile option wrongly formatted " << endl;
+      exit(0);
+    }
+    string file = file_val[0];
+    if (ref.find(file) != string::npos){
+      return true;
+    }
+  }
+  return false;
+}
+
 string
-Common::GetMappedStr(map<string,string> str_map, int index){
+Common::GetMappedStr(const map<string,string> &str_map, int index){
   int count=0;
   string str;
   for (auto const& var : str_map){

@@ -6,10 +6,6 @@ from sklearn.utils import shuffle
 
 argc,argv,argp = pymva.tools.ParseConfig(sys.argv)
 
-print (argc)
-print (argv)
-print (argp)
-
 #Configuration
 tool = pymva.kit.MVAKit('Training')
 if argp['ntup_prepared']:
@@ -53,7 +49,7 @@ for i in range(tool.NSplit):
     
     #arrange datas
     print ('  Transforming data ..')
-    x_train_scaled,x_test_scaled=pymva.tools.PCAStdTransform(x_train,y_train,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
+    x_train_scaled,x_test_scaled=pymva.tools.StdTransform(x_train,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
     print ('  Shuffling data ..')
     x_train_scaled_shuf,y_train,w_train = shuffle(x_train_scaled,y_train,w_train,random_state=0);
     print ('  Scaling weights ..')
@@ -61,10 +57,11 @@ for i in range(tool.NSplit):
     
     #train data
     model = pymva.ml.GetKerasModel(tool.NVar,tool.GetArchitectureOpt())
-    pymva.ml.TrainKerasModel(model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
+    pymva.ml.TrainKerasModel(path,model,tool.GetEngineOpt(),x_train_scaled_shuf,y_train,w_train)
     ypred_train = model.predict(x_train_scaled)
     ypred_test = model.predict(x_test_scaled)
     #save everything
     model.save(path+'keras_output/model/model_'+str(i)+'.h5')
+    pymva.ml.SaveKerasModel(model,path+'keras_output/model/model_'+str(i)+'.txt')
     ntup_opt = 'recreate' if i == 0 else 'update'
     pymva.tools.CloneFile(path,ntupleName,['TrainTree'+str(i),'TestTree'+str(i)],[ypred_train,ypred_test],'_clone',ntup_opt=ntup_opt)

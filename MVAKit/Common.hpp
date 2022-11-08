@@ -20,39 +20,47 @@ using namespace std;
 
 namespace Common {
   // Removing the special characters
-  string RemoveSpecialChars(const string str);
+  string RemoveSpecialChars(const string &str);
   //
   //
   // String separation by char and vectorize
-  vector<string> StringSep(const string str,char c=',');
+  vector<string> StringSep(const string &str,char c=',');
   //
   //
   // String separation by char and vectorize
-  vector<float> StringSepFloat(const string str,char c=',');
+  vector<float> StringSepFloat(const string &str,char c=',');
   //
   //
   // String compare regardless case
-  bool StringCompare(const string str1, const string str2);
+  bool StringCompare(const string &str1, const string &str2);
   //
   //
   // String find regardless case
-  bool StringFind(const string str1, const string str2);
+  bool StringFind(const string &str1, const string &str2);
   //
   //
   // Check if string digit
-  bool CheckDigit(const string str);
+  bool CheckDigit(const string &str);
   //
   //
   // Find digit in string
-  double FindDigit(const string ref,const string var);
+  double FindDigit(const string &ref,const string &var);
+  //
+  //
+  // Find digit in vector<string>
+  double FindDigit(const string &ref,const vector<string> &var);
+  //
+  //
+  // Is ref in vector<string>?
+  bool IsIn(const string &ref,const vector<string> &var);
   //
   //
   // Find digit in string
-  string GetMappedStr(map<string,string> str_map, int index);
+  string GetMappedStr(const map<string,string> &str_map, int index);
   //
   //
   // LowerCase
-  string LowerCase(string str);
+  string LowerCase(const string &str);
 
 }
 #endif

@@ -24,10 +24,11 @@ public:
   ReadTree();
   ~ReadTree();
 
-  void SetVariables(const string &title,vector<pair<string,string>> &vars);
-  void SetVariables(const string &title,map<string,string> &vars);
-  void SetVariables(const string &title,const vector<string> &vars);
-  void SetVariables(const string &title,const string &var);
+  void SetAlias(const vector<pair<string,string>> &vars);
+  void SetVariables(const string &title, const vector<pair<string,string>> &vars);
+  void SetVariables(const string &title, const map<string,string> &vars);
+  void SetVariables(const string &title, const vector<string> &vars);
+  void SetVariables(const string &title, const string &var);
   void SetInputs(const string &fname, const string &tname, const string &cut, const string &weight);
   void SetFormulas(const string &fname, const string &tname, const string &cut, const string &weight);
 
@@ -55,6 +56,7 @@ private:
 
   string m_var_exp;
 
+  vector<pair<string,string>> m_alias_by_request;
   vector<pair<string,string>> m_alias;
   
   map<string,vector<int>> m_label_index;

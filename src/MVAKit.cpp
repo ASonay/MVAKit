@@ -238,6 +238,7 @@ MVAKit::SetEvents(const char *file,const char *label,int doCut){
     {cout << "Name: " << var.first << " Var: " << var.second << endl;}
   
   m_treader->ResetVariables();
+  m_treader->SetAlias(m_alias);
   m_treader->SetVariables("v",m_variables);
   m_treader->SetVariables("vs",m_variables_other);
   if (m_split_per==0)
@@ -381,8 +382,17 @@ MVAKit::AssignEvents(const string fname)
 
   while (m_treader->NextEvent()){
     m_w = m_treader->GetWeight();
+    Double_t scale = 1.0;
+    for (auto const& x : m_scale_current){
+      if (x.first=="single")
+	{scale=x.second;}
+    }
+    m_w*=scale; 
     m_LabelWeight[m_label_current]+=m_w;
     m_LabelEntries[m_label_current]+=1;
+    m_vars = m_treader->GetInputs("v");
+    m_varsSpec = m_treader->GetInputs("vs");
+    if (m_parameterized) {m_vars.push_back((Double_t)GetParam(fname,m_w));}
     vector<Double_t> cond = m_treader->GetInputs("z");
     int cond_index=0;
     for (auto sp : m_split){
@@ -391,15 +401,6 @@ MVAKit::AssignEvents(const string fname)
 	split_cond=int(cond[cond_index]);
       }
       else {split_cond = int(rand()%100 < m_split_per);}
-      Double_t scale = 1.0;
-      for (auto const& x : m_scale_current){
-	if (x.first=="single")
-	  {scale=x.second;}
-      }
-      m_w*=scale; 
-      m_vars = m_treader->GetInputs("v");
-      m_varsSpec = m_treader->GetInputs("vs");
-      if (m_parameterized) {m_vars.push_back((Double_t)GetParam(fname,m_w));}
       if (FillVarstoRecord()) {continue;}
       if (split_cond){
 	if (m_loaders.size()!=0){
@@ -433,7 +434,12 @@ MVAKit::GetParam(string file,Double_t &weight)
   double param=0;
 
   if (!is_second){
-    param = Common::FindDigit(file,m_paramvar);
+    if (m_paramFile.empty()) {
+      param = Common::FindDigit(file,m_paramvar);
+    }
+    else {
+      param = Common::FindDigit(file,Common::StringSep(m_paramFile,','));
+    }
     Double_t scale = m_scale_current[to_string((int)param)] != 0.0 ? m_scale_current[to_string((int)param)] : 1.0;
     weight*=scale;
     m_param_sample_weights[(int)param]+=weight;
@@ -467,7 +473,6 @@ MVAKit::GetParam(string file,Double_t &weight)
     else if (Common::StringCompare(m_pscale,"flat")){
       weight*=1.0/((Double_t)m_param_map[(int)param]);
     }
-
   }
 
   return param;

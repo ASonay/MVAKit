@@ -97,12 +97,12 @@ def CloneFile(path,fil,tree_names,y_pred,pref='',var_name='score',ntup_opt='recr
         print('Attention :: you are trying to create a new ntuple with same file name.')
         print('Please specify a prefix.')
         exit()
-    fil_new = fil.replace('.root',pref+'.root')
+    fil_new_val = fil.replace('.root',f'{pref}.root')
     if not same_path:
-        fil_new = path+fil[fil.rfind('/')+1:]
-    print (('FileName to be recorded: %s')%fil_new)
+        fil_new_val = path+fil_new_val[fil_new_val.rfind('/')+1:]
+    print (f'FileName to be recorded: {fil_new_val}')
     trees_new=[]
-    tfile_new = TFile(fil_new,ntup_opt)
+    tfile_new = TFile(fil_new_val,ntup_opt)
     for t in trees:
         trees_new.append(t.CloneTree())
         trees_new[-1].Branch(var_name,score)
@@ -125,7 +125,7 @@ def CloneFile(path,fil,tree_names,y_pred,pref='',var_name='score',ntup_opt='recr
     del tfile
     del tfile_new
     print ('Closing File --------------------------\n')
-    return fil_new
+    return fil_new_val
 
 #To-Do: make it also adaptable for multiclass
 def ScaleWeights(y,w):

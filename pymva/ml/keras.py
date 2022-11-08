@@ -110,7 +110,7 @@ def TrainKerasModel(path,model,opt,x,y,w,custom_callbacks=None):
         print ('You choose none, SGD will be run..')
         optim=SGD(learning_rate=lrate, momentum=momentum)
     
-    model.compile(loss=loss, optimizer=optim, metrics=mets)
+    model.compile(loss=loss, optimizer=optim, metrics=mets+['acc'])
     print (model.summary())
     model.fit(np.array(x).astype(np.float32), np.array(y).astype(np.float32), sample_weight = np.array(w).astype(np.float32), epochs=nepoch, batch_size=batch, callbacks=cbacks)
 
@@ -154,8 +154,11 @@ def CompileKerasModel(model,opt):
 def SaveKerasModel(model,fil):
     from tensorflow.keras.optimizers import SGD,Adam,RMSprop,schedules
     from tensorflow.keras.models import Sequential
+    import tensorflow as tf
+    ind=0
     with open(fil, 'w') as fout:
-        for ind,layer in enumerate(model.layers):
+        for layer in model.layers:
+            if not isinstance(layer,tf.keras.layers.Dense): continue
             fout.write('Start for layer ' + str(ind) + '\n')
             W = layer.get_weights()[0]
             for i in range(W.shape[0]):
@@ -170,6 +173,7 @@ def SaveKerasModel(model,fil):
             fout.write('\n\n')
             fout.write('End of layer ' + str(ind) + '\n')
             fout.write('\n\n')
+            ind+=1
 
 def AddDropout(opt,Dropout=0.3):
     new_string = ''

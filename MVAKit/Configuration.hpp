@@ -84,6 +84,7 @@ protected:
   vector<pair<string,string>> m_weight;
   vector<pair<string,string>> m_cut;
   vector<pair<string,string>> m_tree;
+  vector<pair<string,string>> m_alias;
   vector<pair<string,string>> m_variables;
   vector<pair<string,string>> m_variables_other;
   vector<string> m_split;
@@ -94,6 +95,7 @@ protected:
   vector<string> m_labels;
   vector<string> m_exe;
   string m_paramvar;
+  string m_paramFile;
   TString m_trainingOpt;
   TString m_arcOpt;
   TString m_engOpt;
