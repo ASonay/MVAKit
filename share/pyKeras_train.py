@@ -17,10 +17,11 @@ tool.ReadConf()
 
 if 'path' in argp:
     path = argp['path']
+    if path[-1] != '/': path += '/'
 else:
     path = '.'
-    
-path += '/pyKeras'+pymva.tools.RemoveSpecialChars(tool.GetEngineOpt())+'/'
+    path += '/pyKeras'+pymva.tools.RemoveSpecialChars(tool.GetEngineOpt())+'/'
+
 if not os.path.exists(path):os.makedirs(path)
 
 #Preparing data into new root file
