@@ -16,6 +16,12 @@
 using namespace std;
 
 
+struct VariableStore {
+  string first;
+  string second;
+  string type = "flat";
+};
+
 
 class Configuration{
 public:
@@ -55,14 +61,18 @@ public:
   void GetVariableName(int index, char carr[], int pair=0) {
     if (pair==0)
       {strcpy(carr,m_variables[index].first.c_str());}
-    else
+    else if (pair==1)
       {strcpy(carr,m_variables[index].second.c_str());}
+    else
+      {strcpy(carr,m_variables[index].type.c_str());}
   }
   void GetSpectatorVariableName(int index, char carr[], int pair=0) {
     if (pair==0)
       {strcpy(carr,m_variables_other[index].first.c_str());}
-    else
+    else if (pair==1)
       {strcpy(carr,m_variables_other[index].second.c_str());}
+    else
+      {strcpy(carr,m_variables[index].type.c_str());}
   }
   void GetParamName(char carr[]) {strcpy(carr,m_paramvar.c_str());}
   vector<TString> GetTXML();
@@ -85,8 +95,8 @@ protected:
   vector<pair<string,string>> m_cut;
   vector<pair<string,string>> m_tree;
   vector<pair<string,string>> m_alias;
-  vector<pair<string,string>> m_variables;
-  vector<pair<string,string>> m_variables_other;
+  vector<VariableStore> m_variables;
+  vector<VariableStore> m_variables_other;
   vector<string> m_split;
   vector<string> m_xmlFile;
   vector<string> m_cond;

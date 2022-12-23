@@ -50,7 +50,7 @@ for i in range(tool.NSplit):
     
     #arrange datas
     print ('  Transforming data ..')
-    x_train_scaled,x_test_scaled=pymva.tools.StdTransform(x_train,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
+    x_train_scaled,x_test_scaled=pymva.tools.StdTransform(x_train.values,x_test,tool.Variables,save_loc=path+'keras_output/feature_weight/fold'+str(i)+'_')
     print ('  Shuffling data ..')
     x_train_scaled_shuf,y_train,w_train = shuffle(x_train_scaled,y_train,w_train,random_state=0);
     print ('  Scaling weights ..')

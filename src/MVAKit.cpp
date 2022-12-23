@@ -71,50 +71,110 @@ MVAKit::SetFile(const char *name)
 {
   const string base_name_train = "TrainTree";
   const string base_name_test = "TestTree";
-  int total_variables = m_variables.size()+m_variables_other.size();
+  int total_variables = 0, total_vectors = 0;
+  for (auto const &var : m_variables){
+    if (Common::StringCompare("flat",var.type)) {total_variables++;}
+    else if (Common::StringCompare("vector",var.type)) {total_vectors++;}
+    else {
+      cout << "The known variable types are flat and vector" << endl;
+      exit(0);
+    }
+  }
+  for (auto const &var : m_variables_other){
+    if (Common::StringCompare("flat",var.type)) {total_variables++;}
+    else if (Common::StringCompare("vector",var.type)) {total_vectors++;}
+    else {
+      cout << "The known variable types are flat and vector" << endl;
+      exit(0);
+    }
+  }
   if (m_parameterized) {total_variables++;}
-  const int nov = total_variables;
+  const int nov_vars = total_variables;
+  const int nov_vecs = total_vectors;
   const int split_size = m_split.size();
+
+  cout << "Number of flat variables " << total_variables << " and vector variables" << total_vectors << " found." << endl;
   
   m_fsave = true;
   m_tfile.reset(new TFile(name,"recreate"));
-  m_var_rec.reset(new Double_t[nov]);
+  m_var_rec.reset(new Double_t[nov_vars]);
+  m_vec_rec.reset(new vector<Double_t>[nov_vecs]);
 
   for (int i=0;i<split_size;i++){
-    int counter=0;
+    int counter_flat=0, counter_vec=0;
     m_ttree_test.emplace_back(new TTree((base_name_test+to_string(i)).c_str(),"Test Tree"));
     m_ttree_test.back()->Branch("classID",&m_classID);
     m_ttree_test.back()->Branch("label",&m_label_current);
     for (auto const &var : m_variables){
-      m_ttree_test.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
-      counter++;
+      if (Common::StringCompare("flat",var.type)) {
+	m_ttree_test.back()->Branch(var.second.c_str(),&m_var_rec[counter_flat],(var.second+"/D").c_str());
+	counter_flat++;
+      }
+      else if (Common::StringCompare("vector",var.type)) {
+	m_ttree_test.back()->Branch(var.second.c_str(),&m_vec_rec[counter_vec]);
+	counter_vec++;
+      }
+      else {
+	cout << "The known variable types are flat and vector" << endl;
+	exit(0);
+      }
     }
     if (m_parameterized){
-      m_ttree_test.back()->Branch(m_paramvar.c_str(),&m_var_rec[counter],(m_paramvar+"/D").c_str());
-      counter++;
+      m_ttree_test.back()->Branch(m_paramvar.c_str(),&m_var_rec[counter_flat],(m_paramvar+"/D").c_str());
+      counter_flat++;
     }
     for (auto const &var : m_variables_other){
-      m_ttree_test.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
-      counter++;
+      if (Common::StringCompare("flat",var.type)) {
+	m_ttree_test.back()->Branch(var.second.c_str(),&m_var_rec[counter_flat],(var.second+"/D").c_str());
+	counter_flat++;
+      }
+      else if (Common::StringCompare("vector",var.type)) {
+	m_ttree_test.back()->Branch(var.second.c_str(),&m_vec_rec[counter_vec]);
+	counter_vec++;
+      }
+      else {
+	cout << "The known variable types are flat and vector" << endl;
+	exit(0);
+      }
     }
     m_ttree_test.back()->Branch("weight",&m_w,"weight/D");
   }
   for (int i=0;i<split_size;i++){
-    int counter=0;
+    int counter_flat=0, counter_vec=0;
     m_ttree_train.emplace_back(new TTree((base_name_train+to_string(i)).c_str(),"Train Tree"));
     m_ttree_train.back()->Branch("classID",&m_classID);
     m_ttree_train.back()->Branch("label",&m_label_current);
     for (auto const &var : m_variables){
-      m_ttree_train.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
-      counter++;
+      if (Common::StringCompare("flat",var.type)) {
+	m_ttree_train.back()->Branch(var.second.c_str(),&m_var_rec[counter_flat],(var.second+"/D").c_str());
+	counter_flat++;
+      }
+      else if (Common::StringCompare("vector",var.type)) {
+	m_ttree_train.back()->Branch(var.second.c_str(),&m_vec_rec[counter_vec]);
+	counter_vec++;
+      }
+      else {
+	cout << "The known variable types are flat and vector" << endl;
+	exit(0);
+      }
     }
     if (m_parameterized){
-      m_ttree_train.back()->Branch(m_paramvar.c_str(),&m_var_rec[counter],(m_paramvar+"/D").c_str());
-      counter++;
+      m_ttree_train.back()->Branch(m_paramvar.c_str(),&m_var_rec[counter_flat],(m_paramvar+"/D").c_str());
+      counter_flat++;
     }
     for (auto const &var : m_variables_other){
-      m_ttree_train.back()->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
-      counter++;
+      if (Common::StringCompare("flat",var.type)) {
+	m_ttree_train.back()->Branch(var.second.c_str(),&m_var_rec[counter_flat],(var.second+"/D").c_str());
+	counter_flat++;
+      }
+      else if (Common::StringCompare("vector",var.type)) {
+	m_ttree_train.back()->Branch(var.second.c_str(),&m_vec_rec[counter_vec]);
+	counter_vec++;
+      }
+      else {
+	cout << "The known variable types are flat and vector" << endl;
+	exit(0);
+      }
     }
     m_ttree_train.back()->Branch("weight",&m_w,"weight/D");
   }
@@ -139,18 +199,38 @@ MVAKit::SetFiletoClone(string name)
 
   m_ttree->Branch("classID",&m_classID);
   m_ttree->Branch("label",&m_label_current);
-  int counter=0;
+  int counter_flat=0, counter_vec=0;
   for (auto const &var : m_variables){
-    m_ttree->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
-    counter++;
+    if (Common::StringCompare("flat",var.type)) {
+      m_ttree->Branch(var.second.c_str(),&m_var_rec[counter_flat],(var.second+"/D").c_str());
+      counter_flat++;
+    }
+    else if (Common::StringCompare("vector",var.type)) {
+      m_ttree->Branch(var.second.c_str(),&m_var_rec[counter_vec]);
+      counter_vec++;
+    }
+    else {
+      cout << "The known variable types are flat and vector" << endl;
+      exit(0);
+    }
   }
   if (m_parameterized){
-    m_ttree->Branch(m_paramvar.c_str(),&m_var_rec[counter],(m_paramvar+"/D").c_str());
-    counter++;
+    m_ttree->Branch(m_paramvar.c_str(),&m_var_rec[counter_flat],(m_paramvar+"/D").c_str());
+    counter_flat++;
   }
   for (auto const &var : m_variables_other){
-    m_ttree->Branch(var.first.c_str(),&m_var_rec[counter],(var.first+"/D").c_str());
-    counter++;
+    if (Common::StringCompare("flat",var.type)) {
+      m_ttree->Branch(var.second.c_str(),&m_var_rec[counter_flat],(var.second+"/D").c_str());
+      counter_flat++;
+    }
+    else if (Common::StringCompare("vector",var.type)) {
+      m_ttree->Branch(var.second.c_str(),&m_var_rec[counter_vec]);
+      counter_vec++;
+    }
+    else {
+      cout << "The known variable types are flat and vector" << endl;
+      exit(0);
+    }
   }
   m_ttree->Branch("weight",&m_w,"weight/D");
 }
@@ -169,22 +249,30 @@ MVAKit::FillVarstoRecord()
 {
 
   if (m_fsave){
-    int counter=0;
+    int counter_flat=0,counter_vec=0;
     for (auto x : m_vars){
-      m_var_rec[counter]=x;
-      counter++;
+      m_var_rec[counter_flat]=x;
+      counter_flat++;
     }
     for (auto x : m_varsSpec){
-      m_var_rec[counter]=x;
-      counter++;
+      m_var_rec[counter_flat]=x;
+      counter_flat++;
+    }
+    for (auto x : m_vecs){
+      m_vec_rec[counter_vec]=x;
+      counter_vec++;
+    }
+    for (auto x : m_vecsSpec){
+      m_vec_rec[counter_vec]=x;
+      counter_vec++;
     }
   }
   
   if (m_fclone) {
     m_ttree->GetBranch("classID")->Fill();
     m_ttree->GetBranch("label")->Fill();
-    for (auto const &var : m_variables) {m_ttree->GetBranch(var.first.c_str())->Fill();}
-    for (auto const &var : m_variables_other) {m_ttree->GetBranch(var.first.c_str())->Fill();}
+    for (auto const &var : m_variables) {m_ttree->GetBranch(var.second.c_str())->Fill();}
+    for (auto const &var : m_variables_other) {m_ttree->GetBranch(var.second.c_str())->Fill();}
     m_ttree->GetBranch("weight")->Fill();
     return true;
   }
@@ -235,12 +323,20 @@ MVAKit::SetEvents(const char *file,const char *label,int doCut){
 
   cout << "\nVariables:" << endl;
   for (auto const &var : m_variables)
-    {cout << "Name: " << var.first << " Var: " << var.second << endl;}
+    {cout << "Name: " << var.second << " Var(s): " << var.first << endl;}
   
   m_treader->ResetVariables();
   m_treader->SetAlias(m_alias);
-  m_treader->SetVariables("v",m_variables);
-  m_treader->SetVariables("vs",m_variables_other);
+  for (auto const &var : m_variables) {
+    string title = "v";
+    if (Common::StringCompare("vector",var.type)) {title="vec";}
+    m_treader->SetVariables(title,var.first);
+  }
+  for (auto const &var : m_variables_other) {
+    string title = "vs";
+    if (Common::StringCompare("vector",var.type)) {title="vecs";}
+    m_treader->SetVariables(title,var.first);
+  }
   if (m_split_per==0)
     m_treader->SetVariables("z",m_split);
   m_treader->ProcessVariables();
@@ -323,22 +419,33 @@ MVAKit::ReadEvents(string label, vector<string> files){
   cout << "CUT EXPRESSION: " << m_cut_current << endl;
   cout << "WEIGHT EXPRESSION: " << m_weight_current << "\n" << endl;
 
-  // TODO! Make MT safe ReadTree!!!
-  // Define ReadTree as mutex pointer
-  /* 
-    unsigned nth=0;
-    for (unsigned i=0;i<files.size();i++){
-    if (nth<m_maxth && i!=files.size()-1){
-    m_th.push_back(thread(&MVAKit::AssignEvents,this,files[i]));
-    nth++;
+  if (m_parameterized && !is_second && Common::StringCompare(m_psplit,"uni")){
+    double total_weight = 0;
+    for (auto x : files) {
+      cout << "File will be open for unificated mass distribution: " << x << endl;
+      m_treader->SetFormulas(x,m_tree_current,m_cut_current,m_weight_current);
+      double param = 0;
+      if (m_paramFile.empty()) {
+	param = Common::FindDigit(x,m_paramvar);
+      }
+      else {
+	param = Common::FindDigit(x,Common::StringSep(m_paramFile,','));
+      }
+      double weight = 0;
+      while (m_treader->NextEvent()){
+	weight += m_treader->GetWeight();
+      }
+      total_weight += weight;
+      m_scale_current[to_string((int)param)] += weight;
+      cout << "Weight is " << weight << " for " << param << endl;
     }
-    else{
-    for (auto &t : m_th) {t.join();}
-    nth=0;
-    m_th.clear();
+    cout << "Total weight : " << total_weight << endl;
+    for (auto &x : m_scale_current) {
+      cout << "Weight calculated " << x.second << " for " << x.first << endl;      
+      x.second = total_weight / x.second;
+      cout << "will be scaled by " << x.second << endl;
     }
-    }
-  */
+  }
   
   for (auto x : files){
     AssignEvents(x);
@@ -392,6 +499,8 @@ MVAKit::AssignEvents(const string fname)
     m_LabelEntries[m_label_current]+=1;
     m_vars = m_treader->GetInputs("v");
     m_varsSpec = m_treader->GetInputs("vs");
+    m_vecs = m_treader->GetVectors("vec");
+    m_vecsSpec = m_treader->GetVectors("vecs");
     if (m_parameterized) {m_vars.push_back((Double_t)GetParam(fname,m_w));}
     vector<Double_t> cond = m_treader->GetInputs("z");
     int cond_index=0;

@@ -35,16 +35,15 @@ def Labeling(string):
 
 def ReadFile(fil,tr,variables):
     flat_tree = uproot.open(fil)[tr]
-    df = flat_tree.pandas.df()
 
-    x=pd.concat([df.pop(x) for x in variables], axis=1)
-    y=df.pop('classID').astype(np.int8)
-    w=df.pop('weight').astype(np.float16)
+    x=flat_tree.arrays(variables,library='pd')
+    y=flat_tree['classID'].array(library='np')
+    w=flat_tree['weight'].array(library='np')
 
-    del(df,flat_tree)
+    del(flat_tree)
+
+    return x,y,w
     
-    return x.values,y.values,w.values
-
 def UpdateFile(fil,tree_names,y_pred,var_name='score'):
     print (('FileName to be read: %s')%fil)
     tfile = TFile(fil,'update')

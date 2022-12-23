@@ -27,8 +27,8 @@ class MVAKit(object):
         self.NSplit = self.GetNSplit()
         self.__nlabel = self.GetNLabel()
         for i in range(self.__nlabel):self.LabelNames.append(self.GetLabelName(i))
-        for i in range(self.NVar):self.Variables.append(self.GetVariableName(i))
-        for i in range(self.NVar):self.VariablesOriginal.append(self.GetVariableName(i,1))
+        for i in range(self.NVar):self.VariablesOriginal.append(self.GetVariableName(i))
+        for i in range(self.NVar):self.Variables.append(self.GetVariableName(i,1))
         for i in range(self.NVarSpec):self.SpecVariables.append(self.GetSpectatorVariableName(i))
         varParam = self.GetParamName()
         if varParam :

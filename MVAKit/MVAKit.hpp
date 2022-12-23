@@ -97,7 +97,10 @@ private:
   Double_t m_w;
   vector<Double_t> m_vars;
   vector<Double_t> m_varsSpec;
+  vector<vector<Double_t>> m_vecs;
+  vector<vector<Double_t>> m_vecsSpec;
   unique_ptr<Double_t[]> m_var_rec;
+  unique_ptr<vector<Double_t>[]> m_vec_rec;
  
   vector<TMVA::DataLoader*> m_loaders;
 

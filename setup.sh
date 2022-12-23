@@ -32,7 +32,7 @@ if [ "${ROOTSYS}" = "" ]; then
     if [ "${1}" = "slc6" ]; then
 	lsetup "views LCG_96 x86_64-slc6-gcc8-opt"
     else
-	lsetup "views LCG_99 x86_64-centos7-gcc8-opt"
+	lsetup "views LCG_101 x86_64-centos7-gcc8-opt"
     fi
 else
     root_version=`root-config --version`

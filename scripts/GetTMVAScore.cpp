@@ -125,6 +125,9 @@ void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
     file_loc[2].first = input_dir_2LOS+"SM4tVar/ge7jge3b/SM4t/loader_0/weights/factory_BDT_0_Score.weights.xml,"+input_dir_2LOS+"SM4tVar/ge7jge3b/SM4t/loader_1/weights/factory_BDT_1_Score.weights.xml";
     file_loc[2].second = input_dir_2LOS+"SM4tVar/config_bdt_SM4t_crossvalidation_2l.conf";
   }
+  else if (mva_index==-1) {
+    cout << "No BDT option choosen" << endl;
+  }
   else {
     cout << "NO Valid option defined!"
 	 << "\n0 = SM4top"
@@ -133,12 +136,14 @@ void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
     file_loc[1].first = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/ljets/loader_0/factory_BDT_0_Score.weights.xml,/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/ljets/loader_1/factory_BDT_1_Score.weights.xml";
     file_loc[1].second = "/eos/user/b/bsm4tops/bsm4teos/MVA_study_1LOS/SM4top_BDT/ljets/config_SM4top_bdt.conf";
   }
-  for (auto const &x : file_loc)
-    {evaluater[x.first] = unique_ptr<EvalTMVA>(new EvalTMVA(x.second.first,x.second.second));}
+  if (mva_index!=-1) {
+    for (auto const &x : file_loc)
+      {evaluater[x.first] = unique_ptr<EvalTMVA>(new EvalTMVA(x.second.first,x.second.second));}
   
-  for (auto const &x : evaluater){
-    x.second->Init();
-    cout << x.second->GetScore({1}) << endl;;
+    for (auto const &x : evaluater){
+      x.second->Init();
+      cout << x.second->GetScore({1}) << endl;;
+    }
   }
   //BDT-------------------------------------
 

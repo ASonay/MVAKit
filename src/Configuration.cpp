@@ -103,21 +103,53 @@ Configuration::ReadConf(){
   if (in.fail()) {cout << "Can not find config file : " << m_confFile << "\n"; exit(0);}
   cout << "\nStart reading configuration file : " << m_confFile << endl;
   while (in >> str){
+
+    if (str[0]=='%' || str[0]=='#') {
+      in >> str;
+      continue;
+    }
+    
     if (str.compare("Var:")==0){
       in >> str;
-      vector<string> line = Common::StringSep(str,';');
+      vector<string> line_with_type = Common::StringSep(str,'\\');
+      string type = "flat";
+      if (line_with_type.size()>1) {type = line_with_type[1];}
+      if (type == "flat" && Common::StringSep(str,';').size()>1) {
+	cout << "Multiple variables in same line cannot be flat" << endl;
+	cout << str << endl;
+	exit(0);
+      }
+      vector<string> line = Common::StringSep(line_with_type[0],'@');
+      if (line.size() == 0 && Common::StringSep(str,';').size()>1) {
+	cout << "If multiple variables used in same line, variable name must be declared" << endl;
+	cout << str << endl;
+	exit(0);	
+      }
       if (line.size()>1)
-	{m_variables.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[1]));}
+	{m_variables.push_back({line[0],Common::RemoveSpecialChars(line[1]),type});}
       else
-	{m_variables.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[0]));}
+	{m_variables.push_back({line[0],Common::RemoveSpecialChars(line[0]),type});}
     }
     else if (str.compare("OtherVar:")==0){
       in >> str;
-      vector<string> line = Common::StringSep(str,';');
+      vector<string> line_with_type = Common::StringSep(str,'\\');
+      string type = "flat";
+      if (line_with_type.size()>1) {type = line_with_type[1];}
+      if (type == "flat" && Common::StringSep(str,';').size()>1) {
+	cout << "Multiple variables in same line cannot be flat" << endl;
+	cout << str << endl;
+	exit(0);
+      }
+      vector<string> line = Common::StringSep(line_with_type[0],'@');
+      if (line.size() == 0 && Common::StringSep(str,';').size()>1) {
+	cout << "If multiple variables used in same line, variable name must be declared" << endl;
+	cout << str << endl;
+	exit(0);	
+      }
       if (line.size()>1)
-	{m_variables_other.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[1]));}
+	{m_variables_other.push_back({line[0],Common::RemoveSpecialChars(line[1]),type});}
       else
-	{m_variables_other.push_back(make_pair(Common::RemoveSpecialChars(line[0]),line[0]));}
+	{m_variables_other.push_back({line[0],Common::RemoveSpecialChars(line[0]),type});}
     }
     else if (str.compare("ParamVar:")==0){
       in >> str;
@@ -315,7 +347,7 @@ vector<TString>
 Configuration::GetTVariables(){
   vector<TString> newvars;
   for (auto const& var : m_variables){
-    newvars.push_back(var.first);
+    newvars.push_back(var.second);
   }
 
   if (!m_paramvar.empty()){
@@ -329,7 +361,7 @@ vector<TString>
 Configuration::GetTVariablesOther(){
   vector<TString> newvars;
   for (auto const& var : m_variables_other){
-    newvars.push_back(var.first);
+    newvars.push_back(var.second);
   }
   return newvars;
 }
