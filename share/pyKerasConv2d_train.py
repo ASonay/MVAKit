@@ -9,34 +9,34 @@ from ROOT import TLorentzVector
 import tensorflow as tf
 
 class PhysicsLayer(tf.keras.layers.Layer):
-    def __init__(self, nbin=64):
+    def __init__(self, input_dim, nbin=64):
         super(PhysicsLayer, self).__init__()
         self.nbin = nbin
 
-    def build(self, input_shape):
-        self.kernel = self.add_weight("kernel",
-                                      shape=[self.nbin,
-                                             self.nbin])
-
     def call(self, inputs):
-        nbin, xmin, xmax = 64, -3.2, 3.2
-        delta = (xmax-xmin)/nbin
-        zeros = tf.zeros(shape=(nbin,nbin,1))
-        print(inputs)
-        return zeros
+        zeros = tf.zeros(shape=(self.nbin, self.nbin, 1))
+        return tf.reshape(zeros,(None,)+(self.nbin, self.nbin, 1))
+    
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0],)+(self.nbin, self.nbin, 1)
 
-def model():
-    cnn_input = tf.keras.layers.Input(shape=())
-    convert_input = PhysicsLayer()(cnn_input)
-    conv1 = Conv2D(32, kernel_size=4, activation='relu')(convert_input)
-    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-    conv2 = Conv2D(16, kernel_size=4, activation='relu')(pool1)
-    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+#def translate_to_physics_layer(x):
+    
 
-    hidden1 = Dense(10, activation='relu')(pool2)
-    output = Dense(1, activation='sigmoid')(hidden1)
+def get_model():
+    cnn_input = tf.keras.layers.Input(shape=(None,))
+    print(cnn_input.shape)
+    convert_input = PhysicsLayer(cnn_input.shape[0])(cnn_input)
+    print(convert_input.shape)
+    conv1 = tf.keras.layers.Conv2D(filters = 32, kernel_size=(5, 5), padding = 'Same', activation='relu')(convert_input)
+    pool1 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+    conv2 = tf.keras.layers.Conv2D(filters = 16, kernel_size=(5, 5), padding = 'Same', activation='relu')(pool1)
+    pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(conv2)
 
-    model = Model(inputs=cnn_input, outputs=output)
+    hidden1 = tf.keras.layers.Dense(10, activation='relu')(pool2)
+    output = tf.keras.layers.Dense(1, activation='sigmoid')(hidden1)
+
+    model = tf.keras.models.Model(inputs=cnn_input, outputs=output)
 
     # summarize layers
     print(model.summary())
@@ -131,7 +131,14 @@ if not os.path.exists(path+'keras_output/model'):os.makedirs(path+'keras_output/
 
 split_size = tool.NSplit if tool.NSplit > 0 else 1 
 
-model()
+model = get_model()
+
+X = [[1]]
+y = [1]
+
+model.compile(loss="binary_crossentropy",optimizer="ADAM")
+model.fit(X,y)
+
 """
 for i in range(tool.NSplit):
     print ('\nReading data from Py ...')

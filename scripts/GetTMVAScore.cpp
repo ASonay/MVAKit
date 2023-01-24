@@ -59,7 +59,7 @@ void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
 
   //REWEIGHTING-----------------------------
   //string input_dir_reweighting="/eos/user/b/bsm4tops/bsm4teos/reweighting/";
-  string input_dir_reweighting="/eos/user/b/bsm4tops/bsm4teos/reweighting/v212169/";
+  string input_dir_reweighting="/eos/user/b/bsm4tops/bsm4teos/reweighting/v212169_ttXMG/";
   if (input_dir_index==1) input_dir_reweighting="/local_scratch/sched3am/BSM4t/reweighting/";
   nn_config = {
   //0 ttbar 1L nominal
@@ -69,9 +69,9 @@ void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
   //2 ttbar 1L nominal down 50% unc. to reweighted ttbar
   {input_dir_reweighting+"../ljets_nominal/down_var/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"../ljets_nominal/down_var/config_nnrew_ljets_kin.conf"},
   //3 ttbar 1L PhHw
-  {input_dir_reweighting+"../ljets_PhHw/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"../ljets_PhHw/config_nnrew_alt_ljets_kin.conf"},
+  {input_dir_reweighting+"ljets_PhHw/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"ljets_PhHw/config_nnrew_ljets_kin.conf"},
   //4 ttbar 1L Mg5Py8
-  {input_dir_reweighting+"../ljets_Mg5Py8/pnnrewLRate_0_0036_Momentum_0_9_Epoch_120_Batch_1000_Optimizer_SGD_Loss_mean_squared_error/",input_dir_reweighting+"../ljets_Mg5Py8/config_nnrew_alt_ljets_kin.conf"},
+  {input_dir_reweighting+"ljets_Mg5Py8/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"ljets_Mg5Py8/config_nnrew_ljets_kin.conf"},
   //5 ttbar 1L ttbb
   {input_dir_reweighting+"ljets_ttbb/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"ljets_ttbb/config_nnrew_ljets_kin.conf"},
  
@@ -86,7 +86,7 @@ void GetTMVAScore(int mH=400,int mva_index=0,int input_dir_index=0)
   //10 ttbar 2LOS Mg5Py8
   {input_dir_reweighting+"os2l_Mg5Py8/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_Mg5Py8/config_nnrew_os2l_kin.conf"},
   //11 ttbar 2LOS ttbb
-  {input_dir_reweighting+"os2l_ttbb/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"os2l_ttbb/config_nnrew_os2l_kin.conf"},
+  {input_dir_reweighting+"../v212169/os2l_ttbb/pnnrewLRate_0_05_Momentum_0_9_Epoch_320_Batch_1000_Optimizer_SGD_Loss_Exp_LRate_dec_0_9_LRate_step_10000/",input_dir_reweighting+"../v212169/os2l_ttbb/config_nnrew_os2l_kin.conf"},
 };
 
 
@@ -186,8 +186,6 @@ Double_t GetNNRew(int mc, int lep, Args... args){
 
   float score = nn[index]->GetOutput();
   
-  //cout << "Running " << mc << " sample " << sample << " index " << index << " lep number " << lep << " score " << score << endl;
-
   return exp(score);
 }
 
